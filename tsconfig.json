@@ -5,6 +5,7 @@
     "lib": ["dom", "es2015", "esnext.asynciterable"],
     "module": "commonjs",
     "rootDir": "./",
+    //"outDir": "./dist",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
