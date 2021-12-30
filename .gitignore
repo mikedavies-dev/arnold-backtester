@@ -2,6 +2,7 @@ node_modules/
 .vscode
 dist/
 strategies/*
+src/strategies/*
 data/*
 results/*
 profiles/*

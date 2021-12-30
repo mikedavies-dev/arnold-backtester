@@ -1,14 +1,13 @@
 import Logger from '../utils/logger';
 import {profileExists, loadProfile} from '../utils/profile';
 import {format} from 'date-fns';
-import series from 'promise-series2';
 import {StaticPool} from 'node-worker-threads-pool';
 import path from 'path';
 
 const log = Logger('backtest');
 
 const baseFolder = path.parse(__filename).dir;
-const filePath = path.join(baseFolder, './worker.ts');
+const filePath = path.join(baseFolder, './worker.js');
 
 async function run() {
   const args = process.argv.slice(2);
@@ -38,51 +37,45 @@ async function run() {
     )} to ${format(runProfile.dates.to, 'yyyy-MM-dd')}`,
   );
 
-  const threadCount = 1;
+  const threadCount = runProfile.threads;
+
   log(`Starting ${threadCount} threads`);
 
   const pool = new StaticPool({
     size: threadCount,
     task: filePath,
-    workerData: {},
+    workerData: {
+      profile: runProfile,
+    },
   });
 
-  const dateSymbolCombos = new Array(
-    runProfile.dates.dates.length * runProfile.symbols.length,
-  )
-    .fill(null)
-    .map(() => {
-      return {
-        date: null,
-        symbol: null,
-      };
-    });
+  const dateSymbolCombos = runProfile.dates.dates
+    .map(date => {
+      return runProfile.symbols.map(symbol => {
+        return {
+          date,
+          symbol,
+        };
+      });
+    })
+    .flat();
 
-  await Promise.all(
+  const results = await Promise.all(
     dateSymbolCombos.map(async ({date, symbol}) => {
       // This will choose one idle worker in the pool
       // to execute your heavy task without blocking
       // the main thread!
-      await pool.exec({
+      return await pool.exec({
         symbol,
         date,
       });
     }),
   );
 
+  log('Results', results);
+
   // Shutdown the pool
   pool.destroy();
-
-  /*
-  // Run the threads
-  await series<Date, void>(
-    async function (date) {
-      log(`Running ${format(date, 'yyyy-MM-dd')}`);
-    },
-    false,
-    runProfile.dates.dates,
-  );
-  */
 }
 
 run();

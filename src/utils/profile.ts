@@ -10,6 +10,7 @@ type RawProfile = {
     to: string;
   };
   symbols: Array<string>;
+  threads: number;
 };
 
 // Parsed format
@@ -22,6 +23,7 @@ type Profile = {
     dates: Array<Date>;
   };
   symbols: Array<string>;
+  threads: number;
 };
 
 export function getPath(name: string) {

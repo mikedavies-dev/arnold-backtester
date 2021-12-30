@@ -26,10 +26,12 @@
     "ts-jest": "^27.1.2"
   },
   "scripts": {
-    "backtest": "TZ=utc ts-node src/bin/backtest.ts",
-    "results-server": "TZ=utc ts-node src/bin/server.ts",
+    "backtest": "TZ=utc node dist/bin/backtest.js",
+    "results-server": "TZ=utc node dist/bin/server.js",
     "test": "jest",
-    "check": "tsc --noEmit"
+    "check": "tsc --noEmit",
+    "build": "rm -rf ./dist && tsc",
+    "watch": "rm -rf ./dist && tsc --watch"
   },
   "author": "",
   "license": "ISC",
