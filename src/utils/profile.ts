@@ -14,7 +14,7 @@ type RawProfile = {
 };
 
 // Parsed format
-type Profile = {
+export type Profile = {
   strategy: string;
   startingBalance: number;
   dates: {
