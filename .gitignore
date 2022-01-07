@@ -7,3 +7,4 @@ data/*
 results/*
 profiles/*
 !directory/sample.json
+.DS_Store
