@@ -25,7 +25,9 @@
     "eslint-plugin-jest": "^25.3.4",
     "eslint-plugin-react": "^7.28.0",
     "eslint-plugin-react-hooks": "^4.3.0",
+    "husky": "^7.0.4",
     "jest": "^27.4.5",
+    "lint-staged": "^12.1.7",
     "node-worker-threads-pool": "^1.5.1",
     "react": "^17.0.2",
     "ts-jest": "^27.1.2"
@@ -37,9 +39,21 @@
     "test-watch": "TZ=America/New_York jest --watch",
     "check": "tsc --noEmit",
     "build": "rm -rf ./dist && tsc",
-    "watch": "rm -rf ./dist && tsc --watch"
+    "watch": "rm -rf ./dist && tsc --watch",
+    "prepare": "husky install",
+    "lint-staged": "lint-staged"
   },
   "author": "",
   "license": "ISC",
-  "description": ""
+  "description": "",
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx,scss}": [
+      "prettier --write",
+      "eslint --cache --fix"
+    ],
+    "*.{md}": [
+      "prettier --write"
+    ],
+    "*.js": "eslint --cache --fix"
+  }
 }

@@ -28,5 +28,7 @@ export function mergeSortedArrays<Type>(
     }
 
     return sorted.concat(arrayA.slice(indexA));
+
+    // test
   }, arrays[0]);
 }
