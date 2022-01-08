@@ -14,9 +14,28 @@ could check the `SPY` while trading `MSFT`.
 It should let you graphically analyse each trade in context to better help
 understand the strategy.
 
+## Sample Profile
+
+```json
+{
+  "strategy": "sample",
+  "startingBalance": 10000,
+  "dates": {
+    "from": "2021-12-01",
+    "to": "2021-12-03"
+  },
+  "symbols": ["MSFT"]
+}
+```
+
+## Sample Strategy
+
+todo
+
 ## TODO
 
-- Handle missing data file (Option<Tick[]>?)
+- Handle missing data file (`Option<Tick[]>?`)
+- Handle missing profile (`Option<Profile>?`)
 - Create sample strategy to fill out positions API
 - Log results to DB
 - Results viewer

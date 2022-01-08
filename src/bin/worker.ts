@@ -106,7 +106,7 @@ async function execute(param: Params) {
     });
   });
 
-  await log(
+  log(
     `Finished ${param.symbol} in ${numeral(Date.now() - start).format(',')}ms`,
   );
 

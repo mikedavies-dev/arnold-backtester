@@ -1,5 +1,6 @@
 import {format} from 'date-fns';
 import {StaticPool} from 'node-worker-threads-pool';
+import numeral from 'numeral';
 
 import Logger from '../utils/logger';
 import {profileExists, loadProfile} from '../utils/profile';
@@ -38,26 +39,24 @@ async function run() {
     )} to ${format(runProfile.dates.to, 'yyyy-MM-dd')}`,
   );
 
-  const threadCount = runProfile.threads;
-
-  log(`Starting ${threadCount} threads`);
+  log(`Starting ${runProfile.threads} threads`);
 
   const pool = new StaticPool({
-    size: threadCount,
+    size: runProfile.threads,
     task: filePath,
     workerData: {
       profile: runProfile,
     },
   });
 
+  const start = Date.now();
+
   const dateSymbolCombos = runProfile.dates.dates
     .map(date => {
-      return runProfile.symbols.map(symbol => {
-        return {
-          date,
-          symbol,
-        };
-      });
+      return runProfile.symbols.map(symbol => ({
+        date,
+        symbol,
+      }));
     })
     .flat();
 
@@ -73,6 +72,7 @@ async function run() {
     }),
   );
 
+  log(`Finished in ${numeral(Date.now() - start).format(',')}ms`);
   log('Results', results);
 
   // Shutdown the pool
