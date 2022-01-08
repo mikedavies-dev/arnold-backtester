@@ -106,14 +106,9 @@ async function execute(param: Params) {
     });
   });
 
-  // log('Values', JSON.stringify(trackers, null, 2));
-
   await log(
     `Finished ${param.symbol} in ${numeral(Date.now() - start).format(',')}ms`,
   );
-
-  // Let it log some stuff
-  await new Promise(resolve => setTimeout(resolve, 0));
 
   return [];
 }
@@ -126,6 +121,10 @@ if (parentPort) {
 
     try {
       const result = await execute(param);
+
+      // Let it log some stuff
+      await new Promise(resolve => setTimeout(resolve, 0));
+
       parentPort.postMessage(result);
     } catch (err) {
       log('Failed', err);

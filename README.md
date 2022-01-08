@@ -13,3 +13,10 @@ could check the `SPY` while trading `MSFT`.
 
 It should let you graphically analyse each trade in context to better help
 understand the strategy.
+
+## TODO
+
+- Handle missing data file (Option<Tick[]>?)
+- Create sample strategy to fill out positions API
+- Log results to DB
+- Results viewer
