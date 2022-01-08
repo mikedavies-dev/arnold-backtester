@@ -1,4 +1,5 @@
 import {format, startOfDay, fromUnixTime} from 'date-fns';
+import {Tick} from './data';
 
 type Bar = {
   time: string;
@@ -36,8 +37,6 @@ export type Tracker = {
   bars: Bars;
 };
 
-type TickType = 'BID' | 'ASK' | 'TRADE';
-
 export const barLength = 250;
 
 export function initTracker(): Tracker {
@@ -58,13 +57,15 @@ export function initTracker(): Tracker {
   };
 }
 
-export const getBarTime = (period: number, marketTime: number) => {
-  const time = fromUnixTime(marketTime);
-  if (period === Periods.daily) {
-    return startOfDay(time);
-  }
+export const formatBarTime = (period: number, marketTime: number): string => {
   const duration = period * 60;
-  return fromUnixTime(Math.floor(+marketTime / +duration) * +duration);
+
+  const date =
+    period === Periods.daily
+      ? startOfDay(fromUnixTime(marketTime))
+      : fromUnixTime(Math.floor(+marketTime / +duration) * +duration);
+
+  return format(date, 'yyyy-MM-dd HH:mm');
 };
 
 export const updateDataBar = ({
@@ -80,10 +81,7 @@ export const updateDataBar = ({
   period: number;
   time: number;
 }) => {
-  const barTime = getBarTime(period, time);
-  const marketTime = format(barTime, 'yyyy-MM-dd hh:mm:ss');
-
-  console.log('XXX', barTime, marketTime);
+  const marketTime = formatBarTime(period, time);
 
   bars[period] = bars[period] || [];
   const barsToUpdate = bars[period];
@@ -129,21 +127,19 @@ export const updateDataBar = ({
 
 export function updateTracker({
   data,
-  time,
-  isPreMarket,
-  isMarketOpen,
-  type,
-  size,
-  value,
+  tick,
+  marketOpen,
+  marketClose,
 }: {
   data: Tracker;
-  time: number;
-  isPreMarket: boolean;
-  isMarketOpen: boolean;
-  type: TickType;
-  size: number;
-  value: number;
+  tick: Tick;
+  marketOpen: number;
+  marketClose: number;
 }): void {
+  const {time, type, value, size} = tick;
+  const isMarketOpen = time >= marketOpen && time <= marketClose;
+  const isPreMarket = time < marketOpen;
+
   // update bar data
   switch (type) {
     case 'ASK':

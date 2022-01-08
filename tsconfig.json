@@ -16,7 +16,6 @@
     "sourceMap": true,
     "jsx": "react-jsx",
     "checkJs": false,
-    // "noImplicitAny": false,
     "allowSyntheticDefaultImports": true,
     "typeRoots": ["./@types", "./node_modules/@types"]
   },
@@ -24,5 +23,5 @@
     "files": true
   },
   "include": ["**/*.ts", "**/*.tsx", "**/*.js"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "src/tests"]
 }

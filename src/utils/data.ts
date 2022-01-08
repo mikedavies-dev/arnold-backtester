@@ -2,12 +2,14 @@ import LineByLine from 'n-readlines';
 import {format, fromUnixTime} from 'date-fns';
 import * as Fs from 'fs/promises';
 
+export type TickType = 'TRADE' | 'BID' | 'ASK';
+
 type RawTick = {
   time: number;
   index: number;
   dateTime: string;
   symbol: string;
-  type: 'TRADE' | 'BID' | 'ASK';
+  type: TickType;
   size: number;
   value: number;
 };
@@ -17,7 +19,7 @@ export type Tick = {
   index: number;
   dateTime: Date;
   symbol: string;
-  type: 'TRADE' | 'BID' | 'ASK';
+  type: TickType;
   size: number;
   value: number;
 };

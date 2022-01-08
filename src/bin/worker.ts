@@ -97,25 +97,12 @@ async function execute(param: Params) {
 
     const tracker = trackers[tick.symbol];
 
-    const {type, value, size, time} = tick;
-
-    const isMarketOpen = time >= marketOpen && time <= marketClose;
-    const isPreMarket = time < marketOpen;
-
-    // TEMP
-    if (isMarketOpen) {
-      return;
-    }
-
     // Update the tracker data
     updateTracker({
       data: tracker,
-      time,
-      isPreMarket,
-      isMarketOpen,
-      type,
-      size,
-      value,
+      tick,
+      marketOpen,
+      marketClose,
     });
   });
 
@@ -125,7 +112,8 @@ async function execute(param: Params) {
     `Finished ${param.symbol} in ${numeral(Date.now() - start).format(',')}ms`,
   );
 
-  await new Promise(resolve => setTimeout(resolve, 2000));
+  // Let it log some stuff
+  await new Promise(resolve => setTimeout(resolve, 0));
 
   return [];
 }
