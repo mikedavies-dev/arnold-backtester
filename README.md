@@ -1,4 +1,4 @@
-# Arnold Backtesting Platform 💪💪
+# Arnold 💪 - Stock/Crypto Backtesting Platform
 
 The ethos behind Arnold is to allow for advanced backtesting of stocks using
 tick and bid/ask data and provide a different order types like:
