@@ -18,7 +18,7 @@
     "checkJs": false,
     // "noImplicitAny": false,
     "allowSyntheticDefaultImports": true,
-    "typeRoots": ["./@types"]
+    "typeRoots": ["./@types", "./node_modules/@types"]
   },
   "ts-node": {
     "files": true

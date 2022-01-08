@@ -33,7 +33,8 @@
   "scripts": {
     "backtest": "TZ=America/New_York node dist/bin/backtest.js",
     "results-server": "TZ=America/New_York node dist/bin/server.js",
-    "test": "jest",
+    "test": "TZ=America/New_York jest",
+    "test-watch": "TZ=America/New_York jest --watch",
     "check": "tsc --noEmit",
     "build": "rm -rf ./dist && tsc",
     "watch": "rm -rf ./dist && tsc --watch"
