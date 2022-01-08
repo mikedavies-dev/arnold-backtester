@@ -1,5 +1,5 @@
 import LineByLine from 'n-readlines';
-import {format, parseISO} from 'date-fns';
+import {format, fromUnixTime} from 'date-fns';
 import * as Fs from 'fs/promises';
 
 type RawTick = {
@@ -8,6 +8,8 @@ type RawTick = {
   dateTime: string;
   symbol: string;
   type: 'TRADE' | 'BID' | 'ASK';
+  size: number;
+  value: number;
 };
 
 export type Tick = {
@@ -16,6 +18,8 @@ export type Tick = {
   dateTime: Date;
   symbol: string;
   type: 'TRADE' | 'BID' | 'ASK';
+  size: number;
+  value: number;
 };
 
 export async function fileExists(path: string) {
@@ -82,9 +86,11 @@ export async function loadTsData(
     return {
       time: data.time,
       index: data.index,
-      dateTime: parseISO(data.dateTime),
+      dateTime: fromUnixTime(data.time),
       symbol: data.symbol,
       type: data.type,
+      size: data.size,
+      value: data.value,
     };
   });
 
