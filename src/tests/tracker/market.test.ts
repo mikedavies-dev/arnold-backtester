@@ -1,30 +1,16 @@
-import {startOfToday, fromUnixTime} from 'date-fns';
+import {startOfToday} from 'date-fns';
 
 import {initTracker, updateTracker} from '../../utils/tracker';
 import {getMarketOpen, getMarketClose} from '../../utils/market';
-import {Tick, TickType} from '../../utils/data';
+import {createTick, createTime} from '../utils/tick';
 
-function createTick({
-  type,
-  time,
-  value,
-  size,
-}: {
-  type: TickType;
-  time: number;
-  value: number;
-  size: number;
-}): Tick {
-  return {
-    type,
-    time,
-    value,
-    size,
-    dateTime: fromUnixTime(time),
-    symbol: 'AAAA',
-    index: 0,
-  };
-}
+test('market open times', () => {
+  const marketOpen = getMarketOpen(startOfToday());
+  const marketClose = getMarketClose(startOfToday());
+
+  expect(marketOpen).toBe(createTime('09:30'));
+  expect(marketClose).toBe(createTime('16:30'));
+});
 
 test('in-market high', () => {
   const data = initTracker();
@@ -38,7 +24,7 @@ test('in-market high', () => {
     marketOpen,
     marketClose,
     tick: createTick({
-      time: marketOpen - 1,
+      time: createTime('09:29'),
       type: 'BID',
       value: 1,
       size: 100,
@@ -53,7 +39,7 @@ test('in-market high', () => {
     marketOpen,
     marketClose,
     tick: createTick({
-      time: marketOpen - 1,
+      time: createTime('09:29'),
       type: 'TRADE',
       value: 1,
       size: 100,
@@ -69,7 +55,7 @@ test('in-market high', () => {
     marketOpen,
     marketClose,
     tick: createTick({
-      time: marketOpen,
+      time: createTime('09:30'),
       type: 'TRADE',
       value: 1,
       size: 100,
@@ -85,7 +71,7 @@ test('in-market high', () => {
     marketOpen,
     marketClose,
     tick: createTick({
-      time: marketOpen,
+      time: createTime('09:30'),
       type: 'TRADE',
       value: 2,
       size: 100,
@@ -101,7 +87,7 @@ test('in-market high', () => {
     marketOpen,
     marketClose,
     tick: createTick({
-      time: marketOpen,
+      time: createTime('09:30'),
       type: 'TRADE',
       value: 1.4,
       size: 100,
@@ -124,7 +110,7 @@ test('in-market low', () => {
     marketOpen,
     marketClose,
     tick: createTick({
-      time: marketOpen - 1,
+      time: createTime('09:29'),
       type: 'BID',
       value: 1,
       size: 100,
@@ -139,7 +125,7 @@ test('in-market low', () => {
     marketOpen,
     marketClose,
     tick: createTick({
-      time: marketOpen - 1,
+      time: createTime('09:29'),
       type: 'TRADE',
       value: 1,
       size: 100,
@@ -155,7 +141,7 @@ test('in-market low', () => {
     marketOpen,
     marketClose,
     tick: createTick({
-      time: marketOpen,
+      time: createTime('09:30'),
       type: 'TRADE',
       value: 1,
       size: 100,
@@ -171,7 +157,7 @@ test('in-market low', () => {
     marketOpen,
     marketClose,
     tick: createTick({
-      time: marketOpen,
+      time: createTime('09:30'),
       type: 'TRADE',
       value: 0.9,
       size: 100,
@@ -187,7 +173,7 @@ test('in-market low', () => {
     marketOpen,
     marketClose,
     tick: createTick({
-      time: marketOpen,
+      time: createTime('09:30'),
       type: 'TRADE',
       value: 1.4,
       size: 100,
@@ -210,7 +196,7 @@ test('in-market volume', () => {
     marketOpen,
     marketClose,
     tick: createTick({
-      time: marketOpen - 1,
+      time: createTime('09:29'),
       type: 'BID',
       value: 1,
       size: 100,
@@ -223,7 +209,7 @@ test('in-market volume', () => {
     marketOpen,
     marketClose,
     tick: createTick({
-      time: marketOpen - 1,
+      time: createTime('09:29'),
       type: 'TRADE',
       value: 1,
       size: 100,
@@ -238,7 +224,7 @@ test('in-market volume', () => {
     marketOpen,
     marketClose,
     tick: createTick({
-      time: marketOpen,
+      time: createTime('09:30'),
       type: 'TRADE',
       value: 1,
       size: 100,
@@ -253,7 +239,7 @@ test('in-market volume', () => {
     marketOpen,
     marketClose,
     tick: createTick({
-      time: marketOpen,
+      time: createTime('09:30'),
       type: 'TRADE',
       value: 0.9,
       size: 100,
@@ -268,7 +254,7 @@ test('in-market volume', () => {
     marketOpen,
     marketClose,
     tick: createTick({
-      time: marketOpen,
+      time: createTime('09:30'),
       type: 'TRADE',
       value: 1.4,
       size: 150,

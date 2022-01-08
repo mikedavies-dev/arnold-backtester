@@ -1,30 +1,8 @@
-import {startOfToday, fromUnixTime} from 'date-fns';
+import {startOfToday} from 'date-fns';
 
 import {initTracker, updateTracker} from '../../utils/tracker';
 import {getMarketOpen, getMarketClose} from '../../utils/market';
-import {Tick, TickType} from '../../utils/data';
-
-function createTick({
-  type,
-  time,
-  value,
-  size,
-}: {
-  type: TickType;
-  time: number;
-  value: number;
-  size: number;
-}): Tick {
-  return {
-    type,
-    time,
-    value,
-    size,
-    dateTime: fromUnixTime(time),
-    symbol: 'AAAA',
-    index: 0,
-  };
-}
+import {createTick, createTime} from '../utils/tick';
 
 test('pre-market high', () => {
   const data = initTracker();
@@ -38,7 +16,7 @@ test('pre-market high', () => {
     marketOpen,
     marketClose,
     tick: createTick({
-      time: marketOpen - 1,
+      time: createTime('09:29'),
       type: 'BID',
       value: 1,
       size: 100,
@@ -53,7 +31,7 @@ test('pre-market high', () => {
     marketOpen,
     marketClose,
     tick: createTick({
-      time: marketOpen - 1,
+      time: createTime('09:29'),
       type: 'TRADE',
       value: 1,
       size: 100,
@@ -68,7 +46,7 @@ test('pre-market high', () => {
     marketOpen,
     marketClose,
     tick: createTick({
-      time: marketOpen - 1,
+      time: createTime('09:29'),
       type: 'TRADE',
       value: 2,
       size: 100,
@@ -83,7 +61,7 @@ test('pre-market high', () => {
     marketOpen,
     marketClose,
     tick: createTick({
-      time: marketOpen - 1,
+      time: createTime('09:29'),
       type: 'TRADE',
       value: 1.4,
       size: 100,
@@ -98,7 +76,7 @@ test('pre-market high', () => {
     marketOpen,
     marketClose,
     tick: createTick({
-      time: marketOpen + 1,
+      time: createTime('09:30'),
       type: 'TRADE',
       value: 3,
       size: 100,
@@ -120,7 +98,7 @@ test('pre-market low', () => {
     marketOpen,
     marketClose,
     tick: createTick({
-      time: marketOpen - 1,
+      time: createTime('09:29'),
       type: 'BID',
       value: 1,
       size: 100,
@@ -135,7 +113,7 @@ test('pre-market low', () => {
     marketOpen,
     marketClose,
     tick: createTick({
-      time: marketOpen - 1,
+      time: createTime('09:29'),
       type: 'TRADE',
       value: 1,
       size: 100,
@@ -150,7 +128,7 @@ test('pre-market low', () => {
     marketOpen,
     marketClose,
     tick: createTick({
-      time: marketOpen - 1,
+      time: createTime('09:29'),
       type: 'TRADE',
       value: 0.8,
       size: 100,
@@ -165,7 +143,7 @@ test('pre-market low', () => {
     marketOpen,
     marketClose,
     tick: createTick({
-      time: marketOpen - 1,
+      time: createTime('09:29'),
       type: 'TRADE',
       value: 1.2,
       size: 100,
@@ -180,7 +158,7 @@ test('pre-market low', () => {
     marketOpen,
     marketClose,
     tick: createTick({
-      time: marketOpen + 1,
+      time: createTime('09:30'),
       type: 'TRADE',
       value: 0.4,
       size: 100,
@@ -202,7 +180,7 @@ test('pre-market volume', () => {
     marketOpen,
     marketClose,
     tick: createTick({
-      time: marketOpen - 1,
+      time: createTime('09:29'),
       type: 'BID',
       value: 1,
       size: 100,
@@ -215,7 +193,7 @@ test('pre-market volume', () => {
     marketOpen,
     marketClose,
     tick: createTick({
-      time: marketOpen - 1,
+      time: createTime('09:29'),
       type: 'TRADE',
       value: 1,
       size: 100,
@@ -230,7 +208,7 @@ test('pre-market volume', () => {
     marketOpen,
     marketClose,
     tick: createTick({
-      time: marketOpen,
+      time: createTime('09:30'),
       type: 'TRADE',
       value: 1,
       size: 100,
