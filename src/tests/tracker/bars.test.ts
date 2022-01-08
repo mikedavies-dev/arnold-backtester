@@ -23,7 +23,7 @@ test('1m bars', () => {
     }),
   });
 
-  expect(data.bars[1]).toMatchInlineSnapshot(`
+  expect(data.bars.m1).toMatchInlineSnapshot(`
     Array [
       Object {
         "close": 2,
@@ -48,7 +48,7 @@ test('1m bars', () => {
     }),
   });
 
-  expect(data.bars[1]).toMatchInlineSnapshot(`
+  expect(data.bars.m1).toMatchInlineSnapshot(`
     Array [
       Object {
         "close": 2.1,
@@ -73,7 +73,7 @@ test('1m bars', () => {
     }),
   });
 
-  expect(data.bars[1]).toMatchInlineSnapshot(`
+  expect(data.bars.m1).toMatchInlineSnapshot(`
     Array [
       Object {
         "close": 2.2,
@@ -98,7 +98,7 @@ test('1m bars', () => {
     }),
   });
 
-  expect(data.bars[1]).toMatchInlineSnapshot(`
+  expect(data.bars.m1).toMatchInlineSnapshot(`
     Array [
       Object {
         "close": 1.9,
@@ -123,7 +123,7 @@ test('1m bars', () => {
     }),
   });
 
-  expect(data.bars[1]).toMatchInlineSnapshot(`
+  expect(data.bars.m1).toMatchInlineSnapshot(`
     Array [
       Object {
         "close": 1.9,
@@ -163,7 +163,7 @@ test('5m bars', () => {
     }),
   });
 
-  expect(data.bars[5]).toMatchInlineSnapshot(`
+  expect(data.bars.m5).toMatchInlineSnapshot(`
     Array [
       Object {
         "close": 2,
@@ -212,7 +212,7 @@ test('5m bars', () => {
     }),
   });
 
-  expect(data.bars[5]).toMatchInlineSnapshot(`
+  expect(data.bars.m5).toMatchInlineSnapshot(`
     Array [
       Object {
         "close": 2,
@@ -237,7 +237,7 @@ test('5m bars', () => {
     }),
   });
 
-  expect(data.bars[5]).toMatchInlineSnapshot(`
+  expect(data.bars.m5).toMatchInlineSnapshot(`
     Array [
       Object {
         "close": 2,

@@ -1,5 +1,5 @@
 // Access the workerData by requiring it.
-import {parentPort, workerData} from 'worker_threads';
+import {parentPort, workerData, threadId} from 'worker_threads';
 import {format} from 'date-fns';
 import numeral from 'numeral';
 
@@ -11,7 +11,7 @@ import {mergeSortedArrays} from '../utils/data-structures';
 import {initTracker, updateTracker, Tracker} from '../utils/tracker';
 import {getMarketOpen, getMarketClose} from '../utils/market';
 
-const log = Logger('Worker');
+const log = Logger(`Worker#${threadId}`);
 
 type Params = {
   symbol: string;
@@ -106,7 +106,7 @@ async function execute(param: Params) {
     });
   });
 
-  log('Values', trackers);
+  // log('Values', JSON.stringify(trackers, null, 2));
 
   await log(
     `Finished ${param.symbol} in ${numeral(Date.now() - start).format(',')}ms`,

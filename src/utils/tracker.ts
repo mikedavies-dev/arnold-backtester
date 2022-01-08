@@ -10,16 +10,22 @@ type Bar = {
   volume: number;
 };
 
+// export type Bars = Record<number, Array<Bar>>;
+export type Bars = {
+  m1: Array<Bar>;
+  m5: Array<Bar>;
+  daily: Array<Bar>;
+};
+
+type BarPeriod = keyof Bars;
+
 export const Periods = {
   m1: 1,
   m5: 5,
-  h1: 60,
   daily: 1440,
 };
 
-const periods = [Periods.m1, Periods.m5, Periods.daily];
-
-export type Bars = Record<number, Array<Bar>>;
+const periods: Array<BarPeriod> = ['m1', 'm5', 'daily'];
 
 export type Tracker = {
   open: number;
@@ -53,7 +59,11 @@ export function initTracker(): Tracker {
     preMarketHigh: 0,
     preMarketLow: 0,
     preMarketVolume: 0,
-    bars: {},
+    bars: {
+      m1: [],
+      m5: [],
+      daily: [],
+    },
   };
 }
 
@@ -78,10 +88,10 @@ export const updateDataBar = ({
   bars: Bars;
   price: number;
   volume: number;
-  period: number;
+  period: BarPeriod;
   time: number;
 }) => {
-  const marketTime = formatBarTime(period, time);
+  const marketTime = formatBarTime(Periods[period], time);
 
   bars[period] = bars[period] || [];
   const barsToUpdate = bars[period];

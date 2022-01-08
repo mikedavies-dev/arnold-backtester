@@ -1,7 +1,8 @@
-import Logger from '../utils/logger';
-import {profileExists, loadProfile} from '../utils/profile';
 import {format} from 'date-fns';
 import {StaticPool} from 'node-worker-threads-pool';
+
+import Logger from '../utils/logger';
+import {profileExists, loadProfile} from '../utils/profile';
 import path from 'path';
 
 const log = Logger('backtest');

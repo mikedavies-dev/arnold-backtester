@@ -15,11 +15,6 @@ test('bar time 5m', () => {
   expect(time).toBe('2021-01-01 09:30');
 });
 
-test('bar time 1h', () => {
-  const time = formatBarTime(Periods.h1, parseDate('2021-01-01 09:33:00'));
-  expect(time).toBe('2021-01-01 09:00');
-});
-
 test('bar time daily', () => {
   const time = formatBarTime(Periods.daily, parseDate('2021-01-01 09:33:00'));
   expect(time).toBe('2021-01-01 00:00');
