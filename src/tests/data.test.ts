@@ -5,7 +5,7 @@ test('file does not exist', async () => {
 });
 
 test('file exists', async () => {
-  expect(await fileExists('./readme.md')).toBe(true);
+  expect(await fileExists('./README.md')).toBe(true);
 });
 
 test('load valid ts data', async () => {
