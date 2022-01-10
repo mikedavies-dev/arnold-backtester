@@ -10,3 +10,4 @@ profiles/*
 .DS_Store
 .idea
 .eslintcache
+coverage
