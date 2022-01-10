@@ -12,6 +12,7 @@
   "version": "1.0.0",
   "main": "index.ts",
   "devDependencies": {
+    "is-ci-cli": "^2.2.0",
     "@babel/eslint-parser": "^7.16.5",
     "@types/jest": "^27.4.0",
     "@types/n-readlines": "^1.0.3",
@@ -36,8 +37,9 @@
   "scripts": {
     "backtest": "TZ=America/New_York node dist/bin/backtest.js",
     "results-server": "TZ=America/New_York node dist/bin/server.js",
-    "test": "TZ=America/New_York jest",
-    "test-watch": "TZ=America/New_York jest --watch",
+    "test": "is-ci-cli test:coverage test:watch",
+    "test:coverage": "TZ=America/New_York jest --coverage --runInBand",
+    "test:watch": "TZ=America/New_York jest --watch --runInBand",
     "check": "tsc --noEmit",
     "build": "rm -rf ./dist && tsc",
     "watch": "rm -rf ./dist && tsc --watch",
