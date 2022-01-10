@@ -4,7 +4,7 @@ import {format} from 'date-fns';
 import numeral from 'numeral';
 
 import Logger from '../utils/logger';
-import {loadTsData, Tick} from '../utils/data';
+import {loadTsForSymbolAndDate, Tick} from '../utils/data';
 import {Profile} from '../utils/profile';
 import {loadStrategy} from '../utils/module';
 import {mergeSortedArrays} from '../utils/data-structures';
@@ -57,10 +57,13 @@ async function execute(param: Params) {
 
   // Load the main symbol data
   const symbolData = await Promise.all(
-    symbols.map(async symbol => await loadTsData(symbol, param.date)),
+    symbols.map(
+      async symbol => await loadTsForSymbolAndDate(symbol, param.date),
+    ),
   );
 
   if (symbolData.some(data => !data)) {
+    log(`Some symbols are missing data for this date, skipping`);
     parentPort.postMessage({ok: false, error: 'no-symbol-data'});
     return;
   }
@@ -73,7 +76,7 @@ async function execute(param: Params) {
 
   // Iterate the data..
   log(
-    `Loaded ${marketData.length} ticks for ${
+    `Loaded ${numeral(marketData.length).format('0,0')} ticks for ${
       param.symbol
     } and ${strategy.extraSymbols.join(', ')}`,
   );

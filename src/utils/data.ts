@@ -72,14 +72,11 @@ function readCSV<
   return data;
 }
 
-export async function loadTsData(
-  symbol: string,
-  date: Date,
+export async function loadTsFile(
+  filename: string,
 ): Promise<Array<Tick> | null> {
-  const filename = `./data/${symbol}_${format(date, 'yyyyMMdd')}_merged.csv`;
-
   // check if the file exists
-  if (!fileExists(filename)) {
+  if (!(await fileExists(filename))) {
     return null;
   }
 
@@ -97,4 +94,13 @@ export async function loadTsData(
   });
 
   return data;
+}
+
+export async function loadTsForSymbolAndDate(
+  symbol: string,
+  date: Date,
+): Promise<Array<Tick> | null> {
+  const filename = `./data/${symbol}_${format(date, 'yyyyMMdd')}_merged.csv`;
+
+  return loadTsFile(filename);
 }

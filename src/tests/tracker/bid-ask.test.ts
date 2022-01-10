@@ -2,7 +2,7 @@ import {startOfToday} from 'date-fns';
 
 import {initTracker, updateTracker} from '../../utils/tracker';
 import {getMarketOpen, getMarketClose} from '../../utils/market';
-import {createTick, createTime} from '../utils/tick';
+import {createTick, createTime} from '../test-utils/tick';
 
 test('bid/ask', () => {
   const data = initTracker();

@@ -34,7 +34,6 @@ todo
 
 ## TODO
 
-- Handle missing data file (`Option<Tick[]>?`)
 - Handle missing profile (`Option<Profile>?`)
 - Create sample strategy to fill out positions API
 - Log results to DB

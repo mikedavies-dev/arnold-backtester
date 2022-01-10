@@ -1,7 +1,7 @@
 import {initTracker, updateTracker} from '../../utils/tracker';
 import {getMarketOpen, getMarketClose} from '../../utils/market';
 
-import {createTick, createTime, getTestDate} from '../utils/tick';
+import {createTick, createTime, getTestDate} from '../test-utils/tick';
 
 test('1m bars', () => {
   const data = initTracker();
