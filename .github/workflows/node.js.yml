@@ -31,3 +31,7 @@ jobs:
       - run: npm run check
       - run: npm install jest
       - run: npm test
+      - name: Code Coverage Report
+        uses: romeovs/lcov-reporter-action@v0.2.11
+        with:
+          lcov-file: ./coverage/lcov.info
