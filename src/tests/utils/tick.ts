@@ -24,6 +24,10 @@ export function createTick({
   };
 }
 
+export function getTestDate() {
+  return parse('2022-01-01', 'yyyy-MM-dd', new Date());
+}
+
 export function createTime(time: string) {
-  return flow(parse, getUnixTime)(time, 'HH:mm', endOfToday());
+  return flow(parse, getUnixTime)(time, 'HH:mm', getTestDate());
 }

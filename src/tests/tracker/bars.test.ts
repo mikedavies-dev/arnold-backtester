@@ -1,15 +1,13 @@
-import {startOfToday} from 'date-fns';
-
 import {initTracker, updateTracker} from '../../utils/tracker';
 import {getMarketOpen, getMarketClose} from '../../utils/market';
 
-import {createTick, createTime} from '../utils/tick';
+import {createTick, createTime, getTestDate} from '../utils/tick';
 
 test('1m bars', () => {
   const data = initTracker();
 
-  const marketOpen = getMarketOpen(startOfToday());
-  const marketClose = getMarketClose(startOfToday());
+  const marketOpen = getMarketOpen(getTestDate());
+  const marketClose = getMarketClose(getTestDate());
 
   updateTracker({
     data,
@@ -30,7 +28,7 @@ test('1m bars', () => {
         "high": 2,
         "low": 2,
         "open": 2,
-        "time": "2022-01-08 09:30",
+        "time": "2022-01-01 09:30",
         "volume": 100,
       },
     ]
@@ -55,7 +53,7 @@ test('1m bars', () => {
         "high": 2.1,
         "low": 2,
         "open": 2,
-        "time": "2022-01-08 09:30",
+        "time": "2022-01-01 09:30",
         "volume": 200,
       },
     ]
@@ -80,7 +78,7 @@ test('1m bars', () => {
         "high": 2.2,
         "low": 2,
         "open": 2,
-        "time": "2022-01-08 09:30",
+        "time": "2022-01-01 09:30",
         "volume": 300,
       },
     ]
@@ -105,7 +103,7 @@ test('1m bars', () => {
         "high": 2.2,
         "low": 1.9,
         "open": 2,
-        "time": "2022-01-08 09:30",
+        "time": "2022-01-01 09:30",
         "volume": 400,
       },
     ]
@@ -130,7 +128,7 @@ test('1m bars', () => {
         "high": 2.2,
         "low": 1.9,
         "open": 2,
-        "time": "2022-01-08 09:30",
+        "time": "2022-01-01 09:30",
         "volume": 400,
       },
       Object {
@@ -138,7 +136,7 @@ test('1m bars', () => {
         "high": 2.1,
         "low": 2.1,
         "open": 2.1,
-        "time": "2022-01-08 09:31",
+        "time": "2022-01-01 09:31",
         "volume": 100,
       },
     ]
@@ -148,8 +146,8 @@ test('1m bars', () => {
 test('5m bars', () => {
   const data = initTracker();
 
-  const marketOpen = getMarketOpen(startOfToday());
-  const marketClose = getMarketClose(startOfToday());
+  const marketOpen = getMarketOpen(getTestDate());
+  const marketClose = getMarketClose(getTestDate());
 
   updateTracker({
     data,
@@ -170,7 +168,7 @@ test('5m bars', () => {
         "high": 2,
         "low": 2,
         "open": 2,
-        "time": "2022-01-08 09:30",
+        "time": "2022-01-01 09:30",
         "volume": 100,
       },
     ]
@@ -219,7 +217,7 @@ test('5m bars', () => {
         "high": 2,
         "low": 1.9,
         "open": 2,
-        "time": "2022-01-08 09:30",
+        "time": "2022-01-01 09:30",
         "volume": 400,
       },
     ]
@@ -244,7 +242,7 @@ test('5m bars', () => {
         "high": 2,
         "low": 1.9,
         "open": 2,
-        "time": "2022-01-08 09:30",
+        "time": "2022-01-01 09:30",
         "volume": 400,
       },
       Object {
@@ -252,7 +250,7 @@ test('5m bars', () => {
         "high": 2,
         "low": 2,
         "open": 2,
-        "time": "2022-01-08 09:35",
+        "time": "2022-01-01 09:35",
         "volume": 100,
       },
     ]

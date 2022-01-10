@@ -2,11 +2,11 @@ import {startOfToday} from 'date-fns';
 
 import {initTracker, updateTracker} from '../../utils/tracker';
 import {getMarketOpen, getMarketClose} from '../../utils/market';
-import {createTick, createTime} from '../utils/tick';
+import {createTick, createTime, getTestDate} from '../utils/tick';
 
 test('market open times', () => {
-  const marketOpen = getMarketOpen(startOfToday());
-  const marketClose = getMarketClose(startOfToday());
+  const marketOpen = getMarketOpen(getTestDate());
+  const marketClose = getMarketClose(getTestDate());
 
   expect(marketOpen).toBe(createTime('09:30'));
   expect(marketClose).toBe(createTime('16:30'));
@@ -15,8 +15,8 @@ test('market open times', () => {
 test('in-market high', () => {
   const data = initTracker();
 
-  const marketOpen = getMarketOpen(startOfToday());
-  const marketClose = getMarketClose(startOfToday());
+  const marketOpen = getMarketOpen(getTestDate());
+  const marketClose = getMarketClose(getTestDate());
 
   // Make sure we don't update on a bid
   updateTracker({
@@ -101,8 +101,8 @@ test('in-market high', () => {
 test('in-market low', () => {
   const data = initTracker();
 
-  const marketOpen = getMarketOpen(startOfToday());
-  const marketClose = getMarketClose(startOfToday());
+  const marketOpen = getMarketOpen(getTestDate());
+  const marketClose = getMarketClose(getTestDate());
 
   // Make sure we don't update on a bid
   updateTracker({
@@ -187,8 +187,8 @@ test('in-market low', () => {
 test('in-market volume', () => {
   const data = initTracker();
 
-  const marketOpen = getMarketOpen(startOfToday());
-  const marketClose = getMarketClose(startOfToday());
+  const marketOpen = getMarketOpen(getTestDate());
+  const marketClose = getMarketClose(getTestDate());
 
   // Make sure we don't update on a bid
   updateTracker({
