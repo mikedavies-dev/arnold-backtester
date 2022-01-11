@@ -11,3 +11,4 @@ profiles/*
 .idea
 .eslintcache
 coverage
+codecov.yml
