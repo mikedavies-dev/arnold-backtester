@@ -33,5 +33,3 @@ jobs:
       - run: npm test
       - uses: actions/checkout@main
       - uses: codecov/codecov-action@v2
-        with:
-          directory: ./coverage
