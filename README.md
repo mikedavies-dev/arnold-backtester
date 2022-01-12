@@ -1,5 +1,7 @@
 # Arnold 💪 - Stock/Crypto Backtesting Platform
 
+[![codecov](https://codecov.io/gh/ant-fx/arnold-backtester/branch/main/graph/badge.svg?token=1CF7QD9N5O)](https://codecov.io/gh/ant-fx/arnold-backtester)
+
 The ethos behind Arnold is to allow for advanced backtesting of stocks using
 tick and bid/ask data and provide a different order types like:
 
