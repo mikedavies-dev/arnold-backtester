@@ -28,6 +28,10 @@ export function getTestDate() {
   return parse('2022-01-01', 'yyyy-MM-dd', new Date());
 }
 
-export function createTime(time: string) {
+export function createTimeAsUnix(time: string) {
   return flow(parse, getUnixTime)(time, 'HH:mm', getTestDate());
+}
+
+export function createTimeAsDate(time: string) {
+  return flow(parse)(time, 'HH:mm', getTestDate());
 }

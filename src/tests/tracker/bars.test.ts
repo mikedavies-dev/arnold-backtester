@@ -3,7 +3,7 @@ import {addMinutes, getUnixTime} from 'date-fns';
 import {initTracker, updateTracker, MaximumBarCount} from '../../utils/tracker';
 import {getMarketOpen, getMarketClose} from '../../utils/market';
 
-import {createTick, createTime, getTestDate} from '../test-utils/tick';
+import {createTick, createTimeAsUnix, getTestDate} from '../test-utils/tick';
 
 test('1m bars', () => {
   const data = initTracker();
@@ -16,7 +16,7 @@ test('1m bars', () => {
     marketOpen,
     marketClose,
     tick: createTick({
-      time: createTime('09:30'),
+      time: createTimeAsUnix('09:30'),
       type: 'TRADE',
       value: 2,
       size: 100,
@@ -41,7 +41,7 @@ test('1m bars', () => {
     marketOpen,
     marketClose,
     tick: createTick({
-      time: createTime('09:30'),
+      time: createTimeAsUnix('09:30'),
       type: 'TRADE',
       value: 2.1,
       size: 100,
@@ -66,7 +66,7 @@ test('1m bars', () => {
     marketOpen,
     marketClose,
     tick: createTick({
-      time: createTime('09:30'),
+      time: createTimeAsUnix('09:30'),
       type: 'TRADE',
       value: 2.2,
       size: 100,
@@ -91,7 +91,7 @@ test('1m bars', () => {
     marketOpen,
     marketClose,
     tick: createTick({
-      time: createTime('09:30'),
+      time: createTimeAsUnix('09:30'),
       type: 'TRADE',
       value: 1.9,
       size: 100,
@@ -116,7 +116,7 @@ test('1m bars', () => {
     marketOpen,
     marketClose,
     tick: createTick({
-      time: createTime('09:31'),
+      time: createTimeAsUnix('09:31'),
       type: 'TRADE',
       value: 2.1,
       size: 100,
@@ -156,7 +156,7 @@ test('5m bars', () => {
     marketOpen,
     marketClose,
     tick: createTick({
-      time: createTime('09:30'),
+      time: createTimeAsUnix('09:30'),
       type: 'TRADE',
       value: 2,
       size: 100,
@@ -181,7 +181,7 @@ test('5m bars', () => {
     marketOpen,
     marketClose,
     tick: createTick({
-      time: createTime('09:31'),
+      time: createTimeAsUnix('09:31'),
       type: 'TRADE',
       value: 2,
       size: 100,
@@ -193,7 +193,7 @@ test('5m bars', () => {
     marketOpen,
     marketClose,
     tick: createTick({
-      time: createTime('09:31'),
+      time: createTimeAsUnix('09:31'),
       type: 'TRADE',
       value: 1.9,
       size: 100,
@@ -205,7 +205,7 @@ test('5m bars', () => {
     marketOpen,
     marketClose,
     tick: createTick({
-      time: createTime('09:31'),
+      time: createTimeAsUnix('09:31'),
       type: 'TRADE',
       value: 2,
       size: 100,
@@ -230,7 +230,7 @@ test('5m bars', () => {
     marketOpen,
     marketClose,
     tick: createTick({
-      time: createTime('09:36'),
+      time: createTimeAsUnix('09:36'),
       type: 'TRADE',
       value: 2,
       size: 100,

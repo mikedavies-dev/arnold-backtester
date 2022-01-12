@@ -1,13 +1,13 @@
 import {initTracker, updateTracker} from '../../utils/tracker';
 import {getMarketOpen, getMarketClose} from '../../utils/market';
-import {createTick, createTime, getTestDate} from '../test-utils/tick';
+import {createTick, createTimeAsUnix, getTestDate} from '../test-utils/tick';
 
 test('market open times', () => {
   const marketOpen = getMarketOpen(getTestDate());
   const marketClose = getMarketClose(getTestDate());
 
-  expect(marketOpen).toBe(createTime('09:30'));
-  expect(marketClose).toBe(createTime('16:30'));
+  expect(marketOpen).toBe(createTimeAsUnix('09:30'));
+  expect(marketClose).toBe(createTimeAsUnix('16:30'));
 });
 
 test('in-market high', () => {
@@ -22,7 +22,7 @@ test('in-market high', () => {
     marketOpen,
     marketClose,
     tick: createTick({
-      time: createTime('09:29'),
+      time: createTimeAsUnix('09:29'),
       type: 'BID',
       value: 1,
       size: 100,
@@ -37,7 +37,7 @@ test('in-market high', () => {
     marketOpen,
     marketClose,
     tick: createTick({
-      time: createTime('09:29'),
+      time: createTimeAsUnix('09:29'),
       type: 'TRADE',
       value: 1,
       size: 100,
@@ -53,7 +53,7 @@ test('in-market high', () => {
     marketOpen,
     marketClose,
     tick: createTick({
-      time: createTime('09:30'),
+      time: createTimeAsUnix('09:30'),
       type: 'TRADE',
       value: 1,
       size: 100,
@@ -69,7 +69,7 @@ test('in-market high', () => {
     marketOpen,
     marketClose,
     tick: createTick({
-      time: createTime('09:30'),
+      time: createTimeAsUnix('09:30'),
       type: 'TRADE',
       value: 2,
       size: 100,
@@ -85,7 +85,7 @@ test('in-market high', () => {
     marketOpen,
     marketClose,
     tick: createTick({
-      time: createTime('09:30'),
+      time: createTimeAsUnix('09:30'),
       type: 'TRADE',
       value: 1.4,
       size: 100,
@@ -108,7 +108,7 @@ test('in-market low', () => {
     marketOpen,
     marketClose,
     tick: createTick({
-      time: createTime('09:29'),
+      time: createTimeAsUnix('09:29'),
       type: 'BID',
       value: 1,
       size: 100,
@@ -123,7 +123,7 @@ test('in-market low', () => {
     marketOpen,
     marketClose,
     tick: createTick({
-      time: createTime('09:29'),
+      time: createTimeAsUnix('09:29'),
       type: 'TRADE',
       value: 1,
       size: 100,
@@ -139,7 +139,7 @@ test('in-market low', () => {
     marketOpen,
     marketClose,
     tick: createTick({
-      time: createTime('09:30'),
+      time: createTimeAsUnix('09:30'),
       type: 'TRADE',
       value: 1,
       size: 100,
@@ -155,7 +155,7 @@ test('in-market low', () => {
     marketOpen,
     marketClose,
     tick: createTick({
-      time: createTime('09:30'),
+      time: createTimeAsUnix('09:30'),
       type: 'TRADE',
       value: 0.9,
       size: 100,
@@ -171,7 +171,7 @@ test('in-market low', () => {
     marketOpen,
     marketClose,
     tick: createTick({
-      time: createTime('09:30'),
+      time: createTimeAsUnix('09:30'),
       type: 'TRADE',
       value: 1.4,
       size: 100,
@@ -194,7 +194,7 @@ test('in-market volume', () => {
     marketOpen,
     marketClose,
     tick: createTick({
-      time: createTime('09:29'),
+      time: createTimeAsUnix('09:29'),
       type: 'BID',
       value: 1,
       size: 100,
@@ -207,7 +207,7 @@ test('in-market volume', () => {
     marketOpen,
     marketClose,
     tick: createTick({
-      time: createTime('09:29'),
+      time: createTimeAsUnix('09:29'),
       type: 'TRADE',
       value: 1,
       size: 100,
@@ -222,7 +222,7 @@ test('in-market volume', () => {
     marketOpen,
     marketClose,
     tick: createTick({
-      time: createTime('09:30'),
+      time: createTimeAsUnix('09:30'),
       type: 'TRADE',
       value: 1,
       size: 100,
@@ -237,7 +237,7 @@ test('in-market volume', () => {
     marketOpen,
     marketClose,
     tick: createTick({
-      time: createTime('09:30'),
+      time: createTimeAsUnix('09:30'),
       type: 'TRADE',
       value: 0.9,
       size: 100,
@@ -252,7 +252,7 @@ test('in-market volume', () => {
     marketOpen,
     marketClose,
     tick: createTick({
-      time: createTime('09:30'),
+      time: createTimeAsUnix('09:30'),
       type: 'TRADE',
       value: 1.4,
       size: 150,

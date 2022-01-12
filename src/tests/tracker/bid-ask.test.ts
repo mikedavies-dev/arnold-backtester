@@ -2,7 +2,7 @@ import {startOfToday} from 'date-fns';
 
 import {initTracker, updateTracker} from '../../utils/tracker';
 import {getMarketOpen, getMarketClose} from '../../utils/market';
-import {createTick, createTime} from '../test-utils/tick';
+import {createTick, createTimeAsUnix} from '../test-utils/tick';
 
 test('bid/ask', () => {
   const data = initTracker();
@@ -18,7 +18,7 @@ test('bid/ask', () => {
     marketOpen,
     marketClose,
     tick: createTick({
-      time: createTime('09:29'),
+      time: createTimeAsUnix('09:29'),
       type: 'BID',
       value: 1,
       size: 100,
@@ -33,7 +33,7 @@ test('bid/ask', () => {
     marketOpen,
     marketClose,
     tick: createTick({
-      time: createTime('09:30'),
+      time: createTimeAsUnix('09:30'),
       type: 'BID',
       value: 2,
       size: 100,
@@ -48,7 +48,7 @@ test('bid/ask', () => {
     marketOpen,
     marketClose,
     tick: createTick({
-      time: createTime('09:30'),
+      time: createTimeAsUnix('09:30'),
       type: 'ASK',
       value: 1.8,
       size: 100,

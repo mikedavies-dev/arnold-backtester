@@ -7,4 +7,9 @@ module.exports = {
     'src/tests/test-utils',
     'src/tests/test-data',
   ],
+  collectCoverageFrom: [
+    './src/**/*.ts',
+    '!src/strategies/**/*.ts',
+    '!src/bin/**/*.ts',
+  ],
 };
