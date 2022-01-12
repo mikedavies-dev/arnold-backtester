@@ -49,10 +49,6 @@ function readCSV<
   let line: Buffer | boolean = false;
 
   while ((line = liner.next())) {
-    if (!line) {
-      break;
-    }
-
     const parts = line.toString('ascii').split(',');
 
     index += 1;

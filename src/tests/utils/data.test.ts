@@ -1,4 +1,5 @@
-import {fileExists, loadTsFile} from '../utils/data';
+import {fileExists, loadTsFile, loadTsForSymbolAndDate} from '../../utils/data';
+import {getTestDate} from '../test-utils/tick';
 
 test('file does not exist', async () => {
   expect(await fileExists('./invalid-file')).toBe(false);
@@ -219,4 +220,9 @@ test('return invalid ts file as an empty array', async () => {
   const data = await loadTsFile('./src/tests/test-data/invalid.csv');
 
   expect(data).toMatchInlineSnapshot(`null`);
+});
+
+test('that we fail to load symbol data', async () => {
+  const data = await loadTsForSymbolAndDate('ZZZZ', getTestDate());
+  expect(data).toBeNull();
 });

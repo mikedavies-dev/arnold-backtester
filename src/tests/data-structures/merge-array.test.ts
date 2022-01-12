@@ -64,3 +64,63 @@ test('merge three arrays', () => {
     ]
   `);
 });
+
+test('first array is shorter than the second', () => {
+  const sorted = mergeSortedArrays(
+    [
+      [1, 2, 4, 1, 10, 9].sort(sorter),
+      [4, 5, 6, 1, 77, 32, 6, 0, 12].sort(sorter),
+    ],
+    sorter,
+  );
+
+  expect(sorted).toMatchInlineSnapshot(`
+    Array [
+      0,
+      1,
+      1,
+      1,
+      2,
+      4,
+      4,
+      5,
+      6,
+      6,
+      9,
+      10,
+      12,
+      32,
+      77,
+    ]
+  `);
+});
+
+test('second array is shorter than the first', () => {
+  const sorted = mergeSortedArrays(
+    [
+      [4, 5, 6, 1, 77, 32, 6, 0, 12].sort(sorter),
+      [1, 2, 4, 1, 10, 9].sort(sorter),
+    ],
+    sorter,
+  );
+
+  expect(sorted).toMatchInlineSnapshot(`
+    Array [
+      0,
+      1,
+      1,
+      1,
+      2,
+      4,
+      4,
+      5,
+      6,
+      6,
+      9,
+      10,
+      12,
+      32,
+      77,
+    ]
+  `);
+});

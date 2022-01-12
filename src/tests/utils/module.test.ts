@@ -12,3 +12,11 @@ test('Load valid test module', async () => {
   `);
   expect(strategy?.init).toMatchInlineSnapshot(`[Function]`);
 });
+
+test('Return null from invalid module', async () => {
+  const modulePath = `../strategies/invalid.ts`;
+
+  const strategy = await loadStrategy(modulePath);
+
+  expect(strategy).toBeNull();
+});

@@ -1,4 +1,6 @@
-import {initTracker, updateTracker} from '../../utils/tracker';
+import {addMinutes, getUnixTime} from 'date-fns';
+
+import {initTracker, updateTracker, MaximumBarCount} from '../../utils/tracker';
 import {getMarketOpen, getMarketClose} from '../../utils/market';
 
 import {createTick, createTime, getTestDate} from '../test-utils/tick';
@@ -255,4 +257,29 @@ test('5m bars', () => {
       },
     ]
   `);
+});
+
+test('removing extra bars from data when we hit the limit', () => {
+  const data = initTracker();
+
+  const marketOpen = getMarketOpen(getTestDate());
+  const marketClose = getMarketClose(getTestDate());
+
+  Array(MaximumBarCount * 2)
+    .fill(0)
+    .forEach((_, index) => {
+      updateTracker({
+        data,
+        marketOpen,
+        marketClose,
+        tick: createTick({
+          time: getUnixTime(addMinutes(getTestDate(), index)),
+          type: 'TRADE',
+          value: 2,
+          size: 100,
+        }),
+      });
+    });
+
+  expect(data.bars.m1.length).toBe(MaximumBarCount);
 });

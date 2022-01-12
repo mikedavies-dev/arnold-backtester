@@ -43,7 +43,7 @@ export type Tracker = {
   bars: Bars;
 };
 
-export const barLength = 250;
+export const MaximumBarCount = 250;
 
 export function initTracker(): Tracker {
   return {
@@ -93,7 +93,6 @@ export const updateDataBar = ({
 }) => {
   const marketTime = formatBarTime(Periods[period], time);
 
-  bars[period] = bars[period] || [];
   const barsToUpdate = bars[period];
 
   if (
@@ -111,7 +110,7 @@ export const updateDataBar = ({
   }
 
   // remove the last items
-  while (barsToUpdate.length > barLength) {
+  while (barsToUpdate.length > MaximumBarCount) {
     barsToUpdate.shift();
   }
 
@@ -201,10 +200,6 @@ export function updateTracker({
           time,
         }),
       );
-
-      break;
-
-    default:
       break;
   }
 }
