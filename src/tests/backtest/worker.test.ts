@@ -21,7 +21,7 @@ describe('test worker module', () => {
   test('fail to run with missing data', async () => {
     const profile = await loadProfile('sample');
 
-    expect(
+    await expect(
       async () =>
         await runBacktest({
           profile: {
@@ -113,7 +113,7 @@ describe('test worker module', () => {
       },
     ]);
 
-    expect(
+    await expect(
       async () =>
         await runBacktest({
           profile: {
@@ -129,7 +129,7 @@ describe('test worker module', () => {
   test('fail to run with an invalid strategy', async () => {
     const profile = await loadProfile('sample');
 
-    expect(
+    await expect(
       async () =>
         await runBacktest({
           profile: {

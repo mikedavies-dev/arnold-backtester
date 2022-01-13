@@ -9,9 +9,22 @@ import {BackTestWorkerErrorCode} from '../backtest/worker';
 const baseFolder = path.parse(__filename).dir;
 const filePath = path.join(baseFolder, '../bin/worker.js');
 
-type WorkerResult = {
+export type WorkerResult = {
   error?: BackTestWorkerErrorCode;
 };
+
+export type BackTestControllerErrorCode =
+  | 'invalid-profile'
+  | 'no-symbol-data'
+  | 'invalid-symbol-data'
+  | 'unknown';
+
+export class BacktestControllerError extends Error {
+  constructor(public code: BackTestControllerErrorCode) {
+    super(code);
+    Object.setPrototypeOf(this, BacktestControllerError.prototype);
+  }
+}
 
 export async function runBacktestController({
   log,
@@ -23,8 +36,7 @@ export async function runBacktestController({
   log(`Loading profile '${profile}'`);
 
   if (!(await profileExists(profile))) {
-    log(`${profile} does not appear to be a valid profile`);
-    return;
+    throw new BacktestControllerError('invalid-profile');
   }
 
   const runProfile = await loadProfile(profile);
@@ -42,7 +54,7 @@ export async function runBacktestController({
   log(`Starting ${runProfile.threads} threads`);
 
   const pool = new StaticPool({
-    size: runProfile.threads,
+    size: runProfile.threads | 1,
     task: filePath,
     workerData: {
       profile: runProfile,
@@ -93,4 +105,6 @@ export async function runBacktestController({
 
   // Shutdown the pool
   pool.destroy();
+
+  return results;
 }

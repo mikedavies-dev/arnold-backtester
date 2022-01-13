@@ -11,5 +11,6 @@ module.exports = {
     './src/**/*.ts',
     '!src/strategies/**/*.ts',
     '!src/bin/**/*.ts',
+    '!src/backtest/controller.ts',
   ],
 };

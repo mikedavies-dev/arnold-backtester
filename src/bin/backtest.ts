@@ -1,5 +1,8 @@
 import Logger from '../utils/logger';
-import {runBacktestController} from '../backtest/controller';
+import {
+  runBacktestController,
+  BacktestControllerError,
+} from '../backtest/controller';
 
 const log = Logger('backtest');
 
@@ -11,10 +14,16 @@ function run() {
     return;
   }
 
-  runBacktestController({
-    log,
-    profile: args[0],
-  });
+  try {
+    runBacktestController({
+      log,
+      profile: args[0],
+    });
+  } catch (err) {
+    const errorCode =
+      err instanceof BacktestControllerError ? err.code : 'unknown';
+    log(`Failed to run backtest: ${errorCode}`);
+  }
 }
 
 run();
