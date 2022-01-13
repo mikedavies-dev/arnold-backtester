@@ -1,5 +1,5 @@
 import {fromUnixTime, parse, getUnixTime, endOfToday} from 'date-fns';
-import {Tick, TickType} from '../../utils/data';
+import {Tick, TickType} from '../../core';
 import {flow} from 'fp-ts/lib/function';
 
 export function createTick({

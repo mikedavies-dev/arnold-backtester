@@ -2,12 +2,14 @@
 import {format} from 'date-fns';
 import numeral from 'numeral';
 
-import {loadTsForSymbolAndDate, Tick} from '../utils/data';
+import {loadTsForSymbolAndDate} from '../utils/data';
 import {Profile} from '../utils/profile';
 import {loadStrategy} from '../utils/module';
 import {mergeSortedArrays} from '../utils/data-structures';
 import {initTracker, updateTracker, Tracker} from '../utils/tracker';
 import {getMarketOpen, getMarketClose} from '../utils/market';
+import {Tick, LoggerCallback} from '../core';
+import {initBroker, placeOrder, handleTick} from './broker';
 
 export type BackTestWorkerErrorCode =
   | 'strategy-not-found'
@@ -47,7 +49,7 @@ export async function runBacktest({
   profile: Profile;
   symbol: string;
   date: Date;
-  log: (message: string, ...args: any) => void;
+  log: LoggerCallback;
 }) {
   // Make sure the module exists
   const strategy = await loadJsOrTsStrategy(profile.strategy);
@@ -100,12 +102,40 @@ export async function runBacktest({
   const marketOpen = getMarketOpen(date);
   const marketClose = getMarketClose(date);
 
+  const currentMarketTime: {
+    current: Date;
+  } = {
+    current: date,
+  };
+
+  const brokerState = initBroker({
+    getMarketTime: () => {
+      return currentMarketTime.current;
+    },
+  });
+
   marketData.forEach(tick => {
     if (!trackers[tick.symbol]) {
       throw new BacktestWorkerError('invalid-symbol-data');
     }
 
+    currentMarketTime.current = tick.dateTime;
+
+    // Update broker, open orders, etc
+    handleTick(brokerState, tick);
+
     const tracker = trackers[tick.symbol];
+
+    // If this is an update for our symbol then call the strategy
+    if (tick.symbol === symbol) {
+      strategy.onTick({
+        log,
+        tick,
+        symbol,
+        tracker,
+        trackers,
+      });
+    }
 
     // Update the tracker data
     updateTracker({

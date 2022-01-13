@@ -3,6 +3,7 @@ import {StaticPool} from 'node-worker-threads-pool';
 import numeral from 'numeral';
 import path from 'path';
 
+import {LoggerCallback} from '../core';
 import {profileExists, loadProfile} from '../utils/profile';
 import {BackTestWorkerErrorCode} from '../backtest/worker';
 
@@ -30,7 +31,7 @@ export async function runBacktestController({
   log,
   profile,
 }: {
-  log: (message: string, ...args: any) => void;
+  log: LoggerCallback;
   profile: string;
 }) {
   log(`Loading profile '${profile}'`);

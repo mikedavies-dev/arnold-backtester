@@ -1,5 +1,5 @@
 import {format, startOfDay, fromUnixTime} from 'date-fns';
-import {Tick} from './data';
+import {Tick} from '../core';
 
 type Bar = {
   time: string;
