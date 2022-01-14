@@ -15,44 +15,29 @@ type OrderAction = 'BUY' | 'SELL';
 type OrderType = 'MKT' | 'LMT' | 'STP' | 'TRAIL';
 type OrderState = 'ACCEPTED' | 'PENDING' | 'FILLED';
 
-export type Order = {
-  id: number;
-  parentId?: number;
-  openedAt: Date;
-  state: OrderState;
-  symbol: string;
-  action: OrderAction;
-  type: OrderType;
-  shares: number;
-  triggerPrice?: number;
-  price?: number;
-  filledAt?: Date;
-  fillPrice?: number;
-};
-
 export type BaseOrder = {
-  id: number;
+  type: OrderType;
   parentId?: number;
-  openedAt: Date;
-  state: OrderState;
   symbol: string;
   action: OrderAction;
-  type: OrderType;
   shares: number;
+};
+
+// Order specification using TypeScript magic..
+export type OrderSpecification =
+  | (BaseOrder & {type: 'MKT'})
+  | (BaseOrder & {type: 'STP'; price: number})
+  | (BaseOrder & {type: 'LMT'; price: number})
+  | (BaseOrder & {type: 'TRAIL'; price: number; triggerPrice?: number});
+
+// Define the full order
+export type Order = OrderSpecification & {
+  id: number;
+  openedAt: Date;
+  state: OrderState;
   filledAt?: Date;
   fillPrice?: number;
 };
-
-/*
-export type OrderType = 
-  | BaseOrder & { type: 'MKT' }
-  | BaseOrder & { type: 'STP'; price: number; triggerPrice?: number };
-  */
-
-export type OrderSpecification = Pick<
-  Order,
-  'action' | 'shares' | 'symbol' | 'type' | 'parentId'
->;
 
 export type Position = {
   symbol: string;
@@ -75,8 +60,10 @@ export type BrokerState = {
 
 export function initBroker({
   getMarketTime,
+  orderExecutionDelayMs,
 }: {
   getMarketTime: () => Date;
+  orderExecutionDelayMs?: number;
 }): BrokerState {
   return {
     getMarketTime,
@@ -85,7 +72,7 @@ export function initBroker({
     openOrders: {},
     positions: [],
     openPositions: {},
-    orderExecutionDelayMs: 1000,
+    orderExecutionDelayMs: orderExecutionDelayMs || 1000,
   };
 }
 
@@ -129,10 +116,6 @@ export function placeOrder(
   openPositions[symbol].orders.push(order);
 
   return orderId;
-}
-
-function getChildOrders(openOrders: Record<number, Order>, orderId: number) {
-  return Object.values(openOrders).filter(o => o.parentId === orderId);
 }
 
 export function handleTick(
@@ -207,10 +190,6 @@ export function handleTick(
         return order.action === 'BUY'
           ? last >= order.triggerPrice
           : last <= order.triggerPrice;
-
-      default:
-        // Unknown order type
-        throw new Error(`Unknown order type ${order.type}`);
     }
   });
 
@@ -241,7 +220,9 @@ export function handleTick(
     }
 
     // set any child orders to pending
-    const childOrders = getChildOrders(openOrders, order.id);
+    const childOrders = Object.values(openOrders).filter(
+      o => o.parentId === order.id,
+    );
     childOrders.forEach(o => {
       o.state = 'PENDING';
     });
@@ -249,4 +230,19 @@ export function handleTick(
     // delete the open order
     delete openOrders[order.id];
   });
+}
+
+export function hasOpenOrders(state: BrokerState, symbol: string) {
+  // This could be a performance issue!
+  return Object.values(state.openOrders).some(
+    o => o.symbol === symbol && o.state === 'PENDING',
+  );
+}
+
+export function getPositionSize(state: BrokerState, symbol: string) {
+  if (!state.openPositions[symbol]) {
+    return 0;
+  }
+
+  return state.openPositions[symbol].size;
 }
