@@ -8,7 +8,7 @@ test('init positions function returns an empty positions ds', () => {
   expect(state).toMatchInlineSnapshot(`
     Object {
       "getMarketTime": [Function],
-      "nextOrderId": 0,
+      "nextOrderId": 1,
       "openOrders": Object {},
       "openPositions": Object {},
       "orders": Array [],
@@ -18,20 +18,20 @@ test('init positions function returns an empty positions ds', () => {
 });
 
 test('place a market order and confirm it is pending', () => {
-  const {state, order} = placeOrder(
-    initBroker({getMarketTime: () => createTimeAsDate('09:30')}),
-    {
-      symbol: 'ZZZZ',
-      shares: 10,
-      action: 'BUY',
-      type: 'MKT',
-    },
-  );
+  const state = initBroker({getMarketTime: () => createTimeAsDate('09:30')});
+  const orderId = placeOrder(state, {
+    symbol: 'ZZZZ',
+    shares: 10,
+    action: 'BUY',
+    type: 'MKT',
+  });
+
+  expect(orderId).toBe(1);
 
   expect(state).toMatchInlineSnapshot(`
     Object {
       "getMarketTime": [Function],
-      "nextOrderId": 1,
+      "nextOrderId": 2,
       "openOrders": Object {
         "1": Object {
           "action": "BUY",
@@ -43,7 +43,26 @@ test('place a market order and confirm it is pending', () => {
           "type": "MKT",
         },
       },
-      "openPositions": Object {},
+      "openPositions": Object {
+        "ZZZZ": Object {
+          "closeReason": null,
+          "data": Object {},
+          "isClosing": false,
+          "orders": Array [
+            Object {
+              "action": "BUY",
+              "id": 1,
+              "openedAt": 2022-01-01T14:30:00.000Z,
+              "shares": 10,
+              "state": "PENDING",
+              "symbol": "ZZZZ",
+              "type": "MKT",
+            },
+          ],
+          "size": 0,
+          "symbol": "ZZZZ",
+        },
+      },
       "orders": Array [
         Object {
           "action": "BUY",
@@ -55,19 +74,26 @@ test('place a market order and confirm it is pending', () => {
           "type": "MKT",
         },
       ],
-      "positions": Array [],
-    }
-  `);
-
-  expect(order).toMatchInlineSnapshot(`
-    Object {
-      "action": "BUY",
-      "id": 1,
-      "openedAt": 2022-01-01T14:30:00.000Z,
-      "shares": 10,
-      "state": "PENDING",
-      "symbol": "ZZZZ",
-      "type": "MKT",
+      "positions": Array [
+        Object {
+          "closeReason": null,
+          "data": Object {},
+          "isClosing": false,
+          "orders": Array [
+            Object {
+              "action": "BUY",
+              "id": 1,
+              "openedAt": 2022-01-01T14:30:00.000Z,
+              "shares": 10,
+              "state": "PENDING",
+              "symbol": "ZZZZ",
+              "type": "MKT",
+            },
+          ],
+          "size": 0,
+          "symbol": "ZZZZ",
+        },
+      ],
     }
   `);
 });

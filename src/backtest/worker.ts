@@ -121,9 +121,6 @@ export async function runBacktest({
 
     currentMarketTime.current = tick.dateTime;
 
-    // Update broker, open orders, etc
-    handleTick(brokerState, tick);
-
     const tracker = trackers[tick.symbol];
 
     // If this is an update for our symbol then call the strategy
@@ -144,6 +141,9 @@ export async function runBacktest({
       marketOpen,
       marketClose,
     });
+
+    // Update broker, open orders, etc
+    handleTick(brokerState, tick.symbol, tracker);
   });
 
   log(`Finished ${symbol} in ${numeral(Date.now() - start).format(',')}ms`);
