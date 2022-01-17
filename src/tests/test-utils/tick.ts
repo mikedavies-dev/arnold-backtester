@@ -1,4 +1,4 @@
-import {fromUnixTime, parse, getUnixTime, endOfToday} from 'date-fns';
+import {fromUnixTime, parse, getUnixTime, format, addSeconds} from 'date-fns';
 import {Tick, TickType} from '../../core';
 import {flow} from 'fp-ts/lib/function';
 
@@ -145,4 +145,17 @@ export function createMarket(ticks: Array<TestTickData>) {
   updateMarketDataAndBroker(data, ticks);
 
   return data;
+}
+
+export function offsetMarketUpdate(
+  market: Market,
+  value: number,
+  precision = 0.05,
+  secondsToAdvance = 1,
+) {
+  const time = addSeconds(market.time, secondsToAdvance);
+
+  updateMarketDataAndBroker(market, [
+    [format(time, 'HH:mm:ss'), value - precision, value + precision, value, 0],
+  ]);
 }

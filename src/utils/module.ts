@@ -1,3 +1,4 @@
+import {BrokerState, OrderSpecification} from '../backtest/broker';
 import {LoggerCallback, Tick} from '../core';
 import {Tracker} from '../utils/tracker';
 
@@ -10,6 +11,11 @@ export type HandleTickParameters = {
   symbol: string;
   tracker: Tracker;
   trackers: Record<string, Tracker>;
+  broker: {
+    state: BrokerState;
+    placeOrder: (spec: OrderSpecification) => number;
+    hasOpenOrders: (symbol: string) => boolean;
+  };
 };
 
 export type HandleTick = (args: HandleTickParameters) => void;
