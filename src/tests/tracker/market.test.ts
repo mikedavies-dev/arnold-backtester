@@ -1,4 +1,4 @@
-import {initTracker, updateTracker} from '../../utils/tracker';
+import {initTracker, handleTrackerTick} from '../../utils/tracker';
 import {getMarketOpen, getMarketClose} from '../../utils/market';
 import {createTick, createTimeAsUnix, getTestDate} from '../test-utils/tick';
 
@@ -17,7 +17,7 @@ test('in-market high', () => {
   const marketClose = getMarketClose(getTestDate());
 
   // Make sure we don't update on a bid
-  updateTracker({
+  handleTrackerTick({
     data,
     marketOpen,
     marketClose,
@@ -32,7 +32,7 @@ test('in-market high', () => {
   expect(data.high).toBe(0);
 
   // Don't update in pre-market
-  updateTracker({
+  handleTrackerTick({
     data,
     marketOpen,
     marketClose,
@@ -48,7 +48,7 @@ test('in-market high', () => {
   expect(data.last).toBe(1);
 
   // Update the first value
-  updateTracker({
+  handleTrackerTick({
     data,
     marketOpen,
     marketClose,
@@ -64,7 +64,7 @@ test('in-market high', () => {
   expect(data.last).toBe(1);
 
   // Make sure it updates with a second
-  updateTracker({
+  handleTrackerTick({
     data,
     marketOpen,
     marketClose,
@@ -80,7 +80,7 @@ test('in-market high', () => {
   expect(data.last).toBe(2);
 
   // Don't go back down
-  updateTracker({
+  handleTrackerTick({
     data,
     marketOpen,
     marketClose,
@@ -103,7 +103,7 @@ test('in-market low', () => {
   const marketClose = getMarketClose(getTestDate());
 
   // Make sure we don't update on a bid
-  updateTracker({
+  handleTrackerTick({
     data,
     marketOpen,
     marketClose,
@@ -118,7 +118,7 @@ test('in-market low', () => {
   expect(data.low).toBe(0);
 
   // Don't update in pre-market
-  updateTracker({
+  handleTrackerTick({
     data,
     marketOpen,
     marketClose,
@@ -134,7 +134,7 @@ test('in-market low', () => {
   expect(data.last).toBe(1);
 
   // Update the first value
-  updateTracker({
+  handleTrackerTick({
     data,
     marketOpen,
     marketClose,
@@ -150,7 +150,7 @@ test('in-market low', () => {
   expect(data.last).toBe(1);
 
   // Make sure it updates with a second
-  updateTracker({
+  handleTrackerTick({
     data,
     marketOpen,
     marketClose,
@@ -166,7 +166,7 @@ test('in-market low', () => {
   expect(data.last).toBe(0.9);
 
   // Don't go back down
-  updateTracker({
+  handleTrackerTick({
     data,
     marketOpen,
     marketClose,
@@ -189,7 +189,7 @@ test('in-market volume', () => {
   const marketClose = getMarketClose(getTestDate());
 
   // Make sure we don't update on a bid
-  updateTracker({
+  handleTrackerTick({
     data,
     marketOpen,
     marketClose,
@@ -202,7 +202,7 @@ test('in-market volume', () => {
   });
 
   // Don't update in pre-market
-  updateTracker({
+  handleTrackerTick({
     data,
     marketOpen,
     marketClose,
@@ -217,7 +217,7 @@ test('in-market volume', () => {
   expect(data.volume).toBe(100);
 
   // Update the first value
-  updateTracker({
+  handleTrackerTick({
     data,
     marketOpen,
     marketClose,
@@ -232,7 +232,7 @@ test('in-market volume', () => {
   expect(data.volume).toBe(200);
 
   // Make sure it updates with a second
-  updateTracker({
+  handleTrackerTick({
     data,
     marketOpen,
     marketClose,
@@ -247,7 +247,7 @@ test('in-market volume', () => {
   expect(data.volume).toBe(300);
 
   // Don't go back down
-  updateTracker({
+  handleTrackerTick({
     data,
     marketOpen,
     marketClose,

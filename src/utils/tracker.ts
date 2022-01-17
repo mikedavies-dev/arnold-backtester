@@ -134,7 +134,7 @@ export const updateDataBar = ({
   }
 };
 
-export function updateTracker({
+export function handleTrackerTick({
   data,
   tick,
   marketOpen,

@@ -4,7 +4,7 @@ import {Tracker} from '../utils/tracker';
 type InitStrategy = () => void;
 type ExtraSymbols = Array<string>;
 
-export type OnTickParameters = {
+export type HandleTickParameters = {
   log: LoggerCallback;
   tick: Tick;
   symbol: string;
@@ -12,24 +12,24 @@ export type OnTickParameters = {
   trackers: Record<string, Tracker>;
 };
 
-export type OnTick = (args: OnTickParameters) => void;
+export type HandleTick = (args: HandleTickParameters) => void;
 
 export async function loadStrategy(path: string) {
   try {
     const {
       init,
       extraSymbols,
-      onTick,
+      handleTick,
     }: {
       init: InitStrategy;
       extraSymbols: ExtraSymbols;
-      onTick: OnTick;
+      handleTick: HandleTick;
     } = await import(path);
 
     return {
       init,
       extraSymbols,
-      onTick,
+      handleTick,
     };
   } catch (err) {
     return null;

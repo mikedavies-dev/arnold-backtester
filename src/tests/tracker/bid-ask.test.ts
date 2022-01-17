@@ -1,6 +1,6 @@
 import {startOfToday} from 'date-fns';
 
-import {initTracker, updateTracker} from '../../utils/tracker';
+import {initTracker, handleTrackerTick} from '../../utils/tracker';
 import {getMarketOpen, getMarketClose} from '../../utils/market';
 import {createTick, createTimeAsUnix} from '../test-utils/tick';
 
@@ -13,7 +13,7 @@ test('bid/ask', () => {
   expect(data.bid).toBe(0);
   expect(data.ask).toBe(0);
 
-  updateTracker({
+  handleTrackerTick({
     data,
     marketOpen,
     marketClose,
@@ -28,7 +28,7 @@ test('bid/ask', () => {
   expect(data.bid).toBe(1);
   expect(data.ask).toBe(0);
 
-  updateTracker({
+  handleTrackerTick({
     data,
     marketOpen,
     marketClose,
@@ -43,7 +43,7 @@ test('bid/ask', () => {
   expect(data.bid).toBe(2);
   expect(data.ask).toBe(0);
 
-  updateTracker({
+  handleTrackerTick({
     data,
     marketOpen,
     marketClose,

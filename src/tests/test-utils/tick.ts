@@ -2,9 +2,9 @@ import {fromUnixTime, parse, getUnixTime, endOfToday} from 'date-fns';
 import {Tick, TickType} from '../../core';
 import {flow} from 'fp-ts/lib/function';
 
-import {Tracker, updateTracker, initTracker} from '../../utils/tracker';
+import {Tracker, handleTrackerTick, initTracker} from '../../utils/tracker';
 import {getMarketOpen, getMarketClose} from '../../utils/market';
-import {handleTick, initBroker, BrokerState} from '../../backtest/broker';
+import {handleBrokerTick, initBroker, BrokerState} from '../../backtest/broker';
 
 export function createTick({
   type,
@@ -62,7 +62,7 @@ export function updateTestTracker(
     const marketClose = getMarketClose(fromUnixTime(time));
 
     // Update bid
-    updateTracker({
+    handleTrackerTick({
       data: tracker,
       tick: createTick({
         type: 'BID',
@@ -75,7 +75,7 @@ export function updateTestTracker(
     });
 
     // Update ask
-    updateTracker({
+    handleTrackerTick({
       data: tracker,
       tick: createTick({
         type: 'ASK',
@@ -88,7 +88,7 @@ export function updateTestTracker(
     });
 
     // Update last trade price/volume
-    updateTracker({
+    handleTrackerTick({
       data: tracker,
       tick: createTick({
         type: 'TRADE',
@@ -124,7 +124,7 @@ export function updateMarketDataAndBroker(
   market.time = updateTestTracker(market.tracker, market.broker, ticks);
 
   // Update the broker
-  handleTick(market.broker, market.symbol, market.tracker);
+  handleBrokerTick(market.broker, market.symbol, market.tracker);
 }
 
 export function createMarket(ticks: Array<TestTickData>) {

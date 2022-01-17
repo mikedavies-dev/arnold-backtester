@@ -118,7 +118,7 @@ export function placeOrder(
   return orderId;
 }
 
-export function handleTick(
+export function handleBrokerTick(
   state: BrokerState,
   symbol: string,
   tracker: Tracker,
@@ -132,104 +132,103 @@ export function handleTick(
     o => o.symbol === symbol && o.state === 'PENDING',
   );
 
-  if (openOrdersForSymbol.length === 0) {
-    return;
-  }
-
   // fill the orders?
-  const filledOrders = openOrdersForSymbol.filter(order => {
-    // Make sure enough time has passed
-    if (
-      differenceInMilliseconds(state.getMarketTime(), order.openedAt) <
-      orderExecutionDelayMs
-    ) {
-      return false;
-    }
+  openOrdersForSymbol
+    .filter(order => {
+      // Make sure enough time has passed
+      if (
+        differenceInMilliseconds(state.getMarketTime(), order.openedAt) <
+        orderExecutionDelayMs
+      ) {
+        return false;
+      }
 
-    switch (order.type) {
-      case 'MKT':
-        // Market orders get filled after the time limit
-        return true;
+      switch (order.type) {
+        case 'MKT':
+          // Market orders get filled after the time limit
+          return true;
 
-      case 'LMT':
-        // Fill limit orders if the price doesn't pass the
-        // limit price
-        return order.action === 'BUY' ? ask <= order.price : bid >= order.price;
+        case 'LMT':
+          // Fill limit orders if the price doesn't pass the
+          // limit price
+          return order.action === 'BUY'
+            ? ask <= order.price
+            : bid >= order.price;
 
-      case 'STP':
-        // Fill the stop order if the price breaks the stop
-        // price. The default trigger method of IB is to use the
-        // last price, not the bid/ask
-        // https://www.interactivebrokers.co.uk/en/software/tws/twsguide_Left.htm#CSHID=usersguidebook%2Fconfiguretws%2Fmodify_the_stop_trigger_method.htm|StartTopic=usersguidebook%2Fconfiguretws%2Fmodify_the_stop_trigger_method.htm|SkinName=ibskin
+        case 'STP':
+          // Fill the stop order if the price breaks the stop
+          // price. The default trigger method of IB is to use the
+          // last price, not the bid/ask
+          // https://www.interactivebrokers.co.uk/en/software/tws/twsguide_Left.htm#CSHID=usersguidebook%2Fconfiguretws%2Fmodify_the_stop_trigger_method.htm|StartTopic=usersguidebook%2Fconfiguretws%2Fmodify_the_stop_trigger_method.htm|SkinName=ibskin
 
-        return order.action === 'BUY'
-          ? last >= order.price
-          : last <= order.price;
+          return order.action === 'BUY'
+            ? last >= order.price
+            : last <= order.price;
 
-      case 'TRAIL':
-        /*
+        case 'TRAIL':
+          /*
           A trailing buy order wil buy when the price goes up to cancel out a short position
           So if the trailing point is 0.1 and the price is:
             1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.6, 0.7, 0.8
           the trigger should have been 0.6
           */
 
-        // The trigger price hasn't been set yet
-        if (!order.triggerPrice) {
+          // The trigger price hasn't been set yet
+          if (!order.triggerPrice) {
+            order.triggerPrice =
+              order.action === 'BUY' ? last + order.price : last - order.price;
+          }
+
+          // Calculate new trigger price
           order.triggerPrice =
-            order.action === 'BUY' ? last + order.price : last - order.price;
-        }
+            order.action === 'BUY'
+              ? Math.min(order.triggerPrice, last + order.price)
+              : Math.max(order.triggerPrice, last - order.price);
 
-        // Calculate new trigger price
-        order.triggerPrice =
-          order.action === 'BUY'
-            ? Math.min(order.triggerPrice, last + order.price)
-            : Math.max(order.triggerPrice, last - order.price);
+          // See if we passed the trigger value
+          return order.action === 'BUY'
+            ? last >= order.triggerPrice
+            : last <= order.triggerPrice;
+      }
+    })
+    .forEach(order => {
+      // Fill the order
+      order.filledAt = state.getMarketTime();
+      order.state = 'FILLED';
 
-        // See if we passed the trigger value
-        return order.action === 'BUY'
-          ? last >= order.triggerPrice
-          : last <= order.triggerPrice;
-    }
-  });
+      // were we filled at the bid or the ask?
+      order.fillPrice = order.action === 'BUY' ? ask : bid;
 
-  filledOrders.forEach(order => {
-    // Fill the order
-    order.filledAt = state.getMarketTime();
-    order.state = 'FILLED';
+      // update open positions
+      const position = openPositions[symbol] || null;
 
-    // were we filled at the bid or the ask?
-    order.fillPrice = order.action === 'BUY' ? ask : bid;
-
-    // update open positions
-    const position = openPositions[symbol] || null;
-
-    if (!position) {
-      throw new Error('No open position for symbol');
-    }
-
-    position.size += order.action === 'BUY' ? order.shares : order.shares * -1;
-
-    // Should we close the position?
-    if (!position.size) {
-      if (order.type === 'TRAIL') {
-        position.closeReason = 'trailing-stop';
+      if (!position) {
+        throw new Error('No open position for symbol');
       }
 
-      delete openPositions[symbol];
-    }
+      position.size +=
+        order.action === 'BUY' ? order.shares : order.shares * -1;
 
-    // set any child orders to pending
-    const childOrders = Object.values(openOrders).filter(
-      o => o.parentId === order.id,
-    );
-    childOrders.forEach(o => {
-      o.state = 'PENDING';
+      // Should we close the position?
+      if (!position.size) {
+        if (order.type === 'TRAIL') {
+          position.closeReason = 'trailing-stop';
+        }
+
+        delete openPositions[symbol];
+      }
+
+      // set any child orders to pending
+      const childOrders = Object.values(openOrders).filter(
+        o => o.parentId === order.id,
+      );
+      childOrders.forEach(o => {
+        o.state = 'PENDING';
+      });
+
+      // delete the open order
+      delete openOrders[order.id];
     });
-
-    // delete the open order
-    delete openOrders[order.id];
-  });
 }
 
 export function hasOpenOrders(state: BrokerState, symbol: string) {

@@ -27,7 +27,7 @@ test('init positions function returns an empty positions ds', () => {
   `);
 });
 
-test('place a market order and confirm it is pending', () => {
+test('placing a market order and confirm it is pending', () => {
   const state = initBroker({getMarketTime: () => createTimeAsDate('09:30')});
   const orderId = placeOrder(state, {
     symbol: 'ZZZZ',
@@ -118,7 +118,7 @@ test('that updating market data without any ticks fails', () => {
   expect(() => createMarket([])).toThrow();
 });
 
-test('place market buy order and wait for it to be filled', () => {
+test('placing market buy order and wait for it to be filled', () => {
   const shares = 100;
 
   const market = createMarket([['09:30:00', 1, 1.2, 1.1, 0]]);

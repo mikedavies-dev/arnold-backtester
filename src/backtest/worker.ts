@@ -6,10 +6,10 @@ import {loadTsForSymbolAndDate} from '../utils/data';
 import {Profile} from '../utils/profile';
 import {loadStrategy} from '../utils/module';
 import {mergeSortedArrays} from '../utils/data-structures';
-import {initTracker, updateTracker, Tracker} from '../utils/tracker';
+import {initTracker, handleTrackerTick, Tracker} from '../utils/tracker';
 import {getMarketOpen, getMarketClose} from '../utils/market';
 import {Tick, LoggerCallback} from '../core';
-import {initBroker, placeOrder, handleTick} from './broker';
+import {initBroker, placeOrder, handleBrokerTick} from './broker';
 
 export type BackTestWorkerErrorCode =
   | 'strategy-not-found'
@@ -109,9 +109,7 @@ export async function runBacktest({
   };
 
   const brokerState = initBroker({
-    getMarketTime: () => {
-      return currentMarketTime.current;
-    },
+    getMarketTime: () => currentMarketTime.current,
   });
 
   marketData.forEach(tick => {
@@ -125,7 +123,7 @@ export async function runBacktest({
 
     // If this is an update for our symbol then call the strategy
     if (tick.symbol === symbol) {
-      strategy.onTick({
+      strategy.handleTick({
         log,
         tick,
         symbol,
@@ -135,7 +133,7 @@ export async function runBacktest({
     }
 
     // Update the tracker data
-    updateTracker({
+    handleTrackerTick({
       data: tracker,
       tick,
       marketOpen,
@@ -143,7 +141,7 @@ export async function runBacktest({
     });
 
     // Update broker, open orders, etc
-    handleTick(brokerState, tick.symbol, tracker);
+    handleBrokerTick(brokerState, tick.symbol, tracker);
   });
 
   log(`Finished ${symbol} in ${numeral(Date.now() - start).format(',')}ms`);

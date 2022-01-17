@@ -1,9 +1,9 @@
-import {OnTickParameters} from '../utils/module';
+import {HandleTickParameters} from '../utils/module';
 
 export const extraSymbols = ['SPY'];
 
 export function init() {}
 
-export function onTick({tick, symbol, log}: OnTickParameters) {
+export function handleTick({tick, symbol, log}: HandleTickParameters) {
   log(symbol, tick);
 }

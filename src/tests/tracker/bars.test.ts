@@ -1,6 +1,10 @@
 import {addMinutes, getUnixTime} from 'date-fns';
 
-import {initTracker, updateTracker, MaximumBarCount} from '../../utils/tracker';
+import {
+  initTracker,
+  handleTrackerTick,
+  MaximumBarCount,
+} from '../../utils/tracker';
 import {getMarketOpen, getMarketClose} from '../../utils/market';
 
 import {createTick, createTimeAsUnix, getTestDate} from '../test-utils/tick';
@@ -11,7 +15,7 @@ test('1m bars', () => {
   const marketOpen = getMarketOpen(getTestDate());
   const marketClose = getMarketClose(getTestDate());
 
-  updateTracker({
+  handleTrackerTick({
     data,
     marketOpen,
     marketClose,
@@ -36,7 +40,7 @@ test('1m bars', () => {
     ]
   `);
 
-  updateTracker({
+  handleTrackerTick({
     data,
     marketOpen,
     marketClose,
@@ -61,7 +65,7 @@ test('1m bars', () => {
     ]
   `);
 
-  updateTracker({
+  handleTrackerTick({
     data,
     marketOpen,
     marketClose,
@@ -86,7 +90,7 @@ test('1m bars', () => {
     ]
   `);
 
-  updateTracker({
+  handleTrackerTick({
     data,
     marketOpen,
     marketClose,
@@ -111,7 +115,7 @@ test('1m bars', () => {
     ]
   `);
 
-  updateTracker({
+  handleTrackerTick({
     data,
     marketOpen,
     marketClose,
@@ -151,7 +155,7 @@ test('5m bars', () => {
   const marketOpen = getMarketOpen(getTestDate());
   const marketClose = getMarketClose(getTestDate());
 
-  updateTracker({
+  handleTrackerTick({
     data,
     marketOpen,
     marketClose,
@@ -176,7 +180,7 @@ test('5m bars', () => {
     ]
   `);
 
-  updateTracker({
+  handleTrackerTick({
     data,
     marketOpen,
     marketClose,
@@ -188,7 +192,7 @@ test('5m bars', () => {
     }),
   });
 
-  updateTracker({
+  handleTrackerTick({
     data,
     marketOpen,
     marketClose,
@@ -200,7 +204,7 @@ test('5m bars', () => {
     }),
   });
 
-  updateTracker({
+  handleTrackerTick({
     data,
     marketOpen,
     marketClose,
@@ -225,7 +229,7 @@ test('5m bars', () => {
     ]
   `);
 
-  updateTracker({
+  handleTrackerTick({
     data,
     marketOpen,
     marketClose,
@@ -268,7 +272,7 @@ test('removing extra bars from data when we hit the limit', () => {
   Array(MaximumBarCount * 2)
     .fill(0)
     .forEach((_, index) => {
-      updateTracker({
+      handleTrackerTick({
         data,
         marketOpen,
         marketClose,
