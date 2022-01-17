@@ -9,7 +9,13 @@ import {mergeSortedArrays} from '../utils/data-structures';
 import {initTracker, handleTrackerTick, Tracker} from '../utils/tracker';
 import {getMarketOpen, getMarketClose} from '../utils/market';
 import {Tick, LoggerCallback} from '../core';
-import {initBroker, placeOrder, handleBrokerTick} from './broker';
+import {
+  initBroker,
+  placeOrder,
+  handleBrokerTick,
+  OrderSpecification,
+  hasOpenOrders,
+} from './broker';
 
 export type BackTestWorkerErrorCode =
   | 'strategy-not-found'
@@ -109,7 +115,9 @@ export async function runBacktest({
   };
 
   const brokerState = initBroker({
-    getMarketTime: () => currentMarketTime.current,
+    getMarketTime: () => {
+      return currentMarketTime.current;
+    },
   });
 
   marketData.forEach(tick => {
@@ -129,6 +137,12 @@ export async function runBacktest({
         symbol,
         tracker,
         trackers,
+        broker: {
+          state: brokerState,
+          placeOrder: (spec: OrderSpecification) =>
+            placeOrder(brokerState, spec),
+          hasOpenOrders: (symbol: string) => hasOpenOrders(brokerState, symbol),
+        },
       });
     }
 
@@ -146,5 +160,5 @@ export async function runBacktest({
 
   log(`Finished ${symbol} in ${numeral(Date.now() - start).format(',')}ms`);
 
-  return [];
+  return brokerState.positions;
 }

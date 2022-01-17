@@ -11,9 +11,9 @@ import {differenceInMilliseconds} from 'date-fns';
 
 import {Tracker} from '../utils/tracker';
 
-type OrderAction = 'BUY' | 'SELL';
-type OrderType = 'MKT' | 'LMT' | 'STP' | 'TRAIL';
-type OrderState = 'ACCEPTED' | 'PENDING' | 'FILLED';
+export type OrderAction = 'BUY' | 'SELL';
+export type OrderType = 'MKT' | 'LMT' | 'STP' | 'TRAIL';
+export type OrderState = 'ACCEPTED' | 'PENDING' | 'FILLED' | 'CANCELLED';
 
 export type BaseOrder = {
   type: OrderType;
@@ -200,11 +200,7 @@ export function handleBrokerTick(
       order.fillPrice = order.action === 'BUY' ? ask : bid;
 
       // update open positions
-      const position = openPositions[symbol] || null;
-
-      if (!position) {
-        throw new Error('No open position for symbol');
-      }
+      const position = openPositions[symbol];
 
       position.size +=
         order.action === 'BUY' ? order.shares : order.shares * -1;
@@ -244,4 +240,66 @@ export function getPositionSize(state: BrokerState, symbol: string) {
   }
 
   return state.openPositions[symbol].size;
+}
+
+export function closeOrder(state: BrokerState, orderId: number) {
+  // find the order
+  if (!state.openOrders[orderId]) {
+    // order not found
+    return;
+  }
+
+  state.openOrders[orderId].state = 'CANCELLED';
+
+  // remove the order
+  delete state.openOrders[orderId];
+
+  // close any child orders
+  const childOrders = Object.values(state.openOrders).filter(
+    o => o.parentId === orderId,
+  );
+
+  childOrders.forEach(childOrder => closeOrder(state, childOrder.id));
+}
+
+export function closeOpenOrders(state: BrokerState) {
+  const ordersToClose = Object.values(state.openOrders);
+  ordersToClose.forEach(order => closeOrder(state, order.id));
+}
+
+export function closePosition(
+  state: BrokerState,
+  symbol: string,
+  reason: string | null = null,
+) {
+  const position = state.openPositions[symbol] || null;
+
+  if (!position || position.isClosing) {
+    return;
+  }
+
+  position.closeReason = reason;
+  position.isClosing = true;
+
+  // close open orders
+  position.orders
+    .filter(o => ['ACCEPTED', 'PENDING'].indexOf(o.state) !== -1)
+    .forEach(o => {
+      closeOrder(state, o.id);
+    });
+
+  // If we don't have any open shares then close the position
+  if (position.size === 0) {
+    delete state.openPositions[symbol];
+    return;
+  }
+
+  const orderId = placeOrder(state, {
+    type: 'MKT',
+    action: position.size > 0 ? 'SELL' : 'BUY',
+    symbol,
+    shares: Math.abs(position.size),
+  });
+
+  return orderId;
 }
