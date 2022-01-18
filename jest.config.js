@@ -3,6 +3,7 @@ module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
   testPathIgnorePatterns: [
+    'node_modules',
     'dist/tests',
     'src/tests/test-utils',
     'src/tests/test-data',

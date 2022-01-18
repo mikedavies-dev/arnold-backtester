@@ -104,6 +104,8 @@ export async function runBacktestController({
   log(`Finished in ${numeral(Date.now() - start).format(',')}ms`);
   log('Results', results);
 
+  // TODO, store backtests in MySQL
+
   // Shutdown the pool
   pool.destroy();
 

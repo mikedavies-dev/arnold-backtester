@@ -35,8 +35,6 @@ export type Tracker = {
   volume: number;
   bid: number;
   ask: number;
-  retraceFromHigh: number;
-  retraceFromLow: number;
   preMarketHigh: number;
   preMarketLow: number;
   preMarketVolume: number;
@@ -54,8 +52,6 @@ export function initTracker(): Tracker {
     volume: 0,
     bid: 0,
     ask: 0,
-    retraceFromHigh: 0,
-    retraceFromLow: 0,
     preMarketHigh: 0,
     preMarketLow: 0,
     preMarketVolume: 0,
