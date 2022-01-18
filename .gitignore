@@ -13,3 +13,4 @@ profiles/*
 .eslintcache
 coverage
 codecov.yml
+.env
