@@ -15,7 +15,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [14.5]
+        node-version: [16.13]
         mongodb-version: ['4.0']
         redis-version: [6]
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
@@ -27,10 +27,13 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
+      - name: Start MongoDB
+        uses: supercharge/mongodb-github-action@1.6.0
+        with:
+          mongodb-version: ${{ matrix.mongodb-version }}
       - run: npm ci
       - run: npm run check
       - run: npm install jest
-      - run: npm test
       - run: npm run test:coverage
       - uses: codecov/codecov-action@v2
         with:
