@@ -1,4 +1,10 @@
-import {connect, disconnect, getBacktests, resetDatabase} from '../../utils/db';
+import {
+  connect,
+  disconnect,
+  getBacktests,
+  resetDatabase,
+  storeBacktestResults,
+} from '../../utils/db';
 
 describe('mongo db tests', () => {
   beforeAll(async () => {
@@ -19,5 +25,11 @@ describe('mongo db tests', () => {
 
     // No tests have been saved yet
     expect(backtests.length).toBe(0);
+  });
+
+  test('storing backtest results', async () => {
+    await storeBacktestResults({
+      positions: [],
+    });
   });
 });

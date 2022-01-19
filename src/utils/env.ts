@@ -3,10 +3,12 @@ import path from 'path';
 
 const nodeEnv = process.env.NODE_ENV;
 
-const configPath = `../../config/${nodeEnv === 'test' ? 'test' : ''}.env`;
+export function getConfigPath(env: string | undefined) {
+  return `../../${env === 'test' ? 'test' : ''}.env`;
+}
 
 dotenv.config({
-  path: path.resolve(__dirname, configPath),
+  path: path.resolve(__dirname, getConfigPath(nodeEnv)),
 });
 
 function getEnv(name: string, def: string) {
@@ -19,6 +21,7 @@ const environment: {
   isProduction: boolean;
   isTesting: boolean;
   MONGO_CONNECTION_STRING: string;
+  getEnv: (name: string, def: string) => string;
 } = {
   env: process.env,
 
@@ -32,6 +35,7 @@ const environment: {
     'MONGO_CONNECTION_STRING',
     'mongodb://localhost:27017/arnold',
   ),
+  getEnv,
 };
 
 export default environment;
