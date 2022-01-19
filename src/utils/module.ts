@@ -1,6 +1,7 @@
 import {BrokerState, OrderSpecification} from '../backtest/broker';
 import {LoggerCallback, Tick} from '../core';
 import {Tracker} from '../utils/tracker';
+import {MarketStatus} from './market';
 
 type InitStrategy = () => void;
 type ExtraSymbols = Array<string>;
@@ -11,10 +12,12 @@ export type HandleTickParameters = {
   symbol: string;
   tracker: Tracker;
   trackers: Record<string, Tracker>;
+  marketState: MarketStatus;
   broker: {
     state: BrokerState;
     placeOrder: (spec: OrderSpecification) => number;
     hasOpenOrders: (symbol: string) => boolean;
+    getPositionSize: (symbol: string) => number;
   };
 };
 

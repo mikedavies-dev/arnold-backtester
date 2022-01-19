@@ -102,7 +102,7 @@ export async function runBacktestController({
   );
 
   log(`Finished in ${numeral(Date.now() - start).format(',')}ms`);
-  log('Results', results);
+  log('Results', JSON.stringify(results, null, 2));
 
   // TODO, store backtests in MySQL
 
