@@ -16,7 +16,7 @@ if (parentPort) {
     const {profile}: {profile: Profile} = workerData;
 
     try {
-      const results = await runBacktest({
+      const positions = await runBacktest({
         profile,
         symbol: param.symbol,
         date: param.date,
@@ -28,7 +28,7 @@ if (parentPort) {
 
       // Send the results to the parent
       parentPort.postMessage({
-        results,
+        positions,
       });
     } catch (err) {
       parentPort.postMessage({

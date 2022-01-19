@@ -1,4 +1,13 @@
+import dotenv from 'dotenv';
+import path from 'path';
+
 const nodeEnv = process.env.NODE_ENV;
+
+const configPath = `../../config/${nodeEnv === 'test' ? 'test' : ''}.env`;
+
+dotenv.config({
+  path: path.resolve(__dirname, configPath),
+});
 
 function getEnv(name: string, def: string) {
   return process.env[name] || def;
@@ -9,11 +18,7 @@ const environment: {
   isDevelopment: boolean;
   isProduction: boolean;
   isTesting: boolean;
-  MYSQL_HOST: string;
-  MYSQL_PORT: string;
-  MYSQL_USER: string;
-  MYSQL_PASS: string;
-  MYSQL_DB: string;
+  MONGO_CONNECTION_STRING: string;
 } = {
   env: process.env,
 
@@ -23,11 +28,10 @@ const environment: {
   isTesting: nodeEnv === 'test',
 
   // Load specific variables with defaults
-  MYSQL_HOST: getEnv('MYSQL_HOST', 'localhost'),
-  MYSQL_PORT: getEnv('MYSQL_PORT', '3306'),
-  MYSQL_USER: getEnv('MYSQL_USER', 'root'),
-  MYSQL_PASS: getEnv('MYSQL_PASS', 'root'),
-  MYSQL_DB: getEnv('MYSQL_DB', 'arnold'),
+  MONGO_CONNECTION_STRING: getEnv(
+    'MONGO_CONNECTION_STRING',
+    'mongodb://localhost:27017/arnold',
+  ),
 };
 
 export default environment;

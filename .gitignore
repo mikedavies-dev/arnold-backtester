@@ -14,3 +14,5 @@ profiles/*
 coverage
 codecov.yml
 .env
+config/*
+!config/.env.sample
