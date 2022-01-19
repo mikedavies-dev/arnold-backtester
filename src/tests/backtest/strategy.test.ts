@@ -73,6 +73,12 @@ describe('test worker module', () => {
             shares: 100,
             action: 'BUY',
           });
+
+          // Make sure we have pending orders
+          expect(broker.hasOpenOrders(symbol)).toBe(true);
+
+          // Make sure our position size is still 0
+          expect(broker.getPositionSize(symbol)).toBe(0);
         }
       },
     });

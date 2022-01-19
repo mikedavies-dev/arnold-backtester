@@ -1,5 +1,11 @@
 import {initTracker, handleTrackerTick} from '../../utils/tracker';
-import {getMarketOpen, getMarketClose} from '../../utils/market';
+import {
+  getMarketOpen,
+  getMarketClose,
+  getMarketState,
+  getPreMarketOpen,
+  MarketStatus,
+} from '../../utils/market';
 import {createTick, createTimeAsUnix, getTestDate} from '../test-utils/tick';
 
 test('market open times', () => {
@@ -260,4 +266,34 @@ test('in-market volume', () => {
   });
 
   expect(data.volume).toBe(450);
+});
+
+describe('market status', () => {
+  const marketOpen = getMarketOpen(getTestDate());
+  const marketClose = getMarketClose(getTestDate());
+  const preMarketOpen = getPreMarketOpen(getTestDate());
+
+  const times: Array<[string, MarketStatus]> = [
+    ['01:00', 'CLOSED'],
+    ['03:59', 'CLOSED'],
+    ['04:00', 'PREMARKET'],
+    ['04:01', 'PREMARKET'],
+    ['09:29', 'PREMARKET'],
+    ['09:30', 'OPEN'],
+    ['16:30', 'OPEN'],
+    ['16:31', 'CLOSED'],
+  ];
+
+  times.forEach(([time, marketStatus]) => {
+    test(`that ${time} has a market status of ${marketStatus}`, () => {
+      expect(
+        getMarketState(
+          createTimeAsUnix(time),
+          preMarketOpen,
+          marketOpen,
+          marketClose,
+        ),
+      ).toBe(marketStatus);
+    });
+  });
 });

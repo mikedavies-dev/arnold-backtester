@@ -19,8 +19,6 @@ test('init tracker', () => {
       "preMarketHigh": 0,
       "preMarketLow": 0,
       "preMarketVolume": 0,
-      "retraceFromHigh": 0,
-      "retraceFromLow": 0,
       "volume": 0,
     }
   `);

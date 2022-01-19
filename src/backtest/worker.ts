@@ -7,7 +7,12 @@ import {Profile} from '../utils/profile';
 import {loadStrategy} from '../utils/module';
 import {mergeSortedArrays} from '../utils/data-structures';
 import {initTracker, handleTrackerTick, Tracker} from '../utils/tracker';
-import {getMarketOpen, getMarketClose} from '../utils/market';
+import {
+  getPreMarketOpen,
+  getMarketOpen,
+  getMarketClose,
+  getMarketState,
+} from '../utils/market';
 import {Tick, LoggerCallback} from '../core';
 import {
   initBroker,
@@ -15,6 +20,7 @@ import {
   handleBrokerTick,
   OrderSpecification,
   hasOpenOrders,
+  getPositionSize,
 } from './broker';
 
 export type BackTestWorkerErrorCode =
@@ -105,6 +111,7 @@ export async function runBacktest({
     {} as Record<string, Tracker>,
   );
 
+  const preMarketOpen = getPreMarketOpen(date);
   const marketOpen = getMarketOpen(date);
   const marketClose = getMarketClose(date);
 
@@ -129,10 +136,18 @@ export async function runBacktest({
 
     const tracker = trackers[tick.symbol];
 
+    const marketState = getMarketState(
+      tick.time,
+      preMarketOpen,
+      marketOpen,
+      marketClose,
+    );
+
     // If this is an update for our symbol then call the strategy
     if (tick.symbol === symbol) {
       strategy.handleTick({
         log,
+        marketState,
         tick,
         symbol,
         tracker,
@@ -142,6 +157,8 @@ export async function runBacktest({
           placeOrder: (spec: OrderSpecification) =>
             placeOrder(brokerState, spec),
           hasOpenOrders: (symbol: string) => hasOpenOrders(brokerState, symbol),
+          getPositionSize: (symbol: string) =>
+            getPositionSize(brokerState, symbol),
         },
       });
     }

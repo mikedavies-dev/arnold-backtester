@@ -6,12 +6,14 @@ import path from 'path';
 import {LoggerCallback} from '../core';
 import {profileExists, loadProfile} from '../utils/profile';
 import {BackTestWorkerErrorCode} from '../backtest/worker';
+import {Position} from './broker';
 
 const baseFolder = path.parse(__filename).dir;
 const filePath = path.join(baseFolder, '../bin/worker.js');
 
 export type WorkerResult = {
   error?: BackTestWorkerErrorCode;
+  positions?: Array<Position>;
 };
 
 export type BackTestControllerErrorCode =
@@ -19,6 +21,10 @@ export type BackTestControllerErrorCode =
   | 'no-symbol-data'
   | 'invalid-symbol-data'
   | 'unknown';
+
+export type BacktestResults = {
+  positions: Array<Position>;
+};
 
 export class BacktestControllerError extends Error {
   constructor(public code: BackTestControllerErrorCode) {
@@ -33,7 +39,7 @@ export async function runBacktestController({
 }: {
   log: LoggerCallback;
   profile: string;
-}) {
+}): Promise<BacktestResults> {
   log(`Loading profile '${profile}'`);
 
   if (!(await profileExists(profile))) {
@@ -102,10 +108,15 @@ export async function runBacktestController({
   );
 
   log(`Finished in ${numeral(Date.now() - start).format(',')}ms`);
-  log('Results', results);
 
   // Shutdown the pool
   pool.destroy();
 
-  return results;
+  const positions = results
+    .filter(val => !val.error)
+    .flatMap(val => val.positions || []);
+
+  return {
+    positions,
+  };
 }
