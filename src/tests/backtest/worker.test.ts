@@ -134,7 +134,10 @@ describe('test worker module', () => {
         await runBacktest({
           profile: {
             ...profile,
-            strategy: 'invalid',
+            strategy: {
+              name: 'invalid',
+              source: null,
+            },
           },
           symbol: 'MSFT',
           date: getTestDate(),

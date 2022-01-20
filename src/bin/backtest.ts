@@ -4,7 +4,7 @@ import {
   BacktestControllerError,
 } from '../backtest/controller';
 
-import {connect, storeBacktestResults} from '../utils/db';
+import {connect, storeBacktestResults, disconnect} from '../utils/db';
 
 const log = Logger('backtest');
 
@@ -28,6 +28,7 @@ async function run() {
     await storeBacktestResults(results);
 
     log('Finished!');
+    await disconnect();
   } catch (err) {
     const errorCode =
       err instanceof BacktestControllerError ? err.code : 'unknown';

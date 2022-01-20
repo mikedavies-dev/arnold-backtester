@@ -101,7 +101,7 @@ describe('test worker module', () => {
           "orders": Array [
             Object {
               "action": "BUY",
-              "fillPrice": 1,
+              "avgFillPrice": 1,
               "filledAt": 2022-01-01T14:31:00.000Z,
               "id": 1,
               "openedAt": 2022-01-01T14:30:00.000Z,

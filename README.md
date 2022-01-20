@@ -21,7 +21,6 @@ understand the strategy.
 ```json
 {
   "strategy": "sample",
-  "startingBalance": 10000,
   "dates": {
     "from": "2021-12-01",
     "to": "2021-12-03"

@@ -4,7 +4,7 @@ import numeral from 'numeral';
 import path from 'path';
 
 import {LoggerCallback} from '../core';
-import {profileExists, loadProfile} from '../utils/profile';
+import {profileExists, loadProfile, Profile} from '../utils/profile';
 import {BackTestWorkerErrorCode} from '../backtest/worker';
 import {Position} from './broker';
 
@@ -24,6 +24,8 @@ export type BackTestControllerErrorCode =
 
 export type BacktestResults = {
   positions: Array<Position>;
+  profile: Profile;
+  createdAt: Date;
 };
 
 export class BacktestControllerError extends Error {
@@ -51,7 +53,7 @@ export async function runBacktestController({
   // Run the profile
   log(
     `Running strategy '${
-      runProfile.strategy
+      runProfile.strategy.name
     }' for tickers ${runProfile.symbols.join(', ')} from ${format(
       runProfile.dates.from,
       'yyyy-MM-dd',
@@ -117,6 +119,8 @@ export async function runBacktestController({
     .flatMap(val => val.positions || []);
 
   return {
+    createdAt: new Date(),
     positions,
+    profile: runProfile,
   };
 }

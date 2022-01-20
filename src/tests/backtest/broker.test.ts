@@ -162,7 +162,7 @@ test('placing market buy order and wait for it to be filled at the ask', () => {
   expect(market.broker.orders[0]).toMatchInlineSnapshot(`
     Object {
       "action": "BUY",
-      "fillPrice": 1.3,
+      "avgFillPrice": 1.3,
       "filledAt": 2022-01-01T14:30:02.000Z,
       "id": 1,
       "openedAt": 2022-01-01T14:30:00.000Z,
@@ -214,7 +214,7 @@ test('placing market sell order and wait for it to be filled at the bid', () => 
   expect(market.broker.orders[0]).toMatchInlineSnapshot(`
     Object {
       "action": "SELL",
-      "fillPrice": 1.1,
+      "avgFillPrice": 1.1,
       "filledAt": 2022-01-01T14:30:02.000Z,
       "id": 1,
       "openedAt": 2022-01-01T14:30:00.000Z,
@@ -320,7 +320,7 @@ test('place limit BUY order that gets filled', () => {
   expect(market.broker.orders[0]).toMatchInlineSnapshot(`
     Object {
       "action": "BUY",
-      "fillPrice": 1.3,
+      "avgFillPrice": 1.3,
       "filledAt": 2022-01-01T14:30:01.000Z,
       "id": 1,
       "openedAt": 2022-01-01T14:30:00.000Z,
@@ -366,7 +366,7 @@ test('place limit SELL order that gets filled', () => {
   expect(market.broker.orders[0]).toMatchInlineSnapshot(`
     Object {
       "action": "SELL",
-      "fillPrice": 1.1,
+      "avgFillPrice": 1.1,
       "filledAt": 2022-01-01T14:30:01.000Z,
       "id": 1,
       "openedAt": 2022-01-01T14:30:00.000Z,
@@ -487,7 +487,7 @@ test('fill a trailing stop buy order', () => {
     Array [
       Object {
         "action": "BUY",
-        "fillPrice": 0.65,
+        "avgFillPrice": 0.65,
         "filledAt": 2022-01-01T14:30:15.000Z,
         "id": 1,
         "openedAt": 2022-01-01T14:30:00.000Z,
@@ -553,7 +553,7 @@ test('fill a trailing stop sell order', () => {
     Array [
       Object {
         "action": "SELL",
-        "fillPrice": 1.3499999999999999,
+        "avgFillPrice": 1.3499999999999999,
         "filledAt": 2022-01-01T14:30:15.000Z,
         "id": 1,
         "openedAt": 2022-01-01T14:30:00.000Z,
@@ -622,7 +622,7 @@ test('close all open positions with closePosition', () => {
     Array [
       Object {
         "action": "BUY",
-        "fillPrice": 1.1500000000000001,
+        "avgFillPrice": 1.1500000000000001,
         "filledAt": 2022-01-01T14:30:01.000Z,
         "id": 1,
         "openedAt": 2022-01-01T14:30:00.000Z,
@@ -633,7 +633,7 @@ test('close all open positions with closePosition', () => {
       },
       Object {
         "action": "BUY",
-        "fillPrice": 1.25,
+        "avgFillPrice": 1.25,
         "filledAt": 2022-01-01T14:30:02.000Z,
         "id": 2,
         "openedAt": 2022-01-01T14:30:01.000Z,
@@ -644,7 +644,7 @@ test('close all open positions with closePosition', () => {
       },
       Object {
         "action": "SELL",
-        "fillPrice": 1.45,
+        "avgFillPrice": 1.45,
         "filledAt": 2022-01-01T14:30:05.000Z,
         "id": 3,
         "openedAt": 2022-01-01T14:30:04.000Z,
@@ -875,7 +875,7 @@ test('fill a child order once a parent order has been filled', () => {
 
   // Order 1 gets filled
   offsetMarketUpdate(market, 1.0);
-  expect(order1.fillPrice).not.toBeNull();
+  expect(order1.avgFillPrice).not.toBeNull();
   expect(getPositionSize(market.broker, market.symbol)).toEqual(shares);
 
   // Price goes up
@@ -899,7 +899,7 @@ test('fill a child order once a parent order has been filled', () => {
     Array [
       Object {
         "action": "BUY",
-        "fillPrice": 1.05,
+        "avgFillPrice": 1.05,
         "filledAt": 2022-01-01T14:30:02.000Z,
         "id": 1,
         "openedAt": 2022-01-01T14:30:00.000Z,
@@ -911,7 +911,7 @@ test('fill a child order once a parent order has been filled', () => {
       },
       Object {
         "action": "SELL",
-        "fillPrice": 1.15,
+        "avgFillPrice": 1.15,
         "filledAt": 2022-01-01T14:30:08.000Z,
         "id": 2,
         "openedAt": 2022-01-01T14:30:00.000Z,
@@ -979,7 +979,7 @@ test('creating a position then closing it', () => {
       "orders": Array [
         Object {
           "action": "BUY",
-          "fillPrice": 0.9500000000000001,
+          "avgFillPrice": 0.9500000000000001,
           "filledAt": 2022-01-01T14:30:01.000Z,
           "id": 1,
           "openedAt": 2022-01-01T14:30:00.000Z,

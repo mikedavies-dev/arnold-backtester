@@ -1,10 +1,24 @@
 import fs from 'fs/promises';
 import {parse, differenceInDays, startOfDay, add} from 'date-fns';
 
+async function loadStrategySource(path: string) {
+  try {
+    return await fs.readFile(path, 'utf-8');
+  } catch {
+    return null;
+  }
+}
+
+async function loadJsOrTsStrategySource(strategy: string) {
+  return (
+    (await loadStrategySource(`./src/strategies/${strategy}.js`)) ||
+    (await loadStrategySource(`./src/strategies/${strategy}.ts`))
+  );
+}
+
 // Format stored on disk
 type RawProfile = {
   strategy: string;
-  startingBalance: number;
   dates: {
     from: string;
     to: string;
@@ -15,8 +29,10 @@ type RawProfile = {
 
 // Parsed format
 export type Profile = {
-  strategy: string;
-  startingBalance: number;
+  strategy: {
+    name: string;
+    source: string | null;
+  };
   dates: {
     from: Date;
     to: Date;
@@ -61,6 +77,10 @@ export async function loadProfile(name: string): Promise<Profile> {
 
   return {
     ...profile,
+    strategy: {
+      name: profile.strategy,
+      source: await loadJsOrTsStrategySource(profile.strategy),
+    },
     dates: {
       from,
       to,

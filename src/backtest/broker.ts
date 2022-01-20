@@ -36,7 +36,7 @@ export type Order = OrderSpecification & {
   openedAt: Date;
   state: OrderState;
   filledAt?: Date;
-  fillPrice?: number;
+  avgFillPrice?: number;
 };
 
 export type Position = {
@@ -197,7 +197,7 @@ export function handleBrokerTick(
       order.state = 'FILLED';
 
       // were we filled at the bid or the ask?
-      order.fillPrice = order.action === 'BUY' ? ask : bid;
+      order.avgFillPrice = order.action === 'BUY' ? ask : bid;
 
       // update open positions
       const position = openPositions[symbol];

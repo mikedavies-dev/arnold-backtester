@@ -64,7 +64,7 @@ export async function runBacktest({
   log: LoggerCallback;
 }) {
   // Make sure the module exists
-  const strategy = await loadJsOrTsStrategy(profile.strategy);
+  const strategy = await loadJsOrTsStrategy(profile.strategy.name);
 
   if (!strategy) {
     throw new BacktestWorkerError('strategy-not-found');

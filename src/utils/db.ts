@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
 // Register the models
-import {Backtest, registerMongooseModels} from '../models/models';
+import {DbBacktest, registerMongooseModels} from '../models/models';
 
 import Env from './env';
 import {BacktestResults} from '../backtest/controller';
@@ -36,9 +36,17 @@ export async function resetDatabase() {
   await mongoose.disconnect();
 }
 
-export async function storeBacktestResults(results: BacktestResults) {}
+export async function storeBacktestResults(results: BacktestResults) {
+  const Backtest = mongoose.model<DbBacktest>('Backtest');
+
+  await Backtest.create<DbBacktest>({
+    createdAt: results.createdAt,
+    positions: results.positions,
+    profile: results.profile,
+  });
+}
 
 export function getBacktests() {
-  const Backtest = mongoose.model<Backtest>('Backtest');
+  const Backtest = mongoose.model<DbBacktest>('Backtest');
   return Backtest.find();
 }
