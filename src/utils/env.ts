@@ -4,7 +4,7 @@ import path from 'path';
 const nodeEnv = process.env.NODE_ENV;
 
 export function getConfigPath(env: string | undefined) {
-  return `../../${env === 'test' ? 'test' : ''}.env`;
+  return `../../.env${env === 'test' ? '.test' : ''}`;
 }
 
 dotenv.config({

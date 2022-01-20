@@ -10,7 +10,7 @@ test('basic env functionality', () => {
 });
 
 test('get env config path', () => {
-  expect(getConfigPath('test')).toMatchInlineSnapshot(`"../../test.env"`);
+  expect(getConfigPath('test')).toMatchInlineSnapshot(`"../../.env.test"`);
   expect(getConfigPath('development')).toMatchInlineSnapshot(`"../../.env"`);
   expect(getConfigPath('production')).toMatchInlineSnapshot(`"../../.env"`);
   expect(getConfigPath(undefined)).toMatchInlineSnapshot(`"../../.env"`);
