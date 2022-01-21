@@ -1,4 +1,4 @@
-import Logger from '../../utils/logger';
+import Logger from '../../../utils/logger';
 
 test('file exists', async () => {
   jest.spyOn(console, 'log').mockImplementation(() => {});

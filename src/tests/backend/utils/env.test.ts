@@ -1,4 +1,4 @@
-import Env, {getConfigPath} from '../../utils/env';
+import Env, {getConfigPath} from '../../../utils/env';
 
 test('basic env functionality', () => {
   expect(Env.isProduction).toBe(false);

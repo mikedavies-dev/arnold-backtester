@@ -1,7 +1,7 @@
 import {startOfToday} from 'date-fns';
 
-import {initTracker, handleTrackerTick} from '../../utils/tracker';
-import {getMarketOpen, getMarketClose} from '../../utils/market';
+import {initTracker, handleTrackerTick} from '../../../utils/tracker';
+import {getMarketOpen, getMarketClose} from '../../../utils/market';
 import {createTick, createTimeAsUnix} from '../test-utils/tick';
 
 test('bid/ask', () => {

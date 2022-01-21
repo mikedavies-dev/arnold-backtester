@@ -1,11 +1,11 @@
-import {BacktestResults} from '../../backtest/controller';
+import {BacktestResults} from '../../../backtest/controller';
 import {
   connect,
   disconnect,
   getBacktests,
   resetDatabase,
   storeBacktestResults,
-} from '../../utils/db';
+} from '../../../utils/db';
 
 import {getTestDate} from '../test-utils/tick';
 

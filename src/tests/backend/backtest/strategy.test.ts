@@ -1,19 +1,19 @@
-import {runBacktest} from '../../backtest/worker';
-import {loadProfile} from '../../utils/profile';
+import {runBacktest} from '../../../backtest/worker';
+import {loadProfile} from '../../../utils/profile';
 import {
   createTimeAsDate,
   createTimeAsUnix,
   getTestDate,
 } from '../test-utils/tick';
 
-import {loadStrategy} from '../../utils/module';
+import {loadStrategy} from '../../../utils/module';
 
-import {loadTsForSymbolAndDate} from '../../utils/data';
+import {loadTsForSymbolAndDate} from '../../../utils/data';
 
-import {Tick} from '../../core';
+import {Tick} from '../../../core';
 
-jest.mock('../../utils/data');
-jest.mock('../../utils/module');
+jest.mock('../../../utils/data');
+jest.mock('../../../utils/module');
 
 const loadTsForSymbolAndDateMock =
   loadTsForSymbolAndDate as jest.MockedFunction<typeof loadTsForSymbolAndDate>;

@@ -1,4 +1,4 @@
-import {loadProfile, profileExists} from '../../utils/profile';
+import {loadProfile, profileExists} from '../../../utils/profile';
 
 test('that a valid profile exists', async () => {
   const exists = await profileExists('sample');

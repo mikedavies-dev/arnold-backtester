@@ -35,6 +35,7 @@ todo
 
 ## TODO
 
-- Create sample strategy to fill out positions API
-- Log results to DB
+- Cleanup project layout
+- Create basic express server
+- Create webpack setup
 - Results viewer

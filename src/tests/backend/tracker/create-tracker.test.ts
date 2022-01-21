@@ -1,4 +1,4 @@
-import {initTracker} from '../../utils/tracker';
+import {initTracker} from '../../../utils/tracker';
 
 test('init tracker', () => {
   const tracker = initTracker();

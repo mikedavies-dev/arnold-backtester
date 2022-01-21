@@ -13,7 +13,7 @@ import {
   closePosition,
   closeOrder,
   closeOpenOrders,
-} from '../../backtest/broker';
+} from '../../../backtest/broker';
 
 test('init positions function returns an empty positions ds', () => {
   const state = initBroker({getMarketTime: () => createTimeAsDate('09:30')});

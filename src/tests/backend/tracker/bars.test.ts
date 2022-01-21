@@ -4,8 +4,8 @@ import {
   initTracker,
   handleTrackerTick,
   MaximumBarCount,
-} from '../../utils/tracker';
-import {getMarketOpen, getMarketClose} from '../../utils/market';
+} from '../../../utils/tracker';
+import {getMarketOpen, getMarketClose} from '../../../utils/market';
 
 import {createTick, createTimeAsUnix, getTestDate} from '../test-utils/tick';
 
