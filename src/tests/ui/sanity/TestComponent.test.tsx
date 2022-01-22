@@ -1,7 +1,3 @@
-/**
- * @jest-environment jsdom
- */
-
 import React from 'react';
 import ReactDOM from 'react-dom';
 
@@ -13,4 +9,5 @@ test('React testing sanity check..', () => {
   const input = div.querySelector('input');
   expect(input).not.toBe(null);
   expect(input?.value).toBe('123');
+  expect(input).not.toBeDisabled();
 });

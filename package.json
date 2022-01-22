@@ -15,6 +15,7 @@
   "main": "index.ts",
   "devDependencies": {
     "@babel/eslint-parser": "^7.16.5",
+    "@testing-library/jest-dom": "^5.16.1",
     "@types/jest": "^27.4.0",
     "@types/n-readlines": "^1.0.3",
     "@types/numeral": "^2.0.2",
