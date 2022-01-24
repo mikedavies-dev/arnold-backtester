@@ -1,5 +1,6 @@
 import fs from 'fs/promises';
 import {parse, differenceInDays, startOfDay, add} from 'date-fns';
+import path from 'path';
 
 async function loadStrategySource(path: string) {
   try {
@@ -43,7 +44,7 @@ export type Profile = {
 };
 
 export function getPath(name: string) {
-  return `./profiles/${name}.json`;
+  return path.join(process.cwd(), `./profiles/${name}.json`);
 }
 
 export async function profileExists(name: string) {
@@ -59,7 +60,8 @@ export async function loadProfile(name: string): Promise<Profile> {
   if (!(await profileExists(name))) {
     throw new Error('This profile does not exist');
   }
-  const profile = require(`../../${getPath(name)}`) as RawProfile;
+
+  const profile = require(getPath(name)) as RawProfile;
 
   const from = parse(profile.dates.from, 'yyyy-MM-dd', new Date());
   const to = parse(profile.dates.to, 'yyyy-MM-dd', new Date());

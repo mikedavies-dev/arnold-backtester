@@ -17,6 +17,7 @@
   "main": "index.ts",
   "devDependencies": {
     "@babel/eslint-parser": "^7.16.5",
+    "@parcel/transformer-sass": "^2.2.1",
     "@testing-library/jest-dom": "^5.16.1",
     "@types/express": "^4.17.13",
     "@types/jest": "^27.4.0",
@@ -37,6 +38,7 @@
     "lint-staged": "^12.1.7",
     "node-worker-threads-pool": "^1.5.1",
     "nodemon": "^2.0.15",
+    "parcel": "^2.2.1",
     "prettier": "^2.5.1",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
@@ -48,8 +50,8 @@
     "test:coverage": "TZ=America/New_York jest --coverage",
     "test:watch": "TZ=America/New_York jest --watch",
     "test:report": "npm run test:coverage && open ./coverage/lcov-report/index.html",
-    "watch::server": "TZ=America/New_York nodemon dist/bin/server.js",
-    "watch::ts": "rm -rf ./dist && tsc --watch",
+    "watch::server": "TZ=America/New_York nodemon ./dist/bin/server.js",
+    "watch::check": "tsc --noEmit --watch",
     "dev": "concurrently npm:watch::server npm:watch::ts",
     "check": "tsc --noEmit",
     "build": "rm -rf ./dist && tsc",
@@ -68,5 +70,45 @@
       "prettier --write"
     ],
     "*.js": "eslint --cache --fix"
+  },
+  "targets": {
+    "frontend": {
+      "source": "./src/clientjs/home.html",
+      "distDir": "./dist/public"
+    },
+    "server": {
+      "source": "./src/bin/server.ts",
+      "distDir": "./dist/bin",
+      "context": "node",
+      "engines": {
+        "node": ">=12.x"
+      }
+    },
+    "backtest-controller": {
+      "source": "./src/bin/backtest.ts",
+      "distDir": "./dist/bin",
+      "context": "node",
+      "engines": {
+        "node": ">=12.x"
+      }
+    },
+    "backtest-worker": {
+      "source": "./src/bin/worker.ts",
+      "distDir": "./dist/bin",
+      "context": "node",
+      "engines": {
+        "node": ">=12.x"
+      }
+    },
+    "strategies": {
+      "source": [
+        "./src/strategies/hod.ts"
+      ],
+      "distDir": "./strategies",
+      "context": "node",
+      "engines": {
+        "node": ">=12.x"
+      }
+    }
   }
 }

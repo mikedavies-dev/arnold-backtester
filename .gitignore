@@ -14,3 +14,9 @@ profiles/*
 coverage
 codecov.yml
 .env
+.parcel-cache
+dist
+bin
+strategies/*
+!strategies/sample.js
+

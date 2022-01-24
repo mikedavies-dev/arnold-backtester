@@ -47,8 +47,8 @@ function marketSortFn(row1: Tick, row2: Tick) {
 
 async function loadJsOrTsStrategy(strategy: string) {
   return (
-    (await loadStrategy(`../strategies/${strategy}.js`)) ||
-    (await loadStrategy(`../strategies/${strategy}.ts`))
+    (await loadStrategy(`../../strategies/${strategy}.js`)) ||
+    (await loadStrategy(`../../strategies/${strategy}.ts`))
   );
 }
 
