@@ -1,22 +1,31 @@
-node_modules/
+# Hidden files
+.env
+.parcel-cache
 .vscode
-dist/
-strategies/*
-src/strategies/*
-data/*
-results/*
-profiles/*
-!directory/sample.json
-!src/strategies/sample.ts
 .DS_Store
 .idea
 .eslintcache
+
+# Coverage files
 coverage
 codecov.yml
-.env
-.parcel-cache
-dist
-bin
-strategies/*
-!strategies/sample.js
 
+#Node modules
+node_modules/
+
+# Compiled parcel files
+dist/
+
+# User defined strategies
+strategies/*
+src/strategies/*
+!strategies/sample.js
+!src/strategies/sample.ts
+
+!directory/sample.json
+
+# User data
+data/*
+
+# User profiles
+profiles/*
