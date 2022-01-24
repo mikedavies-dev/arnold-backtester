@@ -39,3 +39,13 @@ todo
 - Create basic express server
 - Create webpack setup
 - Results viewer
+
+# Ideal folder setup
+
+- src/
+  - bin/
+  - backtest/
+  - trader/
+  - server/
+    - public/
+  - core/
