@@ -1,7 +1,7 @@
 import {parse, fromUnixTime, format} from 'date-fns';
 import {flow} from 'fp-ts/lib/function';
 
-import {getMarketOpen, getMarketClose} from '../../../utils/market';
+import {getMarketOpen, getMarketClose} from '../../utils/market';
 
 test('get market open', () => {
   const marketTime = flow(parse, getMarketOpen, fromUnixTime, date =>

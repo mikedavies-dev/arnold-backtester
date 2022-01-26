@@ -1,4 +1,4 @@
-import {mergeSortedArrays} from '../../../utils/data-structures';
+import {mergeSortedArrays} from '../../utils/data-structures';
 
 const sorter = (v1: number, v2: number) => v1 - v2;
 

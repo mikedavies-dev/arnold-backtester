@@ -1,4 +1,4 @@
-import {loadStrategy} from '../../../utils/module';
+import {loadStrategy} from '../../utils/module';
 
 test('Load valid test module', async () => {
   const modulePath = `../strategies/sample.ts`;

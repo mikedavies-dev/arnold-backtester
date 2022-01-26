@@ -13,21 +13,22 @@ module.exports = {
     '!src/bin/**/*.ts',
     '!src/backtest/controller.ts',
     '!src/**/*.test.{ts,tsx}',
-    '!src/**/jest-client-setup.ts',
+    '!./src/__TESTS_UI__/jest.ts',
+    '!src/clientjs/js/**',
   ],
   projects: [
     {
       preset: 'ts-jest',
       displayName: 'backend',
       testEnvironment: 'node',
-      testMatch: ['<rootDir>/src/tests/backend/**/*.test.{ts,tsx}'],
+      testMatch: ['<rootDir>/src/**/__TESTS__/**/*.test.{ts,tsx}'],
     },
     {
       preset: 'ts-jest',
       displayName: 'ui',
       testEnvironment: 'jsdom',
-      testMatch: ['<rootDir>/src/tests/ui/**/*.test.{ts,tsx}'],
-      setupFilesAfterEnv: ['./src/tests/jest-client-setup.ts'],
+      testMatch: ['<rootDir>/src/**/__TESTS_UI__/**/*.test.{ts,tsx}'],
+      setupFilesAfterEnv: ['./src/__TESTS_UI__/jest.ts'],
     },
   ],
 };

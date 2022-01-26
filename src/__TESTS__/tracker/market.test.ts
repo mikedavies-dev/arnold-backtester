@@ -1,8 +1,22 @@
-import {initTracker, handleTrackerTick} from '../../../utils/tracker';
-import {getMarketOpen, getMarketClose} from '../../../utils/market';
+import {initTracker, handleTrackerTick} from '../../utils/tracker';
+import {
+  getMarketOpen,
+  getMarketClose,
+  getMarketState,
+  getPreMarketOpen,
+  MarketStatus,
+} from '../../utils/market';
 import {createTick, createTimeAsUnix, getTestDate} from '../test-utils/tick';
 
-test('pre-market high', () => {
+test('market open times', () => {
+  const marketOpen = getMarketOpen(getTestDate());
+  const marketClose = getMarketClose(getTestDate());
+
+  expect(marketOpen).toBe(createTimeAsUnix('09:30'));
+  expect(marketClose).toBe(createTimeAsUnix('16:30'));
+});
+
+test('in-market high', () => {
   const data = initTracker();
 
   const marketOpen = getMarketOpen(getTestDate());
@@ -21,9 +35,9 @@ test('pre-market high', () => {
     }),
   });
 
-  expect(data.preMarketHigh).toBe(0);
+  expect(data.high).toBe(0);
 
-  // Update the first value
+  // Don't update in pre-market
   handleTrackerTick({
     data,
     marketOpen,
@@ -36,7 +50,24 @@ test('pre-market high', () => {
     }),
   });
 
-  expect(data.preMarketHigh).toBe(1);
+  expect(data.high).toBe(0);
+  expect(data.last).toBe(1);
+
+  // Update the first value
+  handleTrackerTick({
+    data,
+    marketOpen,
+    marketClose,
+    tick: createTick({
+      time: createTimeAsUnix('09:30'),
+      type: 'TRADE',
+      value: 1,
+      size: 100,
+    }),
+  });
+
+  expect(data.high).toBe(1);
+  expect(data.last).toBe(1);
 
   // Make sure it updates with a second
   handleTrackerTick({
@@ -44,14 +75,15 @@ test('pre-market high', () => {
     marketOpen,
     marketClose,
     tick: createTick({
-      time: createTimeAsUnix('09:29'),
+      time: createTimeAsUnix('09:30'),
       type: 'TRADE',
       value: 2,
       size: 100,
     }),
   });
 
-  expect(data.preMarketHigh).toBe(2);
+  expect(data.high).toBe(2);
+  expect(data.last).toBe(2);
 
   // Don't go back down
   handleTrackerTick({
@@ -59,32 +91,18 @@ test('pre-market high', () => {
     marketOpen,
     marketClose,
     tick: createTick({
-      time: createTimeAsUnix('09:29'),
+      time: createTimeAsUnix('09:30'),
       type: 'TRADE',
       value: 1.4,
       size: 100,
     }),
   });
 
-  expect(data.preMarketHigh).toBe(2);
-
-  // Don't update after the market is open
-  handleTrackerTick({
-    data,
-    marketOpen,
-    marketClose,
-    tick: createTick({
-      time: createTimeAsUnix('09:30'),
-      type: 'TRADE',
-      value: 3,
-      size: 100,
-    }),
-  });
-
-  expect(data.preMarketHigh).toBe(2);
+  expect(data.high).toBe(2);
+  expect(data.last).toBe(1.4);
 });
 
-test('pre-market low', () => {
+test('in-market low', () => {
   const data = initTracker();
 
   const marketOpen = getMarketOpen(getTestDate());
@@ -103,9 +121,9 @@ test('pre-market low', () => {
     }),
   });
 
-  expect(data.preMarketLow).toBe(0);
+  expect(data.low).toBe(0);
 
-  // Update the first value
+  // Don't update in pre-market
   handleTrackerTick({
     data,
     marketOpen,
@@ -118,39 +136,10 @@ test('pre-market low', () => {
     }),
   });
 
-  expect(data.preMarketLow).toBe(1);
+  expect(data.low).toBe(0);
+  expect(data.last).toBe(1);
 
-  // Make sure it updates with a second
-  handleTrackerTick({
-    data,
-    marketOpen,
-    marketClose,
-    tick: createTick({
-      time: createTimeAsUnix('09:29'),
-      type: 'TRADE',
-      value: 0.8,
-      size: 100,
-    }),
-  });
-
-  expect(data.preMarketLow).toBe(0.8);
-
-  // Don't go back down
-  handleTrackerTick({
-    data,
-    marketOpen,
-    marketClose,
-    tick: createTick({
-      time: createTimeAsUnix('09:29'),
-      type: 'TRADE',
-      value: 1.2,
-      size: 100,
-    }),
-  });
-
-  expect(data.preMarketLow).toBe(0.8);
-
-  // Don't update after the market is open
+  // Update the first value
   handleTrackerTick({
     data,
     marketOpen,
@@ -158,15 +147,48 @@ test('pre-market low', () => {
     tick: createTick({
       time: createTimeAsUnix('09:30'),
       type: 'TRADE',
-      value: 0.4,
+      value: 1,
       size: 100,
     }),
   });
 
-  expect(data.preMarketLow).toBe(0.8);
+  expect(data.low).toBe(1);
+  expect(data.last).toBe(1);
+
+  // Make sure it updates with a second
+  handleTrackerTick({
+    data,
+    marketOpen,
+    marketClose,
+    tick: createTick({
+      time: createTimeAsUnix('09:30'),
+      type: 'TRADE',
+      value: 0.9,
+      size: 100,
+    }),
+  });
+
+  expect(data.low).toBe(0.9);
+  expect(data.last).toBe(0.9);
+
+  // Don't go back down
+  handleTrackerTick({
+    data,
+    marketOpen,
+    marketClose,
+    tick: createTick({
+      time: createTimeAsUnix('09:30'),
+      type: 'TRADE',
+      value: 1.4,
+      size: 100,
+    }),
+  });
+
+  expect(data.low).toBe(0.9);
+  expect(data.last).toBe(1.4);
 });
 
-test('pre-market volume', () => {
+test('in-market volume', () => {
   const data = initTracker();
 
   const marketOpen = getMarketOpen(getTestDate());
@@ -198,7 +220,7 @@ test('pre-market volume', () => {
     }),
   });
 
-  expect(data.preMarketVolume).toBe(100);
+  expect(data.volume).toBe(100);
 
   // Update the first value
   handleTrackerTick({
@@ -213,5 +235,65 @@ test('pre-market volume', () => {
     }),
   });
 
-  expect(data.preMarketVolume).toBe(100);
+  expect(data.volume).toBe(200);
+
+  // Make sure it updates with a second
+  handleTrackerTick({
+    data,
+    marketOpen,
+    marketClose,
+    tick: createTick({
+      time: createTimeAsUnix('09:30'),
+      type: 'TRADE',
+      value: 0.9,
+      size: 100,
+    }),
+  });
+
+  expect(data.volume).toBe(300);
+
+  // Don't go back down
+  handleTrackerTick({
+    data,
+    marketOpen,
+    marketClose,
+    tick: createTick({
+      time: createTimeAsUnix('09:30'),
+      type: 'TRADE',
+      value: 1.4,
+      size: 150,
+    }),
+  });
+
+  expect(data.volume).toBe(450);
+});
+
+describe('market status', () => {
+  const marketOpen = getMarketOpen(getTestDate());
+  const marketClose = getMarketClose(getTestDate());
+  const preMarketOpen = getPreMarketOpen(getTestDate());
+
+  const times: Array<[string, MarketStatus]> = [
+    ['01:00', 'CLOSED'],
+    ['03:59', 'CLOSED'],
+    ['04:00', 'PREMARKET'],
+    ['04:01', 'PREMARKET'],
+    ['09:29', 'PREMARKET'],
+    ['09:30', 'OPEN'],
+    ['16:30', 'OPEN'],
+    ['16:31', 'CLOSED'],
+  ];
+
+  times.forEach(([time, marketStatus]) => {
+    test(`that ${time} has a market status of ${marketStatus}`, () => {
+      expect(
+        getMarketState(
+          createTimeAsUnix(time),
+          preMarketOpen,
+          marketOpen,
+          marketClose,
+        ),
+      ).toBe(marketStatus);
+    });
+  });
 });

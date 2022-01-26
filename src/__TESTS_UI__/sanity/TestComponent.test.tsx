@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-import {TestComponent} from '../../../ui/TestComponent';
+import {TestComponent} from '../../ui/TestComponent';
 
 test('React testing sanity check..', () => {
   const div = document.createElement('div');

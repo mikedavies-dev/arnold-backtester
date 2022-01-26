@@ -2,15 +2,15 @@ import express from 'express';
 import path from 'path';
 
 import Logger from '../utils/logger';
-
-const log = Logger('Express');
+import Env from '../utils/env';
 
 import * as Home from './routes/home';
 import * as Api from './routes/api';
 
+const log = Logger('Express');
+
 export async function startServer() {
   const app = express();
-  const PORT = 4020;
 
   // Setup static files
   app.use(express.static(path.join(__dirname, '../public')));
@@ -19,11 +19,11 @@ export async function startServer() {
   Api.init(app);
 
   // Start the server
-  await app.listen(PORT);
-
-  // Tell the world
-  log(`⚡️ Server is running at http://localhost:${PORT}`);
+  const server = app.listen(Env.SERVER_PORT, () => {
+    // Tell the world
+    log(`⚡️ Server is running at http://localhost:${Env.SERVER_PORT}`);
+  });
 
   // return..
-  return app;
+  return server;
 }

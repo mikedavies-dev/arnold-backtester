@@ -1,8 +1,4 @@
-import {
-  fileExists,
-  loadTsFile,
-  loadTsForSymbolAndDate,
-} from '../../../utils/data';
+import {fileExists, loadTsFile, loadTsForSymbolAndDate} from '../../utils/data';
 import {getTestDate} from '../test-utils/tick';
 
 test('file does not exist', async () => {
@@ -14,7 +10,7 @@ test('file exists', async () => {
 });
 
 test('load valid ts data', async () => {
-  const data = await loadTsFile('./src/tests/backend/test-data/tick-data.csv');
+  const data = await loadTsFile('./src/__TESTS__/test-data/tick-data.csv');
 
   expect(data).toMatchInlineSnapshot(`
     Array [
