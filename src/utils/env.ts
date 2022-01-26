@@ -21,6 +21,7 @@ const environment: {
   isProduction: boolean;
   isTesting: boolean;
   MONGO_CONNECTION_STRING: string;
+  SERVER_PORT: string;
   getEnv: (name: string, def: string) => string;
 } = {
   env: process.env,
@@ -35,6 +36,7 @@ const environment: {
     'MONGO_CONNECTION_STRING',
     'mongodb://localhost:27017/arnold',
   ),
+  SERVER_PORT: getEnv('SERVER_PORT', '4010'),
   getEnv,
 };
 

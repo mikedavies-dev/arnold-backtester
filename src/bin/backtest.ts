@@ -32,7 +32,7 @@ async function run() {
   } catch (err) {
     const errorCode =
       err instanceof BacktestControllerError ? err.code : 'unknown';
-    log(`Failed to run backtest: ${errorCode}`);
+    log(`Failed to run backtest: ${errorCode}`, err);
   }
 }
 

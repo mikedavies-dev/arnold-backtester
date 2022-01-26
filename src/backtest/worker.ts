@@ -1,6 +1,7 @@
 // Access the workerData by requiring it.
 import {format} from 'date-fns';
 import numeral from 'numeral';
+import path from 'path';
 
 import {loadTsForSymbolAndDate} from '../utils/data';
 import {Profile} from '../utils/profile';
@@ -47,8 +48,12 @@ function marketSortFn(row1: Tick, row2: Tick) {
 
 async function loadJsOrTsStrategy(strategy: string) {
   return (
-    (await loadStrategy(`../strategies/${strategy}.js`)) ||
-    (await loadStrategy(`../strategies/${strategy}.ts`))
+    (await loadStrategy(
+      path.join(process.cwd(), `./strategies/${strategy}.js`),
+    )) ||
+    (await loadStrategy(
+      path.join(process.cwd(), `./src/strategies/${strategy}.ts`),
+    ))
   );
 }
 

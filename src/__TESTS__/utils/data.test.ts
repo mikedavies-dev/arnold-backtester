@@ -10,7 +10,7 @@ test('file exists', async () => {
 });
 
 test('load valid ts data', async () => {
-  const data = await loadTsFile('./src/tests/test-data/tick-data.csv');
+  const data = await loadTsFile('./src/__TESTS__/test-data/tick-data.csv');
 
   expect(data).toMatchInlineSnapshot(`
     Array [

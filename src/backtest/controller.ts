@@ -9,7 +9,7 @@ import {BackTestWorkerErrorCode} from '../backtest/worker';
 import {Position} from './broker';
 
 const baseFolder = path.parse(__filename).dir;
-const filePath = path.join(baseFolder, '../bin/worker.js');
+const filePath = path.join(baseFolder, './worker.js');
 
 export type WorkerResult = {
   error?: BackTestWorkerErrorCode;
