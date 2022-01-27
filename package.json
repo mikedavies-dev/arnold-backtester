@@ -18,6 +18,7 @@
   "main": "index.ts",
   "devDependencies": {
     "@babel/eslint-parser": "^7.16.5",
+    "@blueprintjs/core": "^3.52.0",
     "@parcel/transformer-sass": "^2.2.1",
     "@testing-library/jest-dom": "^5.16.1",
     "@types/express": "^4.17.13",
@@ -63,9 +64,12 @@
   "license": "ISC",
   "description": "",
   "lint-staged": {
-    "*.{ts,tsx,js,jsx,scss}": [
+    "*.{ts,tsx,js,jsx}": [
       "prettier --write",
       "eslint --cache --fix"
+    ],
+    "*.{scss}": [
+      "prettier --write"
     ],
     "*.md": [
       "prettier --write"
@@ -74,8 +78,9 @@
   },
   "targets": {
     "frontend-backtest": {
-      "source": "./src/clientjs/backtest/index.html",
-      "distDir": "./dist/public/backtest"
+      "source": "./src/web/backtest/index.html",
+      "distDir": "./dist/public/backtest",
+      "publicUrl": "/backtest"
     },
     "server": {
       "source": "./src/bin/server.ts",

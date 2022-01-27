@@ -14,7 +14,7 @@ module.exports = {
     '!src/backtest/controller.ts',
     '!src/**/*.test.{ts,tsx}',
     '!./src/__TESTS_UI__/jest.ts',
-    '!src/clientjs/**',
+    '!src/web/**',
   ],
   projects: [
     {

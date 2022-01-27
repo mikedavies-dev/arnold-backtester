@@ -1,0 +1,15 @@
+// @import "~normalize.css";
+@import 'npm:@blueprintjs/core/lib/css/blueprint.css';
+@import 'npm:@blueprintjs/icons/lib/css/blueprint-icons.css';
+
+body {
+  background-color: #30404d;
+  color: white;
+}
+
+.page {
+  padding-top: 50px;
+  max-width: 1024px;
+  width: 100%;
+  margin: 0 auto;
+}
