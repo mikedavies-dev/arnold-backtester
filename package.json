@@ -73,9 +73,9 @@
     "*.js": "eslint --cache --fix"
   },
   "targets": {
-    "frontend": {
-      "source": "./src/clientjs/home.html",
-      "distDir": "./dist/public"
+    "frontend-backtest": {
+      "source": "./src/clientjs/backtest/index.html",
+      "distDir": "./dist/public/backtest"
     },
     "server": {
       "source": "./src/bin/server.ts",
