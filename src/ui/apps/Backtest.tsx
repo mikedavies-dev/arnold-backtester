@@ -3,6 +3,21 @@ Show an Omnibar to list the backtest results available, when one is selected loa
 display the breakdown
 
 https://blueprintjs.com/docs/#select/omnibar
+
+## TODO
+
+# API:
+- API to load results summary list (date/time, symbols, strategy, etc)
+- API to load the full results details - including calculated stats or
+  should we calculate stats on the client so we can adjust settings?
+
+# CLIENT:
+- When the page loads show a progress load the current list of backtests
+- After loading show an omnibar with the results so the user can choose one
+- Each time the Open Backtest button is pressed, re-load the results from the server
+- When a backtest is selected, load the positions from the server and calculate stats
+
+# Testing!
 */
 
 import {useReducer} from 'react';

@@ -2,6 +2,7 @@ import {BacktestResults} from '../../backtest/controller';
 import {
   connect,
   disconnect,
+  getBacktest,
   getBacktests,
   resetDatabase,
   storeBacktestResults,
@@ -79,6 +80,12 @@ describe('mongo db tests', () => {
 
     // Make sure the results are the same
     const [storedBacktest] = await getBacktests();
-    expect(storedBacktest.toJSON()).toMatchObject(results);
+    expect(storedBacktest).toMatchObject(results);
+
+    // get an individual backtest
+    const storedSingleBacktest = await getBacktest(
+      storedBacktest._id?.toString() || '',
+    );
+    expect(storedSingleBacktest).toMatchObject(results);
   });
 });

@@ -46,7 +46,12 @@ export async function storeBacktestResults(results: BacktestResults) {
   });
 }
 
-export function getBacktests() {
+export async function getBacktests(): Promise<Array<DbBacktest>> {
   const Backtest = mongoose.model<DbBacktest>('Backtest');
-  return Backtest.find();
+  return await Backtest.find();
+}
+
+export async function getBacktest(id: string): Promise<DbBacktest | null> {
+  const Backtest = mongoose.model<DbBacktest>('Backtest');
+  return await Backtest.findById(id);
 }

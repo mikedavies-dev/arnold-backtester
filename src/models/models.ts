@@ -2,7 +2,12 @@ import {Schema, model} from 'mongoose';
 import {Position} from '../backtest/broker';
 import {Profile} from '../utils/profile';
 
+type MongoObjectId = {
+  toString(): string;
+};
+
 export type DbBacktest = {
+  _id?: MongoObjectId;
   createdAt: Date;
   positions: Array<Position>;
   profile: Profile;

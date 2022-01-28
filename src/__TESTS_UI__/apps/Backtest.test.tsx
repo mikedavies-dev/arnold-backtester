@@ -1,9 +1,14 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
+import {render, screen} from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 
 import Backtest from '../../ui/apps/Backtest';
 
 test('Create an empty backtest component..', () => {
-  const div = document.createElement('div');
-  ReactDOM.render(<Backtest />, div);
+  render(<Backtest />);
+
+  // Click the open backtest button
+  userEvent.click(screen.getByText('Open Backtest'));
+
+  // Expect to see the loader .. ?
 });
