@@ -20,42 +20,105 @@ https://blueprintjs.com/docs/#select/omnibar
 # Testing!
 */
 
-import {useReducer} from 'react';
+import {useReducer, useEffect} from 'react';
+import {Button, ButtonGroup} from '@blueprintjs/core';
 
-import {Button, ButtonGroup, NonIdealState} from '@blueprintjs/core';
+import {BacktestResultSummary, listBacktests} from '../api';
+import {BacktestResultsPicker} from '../components/BacktestResultsPicker';
+import Logger from '../../utils/logger';
+
+const log = Logger('UI');
 
 type AppState = {
-  isOpen: boolean;
+  isLoadingResults: boolean;
+  resultsPickerIsOpen: boolean;
+  results: Array<BacktestResultSummary>;
 };
 
 type Action =
-  | {type: 'request'}
-  | {type: 'success'; results: Array<any>}
-  | {type: 'failure'; error: string};
+  | {type: 'openResultsPicker'}
+  | {type: 'loadedBacktestResults'; results: Array<BacktestResultSummary>}
+  | {type: 'toggleLoadingResults'; isLoading: boolean}
+  | {type: 'failure'; error: string}
+  | {type: 'closeResultsPicker'};
 
-function reducer(state: AppState, action: Action) {
+function reducer(state: AppState, action: Action): AppState {
   switch (action.type) {
-    case 'failure':
-      return state;
+    case 'openResultsPicker':
+      return {
+        ...state,
+        resultsPickerIsOpen: true,
+      };
+
+    case 'toggleLoadingResults':
+      return {
+        ...state,
+        isLoadingResults: action.isLoading,
+      };
+
+    case 'loadedBacktestResults':
+      return {
+        ...state,
+        results: action.results,
+      };
+
+    case 'closeResultsPicker':
+      return {
+        ...state,
+        resultsPickerIsOpen: false,
+      };
   }
   return state;
 }
 
 export default function Backtest() {
   const [state, dispatch] = useReducer(reducer, {
-    isOpen: false,
+    isLoadingResults: false,
+    resultsPickerIsOpen: false,
+    results: [],
   });
+
+  const showResultsPicker = async () => {
+    try {
+      dispatch({type: 'openResultsPicker'});
+      dispatch({type: 'toggleLoadingResults', isLoading: true});
+      dispatch({type: 'loadedBacktestResults', results: await listBacktests()});
+    } catch (err) {
+      log('Failed to load results', err);
+    } finally {
+      dispatch({type: 'toggleLoadingResults', isLoading: false});
+    }
+  };
+
+  useEffect(() => {
+    showResultsPicker();
+  }, []);
+
+  const handleSelectResult = (result: BacktestResultSummary) => {
+    log('Select', result);
+    dispatch({type: 'closeResultsPicker'});
+  };
+
+  const handleCloseResultsPicker = () => {
+    dispatch({type: 'closeResultsPicker'});
+  };
 
   return (
     <>
-      <ButtonGroup>
-        <Button icon="folder-open" text="Open Backtest" />
-      </ButtonGroup>
-      <NonIdealState
-        icon="search"
-        title="No search results"
-        description="No results found"
+      <BacktestResultsPicker
+        items={state.results}
+        isOpen={state.resultsPickerIsOpen}
+        isLoading={state.isLoadingResults}
+        onSelect={handleSelectResult}
+        onClose={handleCloseResultsPicker}
       />
+      <ButtonGroup>
+        <Button
+          icon="folder-open"
+          text="Open Backtest"
+          onClick={showResultsPicker}
+        />
+      </ButtonGroup>
     </>
   );
 }

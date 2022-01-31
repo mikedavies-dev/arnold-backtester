@@ -19,6 +19,7 @@
   "devDependencies": {
     "@babel/eslint-parser": "^7.16.5",
     "@blueprintjs/core": "^3.52.0",
+    "@blueprintjs/select": "^3.18.11",
     "@parcel/transformer-sass": "^2.2.1",
     "@testing-library/dom": "^8.11.3",
     "@testing-library/jest-dom": "^5.16.1",
@@ -54,7 +55,7 @@
     "backtest": "TZ=America/New_York node dist/bin/backtest.js",
     "test": "is-ci-cli test:coverage test:watch",
     "test:coverage": "TZ=America/New_York jest --coverage",
-    "test:watch": "TZ=America/New_York jest --watch",
+    "test:watch": "TZ=America/New_York jest --watch --verbose",
     "check": "tsc --noEmit",
     "check:watch": "tsc --noEmit --watch",
     "build": "rm -rf ./dist && npx parcel build",
