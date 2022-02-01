@@ -24,14 +24,15 @@ import {useReducer, useEffect} from 'react';
 import {Button, ButtonGroup} from '@blueprintjs/core';
 
 import {BacktestResultSummary, listBacktests} from '../api';
-import {BacktestResultsPicker} from '../components/BacktestResultsPicker';
 import Logger from '../../utils/logger';
+import {BacktestResultsPicker} from '../components/BacktestResultsPicker';
 
 const log = Logger('UI');
 
 type AppState = {
   isLoadingResults: boolean;
   resultsPickerIsOpen: boolean;
+  selectedResult: BacktestResultSummary | null;
   results: Array<BacktestResultSummary>;
 };
 
@@ -39,7 +40,7 @@ type Action =
   | {type: 'openResultsPicker'}
   | {type: 'loadedBacktestResults'; results: Array<BacktestResultSummary>}
   | {type: 'toggleLoadingResults'; isLoading: boolean}
-  | {type: 'failure'; error: string}
+  | {type: 'setSelectedResult'; selected: BacktestResultSummary}
   | {type: 'closeResultsPicker'};
 
 function reducer(state: AppState, action: Action): AppState {
@@ -67,20 +68,25 @@ function reducer(state: AppState, action: Action): AppState {
         ...state,
         resultsPickerIsOpen: false,
       };
+
+    case 'setSelectedResult':
+      return {
+        ...state,
+        selectedResult: action.selected,
+      };
   }
-  return state;
 }
 
 export default function Backtest() {
   const [state, dispatch] = useReducer(reducer, {
     isLoadingResults: false,
     resultsPickerIsOpen: false,
+    selectedResult: null,
     results: [],
   });
 
-  const showResultsPicker = async () => {
+  const loadBacktestResults = async () => {
     try {
-      dispatch({type: 'openResultsPicker'});
       dispatch({type: 'toggleLoadingResults', isLoading: true});
       dispatch({type: 'loadedBacktestResults', results: await listBacktests()});
     } catch (err) {
@@ -91,34 +97,23 @@ export default function Backtest() {
   };
 
   useEffect(() => {
-    showResultsPicker();
+    loadBacktestResults();
   }, []);
 
   const handleSelectResult = (result: BacktestResultSummary) => {
-    log('Select', result);
-    dispatch({type: 'closeResultsPicker'});
-  };
-
-  const handleCloseResultsPicker = () => {
-    dispatch({type: 'closeResultsPicker'});
+    log('Picked result', result);
+    dispatch({type: 'setSelectedResult', selected: result});
   };
 
   return (
     <>
+      <ButtonGroup>
+        <Button icon="refresh" text="Refresh" onClick={loadBacktestResults} />
+      </ButtonGroup>
       <BacktestResultsPicker
         items={state.results}
-        isOpen={state.resultsPickerIsOpen}
-        isLoading={state.isLoadingResults}
         onSelect={handleSelectResult}
-        onClose={handleCloseResultsPicker}
       />
-      <ButtonGroup>
-        <Button
-          icon="folder-open"
-          text="Open Backtest"
-          onClick={showResultsPicker}
-        />
-      </ButtonGroup>
     </>
   );
 }

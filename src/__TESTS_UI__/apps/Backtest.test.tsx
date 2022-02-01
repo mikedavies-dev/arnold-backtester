@@ -31,8 +31,10 @@ afterEach(() => server.resetHandlers());
 test('Create an empty backtest component..', async () => {
   render(<Backtest />);
   // Click the open backtest button
-  userEvent.click(screen.getByText('Open Backtest'));
+  // userEvent.click(screen.getByText('Open Backtest'));
 
   // Expect to see the loader .. ?
-  expect(await screen.findByText(/sample: ZZZZ/i)).toBeInTheDocument();
+  expect(
+    await screen.findByText(/61e99b598dad9ede732903e6/i),
+  ).toBeInTheDocument();
 });

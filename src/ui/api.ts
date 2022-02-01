@@ -12,8 +12,11 @@ export type RawBacktestResultSummary = {
   strategy: string;
 };
 
-export type BacktestResultSummary = RawBacktestResultSummary & {
+export type BacktestResultSummary = {
+  id: string;
   createdAt: Date;
+  symbols: Array<string>;
+  strategy: string;
 };
 
 export async function listBacktests(): Promise<Array<BacktestResultSummary>> {
