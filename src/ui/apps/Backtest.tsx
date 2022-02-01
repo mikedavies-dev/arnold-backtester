@@ -1,61 +1,130 @@
-/*
-Show an Omnibar to list the backtest results available, when one is selected load the details and
-display the breakdown
+import {useReducer, useEffect} from 'react';
+import {Button, ButtonGroup} from '@blueprintjs/core';
 
-https://blueprintjs.com/docs/#select/omnibar
+import {
+  BacktestResultSummary,
+  listBacktests,
+  listBacktest,
+  BacktestResultDetails,
+} from '../api';
 
-## TODO
+import BacktestResultsDetails from '../components/BacktestResultsDetails';
+import BacktestResultsPicker from '../components/BacktestResultsPicker';
+import LoadingIndicator from '../components/LoadingIndicator';
 
-# API:
-- API to load results summary list (date/time, symbols, strategy, etc)
-- API to load the full results details - including calculated stats or
-  should we calculate stats on the client so we can adjust settings?
+import Logger from '../../utils/logger';
 
-# CLIENT:
-- When the page loads show a progress load the current list of backtests
-- After loading show an omnibar with the results so the user can choose one
-- Each time the Open Backtest button is pressed, re-load the results from the server
-- When a backtest is selected, load the positions from the server and calculate stats
-
-# Testing!
-*/
-
-import {useReducer} from 'react';
-
-import {Button, ButtonGroup, NonIdealState} from '@blueprintjs/core';
+const log = Logger('UI');
 
 type AppState = {
-  isOpen: boolean;
+  isLoading: boolean;
+  results: Array<BacktestResultSummary>;
+  details: BacktestResultDetails | null;
 };
 
 type Action =
-  | {type: 'request'}
-  | {type: 'success'; results: Array<any>}
-  | {type: 'failure'; error: string};
+  | {type: 'isLoading'; value: boolean}
+  | {type: 'backtestResults'; value: Array<BacktestResultSummary>}
+  | {type: 'details'; value: BacktestResultDetails | null};
 
-function reducer(state: AppState, action: Action) {
+function reducer(state: AppState, action: Action): AppState {
   switch (action.type) {
-    case 'failure':
-      return state;
+    case 'isLoading':
+      return {
+        ...state,
+        isLoading: action.value,
+      };
+
+    case 'backtestResults':
+      return {
+        ...state,
+        results: action.value,
+      };
+
+    case 'details':
+      return {
+        ...state,
+        details: action.value,
+      };
   }
-  return state;
 }
 
 export default function Backtest() {
   const [state, dispatch] = useReducer(reducer, {
-    isOpen: false,
+    isLoading: false,
+    results: [],
+    details: null,
   });
+
+  const loadBacktestResults = async () => {
+    try {
+      dispatch({type: 'isLoading', value: true});
+      dispatch({type: 'backtestResults', value: await listBacktests()});
+    } catch (err) {
+      log('Failed', err);
+    } finally {
+      dispatch({type: 'isLoading', value: false});
+    }
+  };
+
+  const handleSelectResult = async (result: BacktestResultSummary) => {
+    try {
+      dispatch({type: 'isLoading', value: true});
+      dispatch({
+        type: 'details',
+        value: await listBacktest(result.id),
+      });
+    } catch (err) {
+      log('Failed', err);
+    } finally {
+      dispatch({type: 'isLoading', value: false});
+    }
+  };
+
+  // Load the initial results
+  useEffect(() => {
+    loadBacktestResults();
+  }, []);
+
+  const closeBacktestResult = () => {
+    dispatch({
+      type: 'details',
+      value: null,
+    });
+  };
 
   return (
     <>
-      <ButtonGroup>
-        <Button icon="folder-open" text="Open Backtest" />
-      </ButtonGroup>
-      <NonIdealState
-        icon="search"
-        title="No search results"
-        description="No results found"
-      />
+      <LoadingIndicator isOpen={state.isLoading} />
+      {!state.details && (
+        <>
+          <ButtonGroup>
+            <Button
+              icon="refresh"
+              text="Refresh Results"
+              onClick={loadBacktestResults}
+            />
+          </ButtonGroup>
+          <h2>Backtest Results</h2>
+          <BacktestResultsPicker
+            items={state.results}
+            onSelect={handleSelectResult}
+          />
+        </>
+      )}
+      {state.details && (
+        <>
+          <ButtonGroup>
+            <Button
+              icon="undo"
+              text="Back to results"
+              onClick={closeBacktestResult}
+            />
+          </ButtonGroup>
+          <h2>Backtest Results</h2>
+          <BacktestResultsDetails />
+        </>
+      )}
     </>
   );
 }
