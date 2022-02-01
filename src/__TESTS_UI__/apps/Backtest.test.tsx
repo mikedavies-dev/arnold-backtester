@@ -2,7 +2,7 @@
 // https://kentcdodds.com/blog/fix-the-not-wrapped-in-act-warning
 
 import React from 'react';
-import {render, screen, waitFor} from '@testing-library/react';
+import {render, screen} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {rest} from 'msw';
 import {setupServer} from 'msw/node';
@@ -14,12 +14,19 @@ const server = setupServer(
     return res(
       ctx.json([
         {
-          id: '61e99b598dad9ede732903e6',
+          id: 'item2',
           createdAt: '2022-01-20T00:00:00.000Z',
           symbols: ['ZZZZ'],
           strategy: 'sample',
         },
       ]),
+    );
+  }),
+  rest.get('/api/backtest/item2', (req, res, ctx) => {
+    return res(
+      ctx.json({
+        // TODO, mock contents here
+      }),
     );
   }),
 );
@@ -30,11 +37,14 @@ afterEach(() => server.resetHandlers());
 
 test('Create an empty backtest component..', async () => {
   render(<Backtest />);
-  // Click the open backtest button
-  // userEvent.click(screen.getByText('Open Backtest'));
 
-  // Expect to see the loader .. ?
-  expect(
-    await screen.findByText(/61e99b598dad9ede732903e6/i),
-  ).toBeInTheDocument();
+  expect(await screen.findByText(/item2/i)).toBeInTheDocument();
+
+  const row = await screen.findByTestId(/item2/i);
+  expect(row).toBeInTheDocument();
+
+  // click the row
+  userEvent.click(row);
+
+  await screen.findByText('Some results');
 });

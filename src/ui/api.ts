@@ -19,6 +19,20 @@ export type BacktestResultSummary = {
   strategy: string;
 };
 
+export type RawBacktestResultDetails = {
+  id: string;
+  createdAt: string;
+  symbols: Array<string>;
+  strategy: string;
+};
+
+export type BacktestResultDetails = {
+  id: string;
+  createdAt: Date;
+  symbols: Array<string>;
+  strategy: string;
+};
+
 export async function listBacktests(): Promise<Array<BacktestResultSummary>> {
   const {data}: {data: Array<RawBacktestResultSummary>} = await instance.get(
     'backtests',
@@ -30,4 +44,15 @@ export async function listBacktests(): Promise<Array<BacktestResultSummary>> {
       createdAt: parseISO(result.createdAt),
     };
   }) as Array<BacktestResultSummary>;
+}
+
+export async function listBacktest(id: string): Promise<BacktestResultDetails> {
+  const {data}: {data: RawBacktestResultDetails} = await instance.get(
+    `backtest/${id}`,
+  );
+
+  return {
+    ...data,
+    createdAt: parseISO(data.createdAt),
+  };
 }

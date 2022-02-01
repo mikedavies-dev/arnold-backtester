@@ -1,11 +1,11 @@
-import {render, screen, within} from '@testing-library/react';
+import {render, screen} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
-import {BacktestResultsPicker} from '../../ui/components/BacktestResultsPicker';
+import BacktestResultsPicker from '../../ui/components/BacktestResultsPicker';
 
-test('display an empty results list', async () => {
+test('display an empty results list and check for no results indicator', async () => {
   render(<BacktestResultsPicker items={[]} onSelect={() => {}} />);
-  expect(await screen.findByText(/Backtest Results/i)).toBeInTheDocument();
+  expect(await screen.findByText(/no results found/i)).toBeInTheDocument();
 });
 
 test('display a list of results and click a result', async () => {
@@ -41,7 +41,7 @@ test('display a list of results and click a result', async () => {
   expect(row).toBeInTheDocument();
 
   // click the row
-  userEvent.dblClick(row);
+  userEvent.click(row);
 
   // expect the handler to have been called
   expect(handleSelect).toHaveBeenCalledTimes(1);
