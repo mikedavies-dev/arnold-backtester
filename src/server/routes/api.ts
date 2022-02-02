@@ -19,6 +19,7 @@ export function init(app: Express) {
           createdAt: backtest.createdAt,
           symbols: backtest.profile.symbols,
           strategy: backtest.profile.strategy.name,
+          positions: backtest.positions.length,
         };
       }),
     );
@@ -32,6 +33,10 @@ export function init(app: Express) {
       return;
     }
 
-    res.send(backtest);
+    res.send({
+      id: backtest._id,
+      positions: backtest.positions,
+      profile: backtest.profile,
+    });
   });
 }

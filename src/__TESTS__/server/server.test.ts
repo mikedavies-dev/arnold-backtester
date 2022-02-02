@@ -50,6 +50,7 @@ test('list backtests', async () => {
       Object {
         "createdAt": "2022-01-01T05:00:00.000Z",
         "id": "abcd",
+        "positions": 1,
         "strategy": "test",
         "symbols": Array [
           "ZZZZ",
@@ -68,8 +69,7 @@ test('get a backtest by id', async () => {
   expect(res.status).toBe(200);
   expect(res.data).toMatchInlineSnapshot(`
     Object {
-      "_id": "abcd",
-      "createdAt": "2022-01-01T05:00:00.000Z",
+      "id": "abcd",
       "positions": Array [
         Object {
           "closeReason": "test",

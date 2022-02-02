@@ -53,5 +53,6 @@ export async function getBacktests(): Promise<Array<DbBacktest>> {
 
 export async function getBacktest(id: string): Promise<DbBacktest | null> {
   const Backtest = mongoose.model<DbBacktest>('Backtest');
-  return await Backtest.findById(id);
+  const backtest = await Backtest.findById(id);
+  return backtest;
 }

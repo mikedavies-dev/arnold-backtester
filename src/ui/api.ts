@@ -17,6 +17,7 @@ export type BacktestResultSummary = {
   createdAt: Date;
   symbols: Array<string>;
   strategy: string;
+  positions: number;
 };
 
 export type RawBacktestResultDetails = {

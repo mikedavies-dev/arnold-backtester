@@ -35,7 +35,7 @@ beforeAll(() => server.listen({onUnhandledRequest: 'error'}));
 afterAll(() => server.close());
 afterEach(() => server.resetHandlers());
 
-test('Create an empty backtest component..', async () => {
+test('loading results, selecting a result and clicking back', async () => {
   render(<Backtest />);
 
   expect(await screen.findByText(/item2/i)).toBeInTheDocument();
@@ -46,5 +46,11 @@ test('Create an empty backtest component..', async () => {
   // click the row
   userEvent.click(row);
 
+  // Check that we are seeing the results
   await screen.findByText('Some results');
+  expect(await screen.queryByText(/item2/i)).toBeFalsy();
+
+  // Click the back button back to results
+  userEvent.click(await screen.findByText(/back to results/i));
+  expect(await screen.findByText(/item2/i)).toBeInTheDocument();
 });

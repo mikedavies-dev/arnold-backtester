@@ -55,7 +55,7 @@ export default function BacktestResultsPicker({
                   </Td>
                   <Td>{result.strategy}</Td>
                   <Td>{result.symbols.join(', ')}</Td>
-                  <Td width="100px">0</Td>
+                  <Td width="100px">{result.positions}</Td>
                 </tr>
               );
             })}

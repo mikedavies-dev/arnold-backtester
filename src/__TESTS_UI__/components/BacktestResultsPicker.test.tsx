@@ -18,18 +18,21 @@ test('display a list of results and click a result', async () => {
           createdAt: new Date(),
           strategy: 'sample',
           symbols: ['ZZZZ'],
+          positions: 0,
         },
         {
           id: 'item2',
           createdAt: new Date(),
           strategy: 'sample',
           symbols: ['ZZZZ'],
+          positions: 0,
         },
         {
           id: 'item3',
           createdAt: new Date(),
           strategy: 'sample',
           symbols: ['ZZZZ'],
+          positions: 0,
         },
       ]}
       onSelect={handleSelect}
