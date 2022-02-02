@@ -1,0 +1,75 @@
+import {addMinutes} from 'date-fns';
+
+import {OrderAction, Position, Order} from '../../backtest/broker';
+import {createTimeAsDate} from './tick';
+
+type TestOrderSpec = {
+  action: OrderAction;
+  winner: boolean;
+  length: number;
+  shares: number;
+  profitLossPerShares: number;
+  entryPrice: number;
+  symbol?: string;
+  time: string;
+};
+
+export function createTestPosition({
+  symbol = 'ZZZZ',
+  shares,
+  action,
+  winner,
+  length,
+  profitLossPerShares,
+  entryPrice,
+  time,
+}: TestOrderSpec): Position {
+  const openedAt = createTimeAsDate(time);
+
+  const entry: Order = {
+    id: 1,
+    symbol,
+    action,
+    shares,
+    type: 'MKT',
+    openedAt: openedAt,
+    filledAt: openedAt,
+    avgFillPrice: entryPrice,
+    state: 'FILLED',
+  };
+
+  const closedAt = addMinutes(openedAt, length);
+
+  const exitPrice = (() => {
+    if (action === 'BUY') {
+      return winner
+        ? entryPrice + profitLossPerShares
+        : entryPrice - profitLossPerShares;
+    }
+
+    return winner
+      ? entryPrice - profitLossPerShares
+      : entryPrice + profitLossPerShares;
+  })();
+
+  const exit: Order = {
+    id: 1,
+    symbol,
+    action: action === 'BUY' ? 'SELL' : 'BUY',
+    shares,
+    type: 'MKT',
+    openedAt: closedAt,
+    filledAt: closedAt,
+    avgFillPrice: exitPrice,
+    state: 'FILLED',
+  };
+
+  return {
+    symbol,
+    orders: [entry, exit],
+    size: shares,
+    data: null,
+    closeReason: 'testing',
+    isClosing: false,
+  };
+}
