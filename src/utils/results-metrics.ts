@@ -1,3 +1,4 @@
+import {pipe} from 'fp-ts/lib/function';
 import {Position, Order} from '../backtest/broker';
 
 /*
@@ -48,25 +49,36 @@ type Metrics = {
   commission: number;
 };
 
-export function totalOrderValue(orders: Array<Order>) {
-  return orders.reduce(
+export const totalOrderValue = (orders: Array<Order>) =>
+  orders.reduce(
     (acc, order) => acc + (order.avgFillPrice || 0) * order.shares,
     0,
   );
-}
+
+const filledOrders = (order: Order) => order.state === 'FILLED';
+const buyOrders = (order: Order) => order.action === 'BUY';
+const sellOrders = (order: Order) => order.action === 'SELL';
+
+const filterOrders =
+  (predicate: (order: Order) => boolean) => (orders: Array<Order>) =>
+    orders.filter(predicate);
 
 export function getPositionPL(position: Position) {
-  const filledOrders = position.orders.filter(o => o.state === 'FILLED');
-
-  const buyValue = totalOrderValue(
-    filledOrders.filter(o => o.action === 'BUY'),
+  const totalBuyValue = pipe(
+    position.orders,
+    filterOrders(filledOrders),
+    filterOrders(buyOrders),
+    totalOrderValue,
   );
 
-  const sellValue = totalOrderValue(
-    filledOrders.filter(o => o.action === 'SELL'),
+  const totalSellValue = pipe(
+    position.orders,
+    filterOrders(filledOrders),
+    filterOrders(sellOrders),
+    totalOrderValue,
   );
 
-  return sellValue - buyValue;
+  return totalSellValue - totalBuyValue;
 }
 
 export function calculateMetrics(positions: Array<Position>, options: Options) {
