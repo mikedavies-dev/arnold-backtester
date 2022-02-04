@@ -223,4 +223,56 @@ describe('test backtest results metrics', () => {
     expect(metrics.maxConsecutiveWins).toBe(2);
     expect(metrics.maxConsecutiveWinAmount).toBe(200);
   });
+
+  test('max consecutive losses', () => {
+    const positions: Array<Position> = [
+      createTestPosition({
+        time: '09:30',
+        length: 5,
+        action: 'BUY',
+        winner: false,
+        shares: 100,
+        entryPrice: 100,
+        profitLossPerShares: 1,
+      }),
+      createTestPosition({
+        time: '09:31',
+        length: 5,
+        action: 'BUY',
+        winner: false,
+        shares: 100,
+        entryPrice: 100,
+        profitLossPerShares: 1,
+      }),
+      createTestPosition({
+        time: '09:32',
+        length: 5,
+        action: 'BUY',
+        winner: true,
+        shares: 100,
+        entryPrice: 100,
+        profitLossPerShares: 1,
+      }),
+      createTestPosition({
+        time: '09:33',
+        length: 5,
+        action: 'BUY',
+        winner: false,
+        shares: 100,
+        entryPrice: 100,
+        profitLossPerShares: 1,
+      }),
+    ];
+
+    const metrics = calculateMetrics(positions, {
+      accountSize,
+      commissionPerTrade,
+    });
+
+    expect(metrics.maxConsecutiveWins).toBe(1);
+    expect(metrics.maxConsecutiveWinAmount).toBe(100);
+
+    expect(metrics.maxConsecutiveLosses).toBe(2);
+    expect(metrics.maxConsecutiveLossAmount).toBe(200);
+  });
 });

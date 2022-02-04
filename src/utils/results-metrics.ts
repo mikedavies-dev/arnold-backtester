@@ -141,7 +141,7 @@ export function handleConsecutivePositionLoss(
   state.currentConsecutiveWinAmount = 0;
 
   state.currentConsecutiveLosses += 1;
-  state.currentConsecutiveLossAmount += positionPnL;
+  state.currentConsecutiveLossAmount += Math.abs(positionPnL); // get the absolute value
 
   if (state.currentConsecutiveLosses > state.maxConsecutiveLosses) {
     state.maxConsecutiveLosses = state.currentConsecutiveLosses;
