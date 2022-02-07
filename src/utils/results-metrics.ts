@@ -156,39 +156,49 @@ type ConsecutivePositions = {
 export function updateConsecutivePositionWin(
   state: ConsecutivePositions,
   positionPnL: number,
-) {
-  state.currentConsecutiveLosses = 0;
-  state.currentConsecutiveLossAmount = 0;
+): ConsecutivePositions {
+  const newState = {...state};
 
-  state.currentConsecutiveWins += 1;
-  state.currentConsecutiveWinAmount += positionPnL;
+  newState.currentConsecutiveLosses = 0;
+  newState.currentConsecutiveLossAmount = 0;
 
-  if (state.currentConsecutiveWins > state.maxConsecutiveWins) {
-    state.maxConsecutiveWins = state.currentConsecutiveWins;
+  newState.currentConsecutiveWins += 1;
+  newState.currentConsecutiveWinAmount += positionPnL;
+
+  if (newState.currentConsecutiveWins > newState.maxConsecutiveWins) {
+    newState.maxConsecutiveWins = newState.currentConsecutiveWins;
   }
 
-  if (state.currentConsecutiveWinAmount > state.maxConsecutiveWinAmount) {
-    state.maxConsecutiveWinAmount = state.currentConsecutiveWinAmount;
+  if (newState.currentConsecutiveWinAmount > newState.maxConsecutiveWinAmount) {
+    newState.maxConsecutiveWinAmount = newState.currentConsecutiveWinAmount;
   }
+
+  return newState;
 }
 
 export function updateConsecutivePositionLoss(
   state: ConsecutivePositions,
   positionPnL: number,
-) {
-  state.currentConsecutiveWins = 0;
-  state.currentConsecutiveWinAmount = 0;
+): ConsecutivePositions {
+  const newState = {...state};
 
-  state.currentConsecutiveLosses += 1;
-  state.currentConsecutiveLossAmount += Math.abs(positionPnL); // get the absolute value
+  newState.currentConsecutiveWins = 0;
+  newState.currentConsecutiveWinAmount = 0;
 
-  if (state.currentConsecutiveLosses > state.maxConsecutiveLosses) {
-    state.maxConsecutiveLosses = state.currentConsecutiveLosses;
+  newState.currentConsecutiveLosses += 1;
+  newState.currentConsecutiveLossAmount += Math.abs(positionPnL); // get the absolute value
+
+  if (newState.currentConsecutiveLosses > newState.maxConsecutiveLosses) {
+    newState.maxConsecutiveLosses = newState.currentConsecutiveLosses;
   }
 
-  if (state.currentConsecutiveLossAmount > state.maxConsecutiveLossAmount) {
-    state.maxConsecutiveLossAmount = state.currentConsecutiveLossAmount;
+  if (
+    newState.currentConsecutiveLossAmount > newState.maxConsecutiveLossAmount
+  ) {
+    newState.maxConsecutiveLossAmount = newState.currentConsecutiveLossAmount;
   }
+
+  return newState;
 }
 
 function updatePeriodMetrics(
@@ -237,7 +247,7 @@ export function calculateMetrics(positions: Array<Position>, options: Options) {
     }),
   };
 
-  const consecutive: ConsecutivePositions = {
+  let consecutive: ConsecutivePositions = {
     maxConsecutiveWins: 0,
     maxConsecutiveLosses: 0,
     maxConsecutiveWinAmount: 0,
@@ -256,12 +266,10 @@ export function calculateMetrics(positions: Array<Position>, options: Options) {
     const positionPnL = getPositionPL(position);
     const isWinner = positionPnL >= 0;
 
-    // consecutive wins/losses (mutate!)
-    if (isWinner) {
-      updateConsecutivePositionWin(consecutive, positionPnL);
-    } else {
-      updateConsecutivePositionLoss(consecutive, positionPnL);
-    }
+    // consecutive wins/losses
+    consecutive = isWinner
+      ? updateConsecutivePositionWin(consecutive, positionPnL)
+      : updateConsecutivePositionLoss(consecutive, positionPnL);
 
     if (position.orders.length) {
       // update hourly metrics
