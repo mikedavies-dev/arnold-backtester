@@ -1,10 +1,55 @@
 import {Position} from '../../backtest/broker';
-import {calculateMetrics} from '../../utils/results-metrics';
+import {
+  calculateMetrics,
+  updatePeriodMetrics,
+  MetricsByPeriod,
+  PositionDirection,
+} from '../../utils/results-metrics';
 
 import {createTestPosition} from '../test-utils/broker';
 
 const accountSize = 1000;
 const commissionPerTrade = 1;
+
+function createAndUpdatePeriodMetrics(
+  data: Partial<MetricsByPeriod>,
+  {
+    orderCount = 0,
+    positionPnL = 0,
+    commissionPerOrder = 0,
+    direction = 'LONG',
+  }: {
+    orderCount?: number;
+    positionPnL?: number;
+    commissionPerOrder?: number;
+    direction?: PositionDirection;
+  } = {},
+): MetricsByPeriod {
+  return updatePeriodMetrics(
+    {
+      orders: 0,
+      positions: 0,
+      longPositions: 0,
+      longWinners: 0,
+      shortPositions: 0,
+      shortWinners: 0,
+      longWinnerPercent: 0,
+      shortWinnerPercent: 0,
+      grossProfit: 0,
+      grossLoss: 0,
+      profitFactor: 0,
+      commission: 0,
+      grossProfitAndLoss: 0,
+      ...data,
+    },
+    {
+      orderCount,
+      positionPnL,
+      commissionPerOrder,
+      direction,
+    },
+  );
+}
 
 describe('test backtest results metrics', () => {
   test('calculate metrics for an empty position list', () => {
@@ -15,8 +60,7 @@ describe('test backtest results metrics', () => {
       commissionPerTrade,
     });
 
-    expect(metrics.grossProfit).toBe(accountSize);
-    expect(metrics.netProfit).toBe(accountSize);
+    expect(metrics.grossProfitAndLoss).toBe(0);
     expect(metrics.positions).toBe(0);
     expect(metrics.orders).toBe(0);
     expect(metrics.commission).toBe(0);
@@ -40,8 +84,7 @@ describe('test backtest results metrics', () => {
       commissionPerTrade,
     });
 
-    expect(metrics.grossProfit).toBe(1100);
-    expect(metrics.netProfit).toBe(1098);
+    expect(metrics.grossProfitAndLoss).toBe(100);
     expect(metrics.positions).toBe(1);
     expect(metrics.orders).toBe(2);
     expect(metrics.commission).toBe(2);
@@ -76,8 +119,7 @@ describe('test backtest results metrics', () => {
       commissionPerTrade,
     });
 
-    expect(metrics.grossProfit).toBe(1200);
-    expect(metrics.netProfit).toBe(1196);
+    expect(metrics.grossProfitAndLoss).toBe(200);
     expect(metrics.positions).toBe(2);
     expect(metrics.orders).toBe(4);
     expect(metrics.commission).toBe(4);
@@ -330,36 +372,10 @@ describe('test backtest results metrics', () => {
       commissionPerTrade,
     });
 
-    expect(metrics.byHour[8]).toMatchInlineSnapshot(`
-      Object {
-        "accumulatedPnL": 0,
-        "commission": 0,
-        "longPositions": 0,
-        "longWinners": 0,
-        "shortPositions": 0,
-        "shortWinners": 0,
-      }
-    `);
-    expect(metrics.byHour[9]).toMatchInlineSnapshot(`
-      Object {
-        "accumulatedPnL": 200,
-        "commission": 4,
-        "longPositions": 1,
-        "longWinners": 1,
-        "shortPositions": 1,
-        "shortWinners": 1,
-      }
-    `);
-    expect(metrics.byHour[10]).toMatchInlineSnapshot(`
-      Object {
-        "accumulatedPnL": 300,
-        "commission": 6,
-        "longPositions": 3,
-        "longWinners": 3,
-        "shortPositions": 0,
-        "shortWinners": 0,
-      }
-    `);
+    // Make sure the positions are correctly assigned
+    expect(metrics.byHour[8].positions).toBe(0);
+    expect(metrics.byHour[9].positions).toBe(2);
+    expect(metrics.byHour[10].positions).toBe(3);
   });
 
   test('check positions by day of week', () => {
@@ -421,65 +437,166 @@ describe('test backtest results metrics', () => {
       commissionPerTrade,
     });
 
-    expect(metrics.byDayOfWeek).toMatchInlineSnapshot(`
-      Array [
-        Object {
-          "accumulatedPnL": 200,
-          "commission": 4,
-          "longPositions": 2,
-          "longWinners": 2,
-          "shortPositions": 0,
-          "shortWinners": 0,
+    expect(metrics.byDayOfWeek[0].positions).toBe(2);
+    expect(metrics.byDayOfWeek[1].positions).toBe(1);
+    expect(metrics.byDayOfWeek[2].positions).toBe(0);
+    expect(metrics.byDayOfWeek[4].positions).toBe(0);
+    expect(metrics.byDayOfWeek[5].positions).toBe(0);
+    expect(metrics.byDayOfWeek[6].positions).toBe(2);
+  });
+
+  describe('metrics', () => {
+    test('profit factor', () => {
+      expect(
+        createAndUpdatePeriodMetrics({
+          grossProfit: 100,
+          grossLoss: 50,
+        }).profitFactor,
+      ).toBe(2);
+
+      expect(
+        createAndUpdatePeriodMetrics({
+          grossProfit: 50,
+          grossLoss: 100,
+        }).profitFactor,
+      ).toBe(0.5);
+
+      // All losses
+      expect(
+        createAndUpdatePeriodMetrics({
+          grossProfit: 0,
+          grossLoss: 100,
+        }).profitFactor,
+      ).toBe(0);
+
+      // All wins
+      expect(
+        createAndUpdatePeriodMetrics({
+          grossProfit: 100,
+          grossLoss: 1,
+        }).profitFactor,
+      ).toBe(100);
+    });
+
+    test('positions', () => {
+      expect(
+        createAndUpdatePeriodMetrics({
+          positions: 1,
+        }).positions,
+      ).toBe(2);
+
+      expect(
+        createAndUpdatePeriodMetrics({
+          positions: 300,
+        }).positions,
+      ).toBe(301);
+    });
+
+    test('orders', () => {
+      expect(
+        createAndUpdatePeriodMetrics(
+          {
+            orders: 0,
+          },
+          {
+            orderCount: 2,
+          },
+        ).orders,
+      ).toBe(2);
+
+      expect(
+        createAndUpdatePeriodMetrics(
+          {
+            orders: 10,
+          },
+          {
+            orderCount: 1,
+          },
+        ).orders,
+      ).toBe(11);
+    });
+
+    test('commission', () => {
+      expect(
+        createAndUpdatePeriodMetrics(
+          {
+            commission: 0,
+          },
+          {
+            commissionPerOrder: 1,
+            orderCount: 10,
+          },
+        ).commission,
+      ).toBe(10);
+
+      expect(
+        createAndUpdatePeriodMetrics(
+          {
+            commission: 10,
+          },
+          {
+            commissionPerOrder: 1.5,
+            orderCount: 10,
+          },
+        ).commission,
+      ).toBe(25);
+    });
+
+    test('long and short positions', () => {
+      let data = createAndUpdatePeriodMetrics(
+        {
+          commission: 0,
+          longPositions: 0,
         },
-        Object {
-          "accumulatedPnL": 100,
-          "commission": 2,
-          "longPositions": 1,
-          "longWinners": 1,
-          "shortPositions": 0,
-          "shortWinners": 0,
+        {
+          direction: 'LONG',
+          commissionPerOrder: 1,
+          orderCount: 2,
         },
-        Object {
-          "accumulatedPnL": 0,
-          "commission": 0,
-          "longPositions": 0,
-          "longWinners": 0,
-          "shortPositions": 0,
-          "shortWinners": 0,
+      );
+
+      // Check long positions
+      expect(data.shortPositions).toBe(0);
+      expect(data.longPositions).toBe(1);
+      expect(data.commission).toBe(2);
+
+      // Check short positions
+      data = createAndUpdatePeriodMetrics(data, {
+        direction: 'SHORT',
+        commissionPerOrder: 1,
+        orderCount: 2,
+      });
+
+      expect(data.shortPositions).toBe(1);
+      expect(data.longPositions).toBe(1);
+
+      // check commission
+      expect(data.commission).toBe(4);
+    });
+
+    test('gross profit', () => {
+      let data = createAndUpdatePeriodMetrics(
+        {},
+        {
+          direction: 'LONG',
+          positionPnL: 100,
         },
-        Object {
-          "accumulatedPnL": 0,
-          "commission": 0,
-          "longPositions": 0,
-          "longWinners": 0,
-          "shortPositions": 0,
-          "shortWinners": 0,
-        },
-        Object {
-          "accumulatedPnL": 0,
-          "commission": 0,
-          "longPositions": 0,
-          "longWinners": 0,
-          "shortPositions": 0,
-          "shortWinners": 0,
-        },
-        Object {
-          "accumulatedPnL": 0,
-          "commission": 0,
-          "longPositions": 0,
-          "longWinners": 0,
-          "shortPositions": 0,
-          "shortWinners": 0,
-        },
-        Object {
-          "accumulatedPnL": 200,
-          "commission": 4,
-          "longPositions": 1,
-          "longWinners": 1,
-          "shortPositions": 1,
-          "shortWinners": 1,
-        },
-      ]
-    `);
+      );
+
+      expect(data.longWinners).toBe(1);
+      expect(data.longWinnerPercent).toBe(1);
+      expect(data.grossProfit).toBe(100);
+      expect(data.grossLoss).toBe(0);
+
+      data = createAndUpdatePeriodMetrics(data, {
+        direction: 'LONG',
+        positionPnL: -50,
+      });
+
+      expect(data.longWinners).toBe(1);
+      expect(data.longWinnerPercent).toBe(0.5);
+      expect(data.grossProfit).toBe(100);
+      expect(data.grossLoss).toBe(50);
+    });
   });
 });
