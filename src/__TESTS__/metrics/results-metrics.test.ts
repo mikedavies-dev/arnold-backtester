@@ -275,4 +275,211 @@ describe('test backtest results metrics', () => {
     expect(metrics.maxConsecutiveLosses).toBe(2);
     expect(metrics.maxConsecutiveLossAmount).toBe(200);
   });
+
+  test('check positions by hour', () => {
+    const positions: Array<Position> = [
+      createTestPosition({
+        time: '09:30',
+        length: 5,
+        action: 'SELL',
+        winner: true,
+        shares: 100,
+        entryPrice: 100,
+        profitLossPerShares: 1,
+      }),
+      createTestPosition({
+        time: '09:31',
+        length: 5,
+        action: 'BUY',
+        winner: true,
+        shares: 100,
+        entryPrice: 100,
+        profitLossPerShares: 1,
+      }),
+      createTestPosition({
+        time: '10:31',
+        length: 5,
+        action: 'BUY',
+        winner: true,
+        shares: 100,
+        entryPrice: 100,
+        profitLossPerShares: 1,
+      }),
+      createTestPosition({
+        time: '10:32',
+        length: 5,
+        action: 'BUY',
+        winner: true,
+        shares: 100,
+        entryPrice: 100,
+        profitLossPerShares: 1,
+      }),
+      createTestPosition({
+        time: '10:33',
+        length: 5,
+        action: 'BUY',
+        winner: true,
+        shares: 100,
+        entryPrice: 100,
+        profitLossPerShares: 1,
+      }),
+    ];
+
+    const metrics = calculateMetrics(positions, {
+      accountSize,
+      commissionPerTrade,
+    });
+
+    expect(metrics.byHour[8]).toMatchInlineSnapshot(`
+      Object {
+        "accumulatedPnL": 0,
+        "commission": 0,
+        "longPositions": 0,
+        "longWinners": 0,
+        "shortPositions": 0,
+        "shortWinners": 0,
+      }
+    `);
+    expect(metrics.byHour[9]).toMatchInlineSnapshot(`
+      Object {
+        "accumulatedPnL": 200,
+        "commission": 4,
+        "longPositions": 1,
+        "longWinners": 1,
+        "shortPositions": 1,
+        "shortWinners": 1,
+      }
+    `);
+    expect(metrics.byHour[10]).toMatchInlineSnapshot(`
+      Object {
+        "accumulatedPnL": 300,
+        "commission": 6,
+        "longPositions": 3,
+        "longWinners": 3,
+        "shortPositions": 0,
+        "shortWinners": 0,
+      }
+    `);
+  });
+
+  test('check positions by day of week', () => {
+    const positions: Array<Position> = [
+      createTestPosition({
+        time: '09:30',
+        length: 5,
+        action: 'SELL',
+        winner: true,
+        shares: 100,
+        entryPrice: 100,
+        profitLossPerShares: 1,
+        date: '2022-01-01',
+      }),
+      createTestPosition({
+        time: '09:31',
+        length: 5,
+        action: 'BUY',
+        winner: true,
+        shares: 100,
+        entryPrice: 100,
+        profitLossPerShares: 1,
+        date: '2022-01-01',
+      }),
+      createTestPosition({
+        time: '10:31',
+        length: 5,
+        action: 'BUY',
+        winner: true,
+        shares: 100,
+        entryPrice: 100,
+        profitLossPerShares: 1,
+        date: '2022-01-02',
+      }),
+      createTestPosition({
+        time: '10:32',
+        length: 5,
+        action: 'BUY',
+        winner: true,
+        shares: 100,
+        entryPrice: 100,
+        profitLossPerShares: 1,
+        date: '2022-01-02',
+      }),
+      createTestPosition({
+        time: '10:33',
+        length: 5,
+        action: 'BUY',
+        winner: true,
+        shares: 100,
+        entryPrice: 100,
+        profitLossPerShares: 1,
+        date: '2022-01-03',
+      }),
+    ];
+
+    const metrics = calculateMetrics(positions, {
+      accountSize,
+      commissionPerTrade,
+    });
+
+    expect(metrics.byDayOfWeek).toMatchInlineSnapshot(`
+      Array [
+        Object {
+          "accumulatedPnL": 200,
+          "commission": 4,
+          "longPositions": 2,
+          "longWinners": 2,
+          "shortPositions": 0,
+          "shortWinners": 0,
+        },
+        Object {
+          "accumulatedPnL": 100,
+          "commission": 2,
+          "longPositions": 1,
+          "longWinners": 1,
+          "shortPositions": 0,
+          "shortWinners": 0,
+        },
+        Object {
+          "accumulatedPnL": 0,
+          "commission": 0,
+          "longPositions": 0,
+          "longWinners": 0,
+          "shortPositions": 0,
+          "shortWinners": 0,
+        },
+        Object {
+          "accumulatedPnL": 0,
+          "commission": 0,
+          "longPositions": 0,
+          "longWinners": 0,
+          "shortPositions": 0,
+          "shortWinners": 0,
+        },
+        Object {
+          "accumulatedPnL": 0,
+          "commission": 0,
+          "longPositions": 0,
+          "longWinners": 0,
+          "shortPositions": 0,
+          "shortWinners": 0,
+        },
+        Object {
+          "accumulatedPnL": 0,
+          "commission": 0,
+          "longPositions": 0,
+          "longWinners": 0,
+          "shortPositions": 0,
+          "shortWinners": 0,
+        },
+        Object {
+          "accumulatedPnL": 200,
+          "commission": 4,
+          "longPositions": 1,
+          "longWinners": 1,
+          "shortPositions": 1,
+          "shortWinners": 1,
+        },
+      ]
+    `);
+  });
 });

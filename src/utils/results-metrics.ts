@@ -1,6 +1,17 @@
+/*
+References:
+  https://github.com/mdeverdelhan/ta4j-origins/blob/master/ta4j/src/main/java/eu/verdelhan/ta4j/analysis/criteria/MaximumDrawdownCriterion.java
+  https://www.javatips.net/api/tradelib-master/src/main/java/net/tradelib/ratio/SharpeRatio.java
+  https://www.javatips.net/api/tradelib-master/src/main/java/net/tradelib/ratio/SortinoRatio.java
+  https://github.com/dcajasn/Riskfolio-Lib/blob/master/riskfolio/RiskFunctions.py
+  https://github.com/lequant40/portfolio_analytics_js
+  https://analyzingalpha.com/profit-factor#:~:text=The%20profit%20factor%20is%20the,above%203.0%20is%20considered%20outstanding.
+*/
+
+import {getHours, getDay} from 'date-fns';
 import {pipe} from 'fp-ts/lib/function';
 import {Position, Order} from '../backtest/broker';
-import {incIf, ratio} from './logic';
+import {incIf, ratio, initArrayOfSize} from './logic';
 
 /*
 Take a list of positions and return some stats, return:
@@ -10,6 +21,7 @@ DONE:
 - Total orders
 - Deposit
 - Net profit
+- Gross profit
 
 - Short trades
 - Short trades (percent won)
@@ -19,29 +31,51 @@ DONE:
 
 - Total commission paid
 
-PENDING:
-
-- Gross profit
-- Gross loss
-- Profit factor
-
-- Sharp ratio
-
 - Max consecutive win count
 - Max consecutive win amount ($)
 - Max consecutive loss count
 - Max consecutive loss amount ($)
 
-- Max drawdown
-- Average profit per position
+PENDING:
 
-- Entries by: array of number [0-23])
- - Hour
- - Weekday
+- Gross profits (sum of all winning trades)
+- Gross losses (sum of all loosing trades)
+- Profit factor (the ratio of gross profits to gross losses)
+
+- Sharp ratio
+- Sortino ratio
+
+- Average order PnL (and %)
+- Std div of average order PnL (and %)
+- Some kind of factor from avg order PnL to std div that favors a stable distribution?
+
+- Max drawdown
+
+- Running stats by positions
+  - Current balance
+  - Current drawdown
+
+- Stats by hours of day: array of number [0-23])
+ - Positions
+ - PnL
+ - PnL %
  
-- Profit/loss by: array of number [0-23]
- - Hour
- - Weekday
+- Stats by day of week: array of number [0-6])
+ - Positions
+ - PnL
+ - PnL %
+
+ a way of overriding the shares traded, i.e. some kind of position calculation based on current account
+ size and the share price. To do this we'd need to know the max loss per trade and possibly the stoploss?
+
+ We can define the max loss as a percent of the account balance but we need to define the stoploss to be able
+ to calculate the number of shares. Or should we leave this down to the system and if we want to adjust the
+ settings then we update the profile and re-run the backtest?
+
+ I think the strategy should have access to the account balance so it can calculate how many shares to purchase
+ this is how the real system would work.. probably.. or would the real system be managed by some kind of
+ portfolio management system? Probably not, at least not in the first version, we could potentially allocate
+ an account size to each strategy
 */
 
 type Options = {
@@ -49,13 +83,18 @@ type Options = {
   commissionPerTrade: number;
 };
 
-type Metrics = {
+type MetricsByPeriod = {
   accumulatedPnL: number;
   commission: number;
   longPositions: number;
   longWinners: number;
   shortPositions: number;
   shortWinners: number;
+};
+
+type Metrics = MetricsByPeriod & {
+  byHour: Array<MetricsByPeriod>;
+  byDayOfWeek: Array<MetricsByPeriod>;
 };
 
 type PositionDirection = 'LONG' | 'SHORT' | 'UNKNOWN';
@@ -114,7 +153,7 @@ type ConsecutivePositions = {
   currentConsecutiveLossAmount: number;
 };
 
-export function handleConsecutivePositionWin(
+export function updateConsecutivePositionWin(
   state: ConsecutivePositions,
   positionPnL: number,
 ) {
@@ -133,7 +172,7 @@ export function handleConsecutivePositionWin(
   }
 }
 
-export function handleConsecutivePositionLoss(
+export function updateConsecutivePositionLoss(
   state: ConsecutivePositions,
   positionPnL: number,
 ) {
@@ -152,6 +191,26 @@ export function handleConsecutivePositionLoss(
   }
 }
 
+function updatePeriodMetrics(
+  metrics: MetricsByPeriod,
+  positionPnL: number,
+  commission: number,
+  direction: PositionDirection,
+  isWinner: boolean,
+): MetricsByPeriod {
+  return {
+    accumulatedPnL: metrics.accumulatedPnL + positionPnL,
+    commission: metrics.commission + commission,
+    longPositions: incIf(direction === 'LONG', metrics.longPositions),
+    longWinners: incIf(direction === 'LONG' && isWinner, metrics.longWinners),
+    shortPositions: incIf(direction === 'SHORT', metrics.shortPositions),
+    shortWinners: incIf(
+      direction === 'SHORT' && isWinner,
+      metrics.shortWinners,
+    ),
+  };
+}
+
 export function calculateMetrics(positions: Array<Position>, options: Options) {
   const initialData: Metrics = {
     accumulatedPnL: options.accountSize,
@@ -160,6 +219,22 @@ export function calculateMetrics(positions: Array<Position>, options: Options) {
     longWinners: 0,
     shortPositions: 0,
     shortWinners: 0,
+    byHour: initArrayOfSize(24, {
+      accumulatedPnL: 0,
+      commission: 0,
+      longPositions: 0,
+      longWinners: 0,
+      shortPositions: 0,
+      shortWinners: 0,
+    }),
+    byDayOfWeek: initArrayOfSize(7, {
+      accumulatedPnL: 0,
+      commission: 0,
+      longPositions: 0,
+      longWinners: 0,
+      shortPositions: 0,
+      shortWinners: 0,
+    }),
   };
 
   const consecutive: ConsecutivePositions = {
@@ -183,19 +258,36 @@ export function calculateMetrics(positions: Array<Position>, options: Options) {
 
     // consecutive wins/losses (mutate!)
     if (isWinner) {
-      handleConsecutivePositionWin(consecutive, positionPnL);
+      updateConsecutivePositionWin(consecutive, positionPnL);
     } else {
-      handleConsecutivePositionLoss(consecutive, positionPnL);
+      updateConsecutivePositionLoss(consecutive, positionPnL);
     }
 
+    if (position.orders.length) {
+      // update hourly metrics
+      const {openedAt} = position.orders[0];
+      const hour = getHours(openedAt);
+      acc.byHour[hour] = updatePeriodMetrics(
+        acc.byHour[hour],
+        positionPnL,
+        commission,
+        direction,
+        isWinner,
+      );
+
+      // update hourly stats
+      const day = getDay(openedAt);
+      acc.byDayOfWeek[day] = updatePeriodMetrics(
+        acc.byDayOfWeek[day],
+        positionPnL,
+        commission,
+        direction,
+        isWinner,
+      );
+    }
     return {
       ...acc,
-      accumulatedPnL: acc.accumulatedPnL + positionPnL,
-      commission: acc.commission + commission,
-      longPositions: incIf(direction === 'LONG', acc.longPositions),
-      longWinners: incIf(direction === 'LONG' && isWinner, acc.longWinners),
-      shortPositions: incIf(direction === 'SHORT', acc.shortPositions),
-      shortWinners: incIf(direction === 'SHORT' && isWinner, acc.shortWinners),
+      ...updatePeriodMetrics(acc, positionPnL, commission, direction, isWinner),
     };
   }, initialData);
 

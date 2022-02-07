@@ -1,4 +1,11 @@
-import {fromUnixTime, parse, getUnixTime, format, addSeconds} from 'date-fns';
+import {
+  fromUnixTime,
+  parse,
+  getUnixTime,
+  format,
+  addSeconds,
+  startOfDay,
+} from 'date-fns';
 import {Tick, TickType} from '../../core';
 import {flow} from 'fp-ts/lib/function';
 
@@ -36,8 +43,8 @@ export function createTimeAsUnix(time: string) {
   return flow(parse, getUnixTime)(time, 'HH:mm', getTestDate());
 }
 
-export function createTimeAsDate(time: string) {
-  return flow(parse)(time, 'HH:mm', getTestDate());
+export function createTimeAsDate(time: string, date = '2022-01-01') {
+  return flow(parse)(time, 'HH:mm', parse(date, 'yyyy-MM-dd', new Date()));
 }
 
 export type TestTickData = [string, number, number, number, number];

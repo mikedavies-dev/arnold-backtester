@@ -12,6 +12,7 @@ type TestOrderSpec = {
   entryPrice: number;
   symbol?: string;
   time: string;
+  date?: string;
 };
 
 export function createTestPosition({
@@ -23,8 +24,9 @@ export function createTestPosition({
   profitLossPerShares,
   entryPrice,
   time,
+  date,
 }: TestOrderSpec): Position {
-  const openedAt = createTimeAsDate(time);
+  const openedAt = createTimeAsDate(time, date);
 
   const entry: Order = {
     id: 1,
