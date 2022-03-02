@@ -26,6 +26,8 @@ type RawProfile = {
   };
   symbols: Array<string>;
   threads: number;
+  initialBalance: number;
+  commissionPerOrder: number;
 };
 
 // Parsed format
@@ -41,6 +43,8 @@ export type Profile = {
   };
   symbols: Array<string>;
   threads: number;
+  initialBalance: number;
+  commissionPerOrder: number;
 };
 
 export function getPath(name: string) {

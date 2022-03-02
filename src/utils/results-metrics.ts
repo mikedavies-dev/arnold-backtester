@@ -1,13 +1,3 @@
-/*
-References:
-  https://github.com/mdeverdelhan/ta4j-origins/blob/master/ta4j/src/main/java/eu/verdelhan/ta4j/analysis/criteria/MaximumDrawdownCriterion.java
-  https://www.javatips.net/api/tradelib-master/src/main/java/net/tradelib/ratio/SharpeRatio.java
-  https://www.javatips.net/api/tradelib-master/src/main/java/net/tradelib/ratio/SortinoRatio.java
-  https://github.com/dcajasn/Riskfolio-Lib/blob/master/riskfolio/RiskFunctions.py
-  https://github.com/lequant40/portfolio_analytics_js
-  https://analyzingalpha.com/profit-factor#:~:text=The%20profit%20factor%20is%20the,above%203.0%20is%20considered%20outstanding.
-*/
-
 import {getHours, getDay} from 'date-fns';
 import {pipe} from 'fp-ts/lib/function';
 import {Position, Order} from '../backtest/broker';
@@ -33,15 +23,23 @@ PENDING:
  this is how the real system would work.. probably.. or would the real system be managed by some kind of
  portfolio management system? Probably not, at least not in the first version, we could potentially allocate
  an account size to each strategy
+
+ References:
+  https://github.com/mdeverdelhan/ta4j-origins/blob/master/ta4j/src/main/java/eu/verdelhan/ta4j/analysis/criteria/MaximumDrawdownCriterion.java
+  https://www.javatips.net/api/tradelib-master/src/main/java/net/tradelib/ratio/SharpeRatio.java
+  https://www.javatips.net/api/tradelib-master/src/main/java/net/tradelib/ratio/SortinoRatio.java
+  https://github.com/dcajasn/Riskfolio-Lib/blob/master/riskfolio/RiskFunctions.py
+  https://github.com/lequant40/portfolio_analytics_js
+  https://analyzingalpha.com/profit-factor#:~:text=The%20profit%20factor%20is%20the,above%203.0%20is%20considered%20outstanding.
 */
 
 type Options = {
   accountSize: number;
-  commissionPerTrade: number;
+  commissionPerOrder: number;
 };
 
 type RunningPositionMetrics = {
-  at: Date;
+  at?: Date;
   pnl: number;
   drawdown: number;
   accountBalance: number;
@@ -116,6 +114,16 @@ export function getPositionPL(position: Position) {
   );
 
   return totalSellValue - totalBuyValue;
+}
+
+export function getPositionCommission(
+  position: Position,
+  commissionPerOrder: number,
+) {
+  return (
+    position.orders.filter(o => o.state === 'FILLED').length *
+    commissionPerOrder
+  );
 }
 
 export function getPositionDirection(position: Position): PositionDirection {
@@ -268,6 +276,8 @@ export function calculateMetrics(positions: Array<Position>, options: Options) {
   const metrics = positions.reduce((acc, position) => {
     const direction = getPositionDirection(position);
     const positionPnL = getPositionPL(position);
+    const positionPnLWithCommission =
+      positionPnL - getPositionCommission(position, options.commissionPerOrder);
     const isWinner = positionPnL >= 0;
 
     // consecutive wins/losses
@@ -278,7 +288,7 @@ export function calculateMetrics(positions: Array<Position>, options: Options) {
     const updateData = {
       orderCount: position.orders.length,
       positionPnL,
-      commissionPerOrder: options.commissionPerTrade,
+      commissionPerOrder: options.commissionPerOrder,
       direction,
     };
 
@@ -307,13 +317,13 @@ export function calculateMetrics(positions: Array<Position>, options: Options) {
       : {drawdown: 0, accountBalance: options.accountSize, pnl: 0};
 
     // Add the next running total
-    const [firstOrder] = position.orders;
+    const firstFilledOrder = position.orders.find(o => o.state === 'FILLED');
 
     metricsByPosition.push({
-      at: firstOrder.filledAt || firstOrder.openedAt,
-      pnl: currentPnL + positionPnL,
-      accountBalance: currentAccountBalance + positionPnL,
-      drawdown: Math.min(currentDrawdown + positionPnL, 0),
+      at: firstFilledOrder?.filledAt,
+      pnl: currentPnL + positionPnLWithCommission,
+      accountBalance: currentAccountBalance + positionPnLWithCommission,
+      drawdown: Math.min(currentDrawdown + positionPnLWithCommission, 0),
     });
 
     // Calculate the maximum drawdown

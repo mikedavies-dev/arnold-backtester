@@ -51,6 +51,8 @@ const Backtest = new Schema<DbBacktest>({
     },
     symbols: [String],
     threads: Number,
+    initialBalance: Number,
+    commissionPerOrder: Number,
   },
 });
 

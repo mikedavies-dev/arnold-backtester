@@ -41,6 +41,8 @@ export const backtestResults: Array<DbBacktest> = [
       },
       symbols: ['ZZZZ'],
       threads: 4,
+      initialBalance: 10000,
+      commissionPerOrder: 1,
     },
   },
 ];

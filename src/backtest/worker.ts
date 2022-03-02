@@ -130,6 +130,8 @@ export async function runBacktest({
     getMarketTime: () => {
       return currentMarketTime.current;
     },
+    initialBalance: profile.initialBalance,
+    commissionPerOrder: profile.commissionPerOrder,
   });
 
   marketData.forEach(tick => {

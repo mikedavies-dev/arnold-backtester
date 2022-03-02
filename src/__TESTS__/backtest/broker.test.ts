@@ -16,10 +16,16 @@ import {
 } from '../../backtest/broker';
 
 test('init positions function returns an empty positions ds', () => {
-  const state = initBroker({getMarketTime: () => createTimeAsDate('09:30')});
+  const state = initBroker({
+    initialBalance: 1000,
+    commissionPerOrder: 1,
+    getMarketTime: () => createTimeAsDate('09:30'),
+  });
 
   expect(state).toMatchInlineSnapshot(`
     Object {
+      "balance": 1000,
+      "commissionPerOrder": 1,
       "getMarketTime": [Function],
       "nextOrderId": 1,
       "openOrders": Object {},
@@ -32,7 +38,11 @@ test('init positions function returns an empty positions ds', () => {
 });
 
 test('placing a market order and confirm it is pending', () => {
-  const state = initBroker({getMarketTime: () => createTimeAsDate('09:30')});
+  const state = initBroker({
+    initialBalance: 1000,
+    commissionPerOrder: 1,
+    getMarketTime: () => createTimeAsDate('09:30'),
+  });
   const orderId = placeOrder(state, {
     symbol: 'ZZZZ',
     shares: 10,
@@ -44,6 +54,8 @@ test('placing a market order and confirm it is pending', () => {
 
   expect(state).toMatchInlineSnapshot(`
     Object {
+      "balance": 1000,
+      "commissionPerOrder": 1,
       "getMarketTime": [Function],
       "nextOrderId": 2,
       "openOrders": Object {

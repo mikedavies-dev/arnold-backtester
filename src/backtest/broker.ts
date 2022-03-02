@@ -10,6 +10,7 @@ So, against my better judgement I'm making functions that mutate on purpose :)
 import {differenceInMilliseconds} from 'date-fns';
 
 import {Tracker} from '../utils/tracker';
+import {getPositionPL, getPositionCommission} from '../utils/results-metrics';
 
 export type OrderAction = 'BUY' | 'SELL';
 export type OrderType = 'MKT' | 'LMT' | 'STP' | 'TRAIL';
@@ -56,14 +57,20 @@ export type BrokerState = {
   positions: Array<Position>;
   openPositions: Record<string, Position>;
   orderExecutionDelayMs: number;
+  balance: number;
+  commissionPerOrder: number;
 };
 
 export function initBroker({
   getMarketTime,
   orderExecutionDelayMs,
+  initialBalance,
+  commissionPerOrder,
 }: {
   getMarketTime: () => Date;
   orderExecutionDelayMs?: number;
+  initialBalance: number;
+  commissionPerOrder: number;
 }): BrokerState {
   return {
     getMarketTime,
@@ -73,6 +80,8 @@ export function initBroker({
     positions: [],
     openPositions: {},
     orderExecutionDelayMs: orderExecutionDelayMs || 1000,
+    balance: initialBalance,
+    commissionPerOrder,
   };
 }
 
@@ -210,6 +219,11 @@ export function handleBrokerTick(
         if (order.type === 'TRAIL') {
           position.closeReason = 'trailing-stop';
         }
+
+        // Update account balance
+        state.balance +=
+          getPositionPL(position) -
+          getPositionCommission(position, state.commissionPerOrder);
 
         delete openPositions[symbol];
       }

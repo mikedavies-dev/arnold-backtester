@@ -142,7 +142,11 @@ export function createMarket(ticks: Array<TestTickData>) {
   const last = ticks[ticks.length - 1];
 
   const data: Market = {
-    broker: initBroker({getMarketTime: () => data.time}),
+    broker: initBroker({
+      initialBalance: 1000,
+      commissionPerOrder: 1,
+      getMarketTime: () => data.time,
+    }),
     time: createTimeAsDate(last[0]),
     tracker: initTracker(),
     symbol: 'AAAA',

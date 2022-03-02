@@ -72,6 +72,8 @@ describe('mongo db tests', () => {
           dates: [getTestDate()],
         },
         symbols: ['MSFT'],
+        initialBalance: 1000,
+        commissionPerOrder: 1,
       },
     };
 
@@ -80,6 +82,7 @@ describe('mongo db tests', () => {
 
     // Make sure the results are the same
     const [storedBacktest] = await getBacktests();
+
     expect(storedBacktest).toMatchObject(results);
 
     // get an individual backtest

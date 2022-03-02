@@ -9,7 +9,7 @@ import {
 import {createTestPosition} from '../test-utils/broker';
 
 const accountSize = 1000;
-const commissionPerTrade = 1;
+const commissionPerOrder = 1;
 
 function createAndUpdatePeriodMetrics(
   data: Partial<MetricsByPeriod>,
@@ -57,7 +57,7 @@ describe('test backtest results metrics', () => {
 
     const metrics = calculateMetrics(positions, {
       accountSize,
-      commissionPerTrade,
+      commissionPerOrder,
     });
 
     expect(metrics.grossProfitAndLoss).toBe(0);
@@ -81,7 +81,7 @@ describe('test backtest results metrics', () => {
 
     const metrics = calculateMetrics(positions, {
       accountSize,
-      commissionPerTrade,
+      commissionPerOrder,
     });
 
     expect(metrics.grossProfitAndLoss).toBe(100);
@@ -116,7 +116,7 @@ describe('test backtest results metrics', () => {
 
     const metrics = calculateMetrics(positions, {
       accountSize,
-      commissionPerTrade,
+      commissionPerOrder,
     });
 
     expect(metrics.grossProfitAndLoss).toBe(200);
@@ -160,7 +160,7 @@ describe('test backtest results metrics', () => {
 
     const metrics = calculateMetrics(positions, {
       accountSize,
-      commissionPerTrade,
+      commissionPerOrder,
     });
 
     expect(metrics.longPositions).toBe(3);
@@ -205,7 +205,7 @@ describe('test backtest results metrics', () => {
 
     const metrics = calculateMetrics(positions, {
       accountSize,
-      commissionPerTrade,
+      commissionPerOrder,
     });
 
     expect(metrics.longPositions).toBe(0);
@@ -259,7 +259,7 @@ describe('test backtest results metrics', () => {
 
     const metrics = calculateMetrics(positions, {
       accountSize,
-      commissionPerTrade,
+      commissionPerOrder,
     });
 
     expect(metrics.maxConsecutiveWins).toBe(2);
@@ -308,7 +308,7 @@ describe('test backtest results metrics', () => {
 
     const metrics = calculateMetrics(positions, {
       accountSize,
-      commissionPerTrade,
+      commissionPerOrder,
     });
 
     expect(metrics.maxConsecutiveWins).toBe(1);
@@ -369,7 +369,7 @@ describe('test backtest results metrics', () => {
 
     const metrics = calculateMetrics(positions, {
       accountSize,
-      commissionPerTrade,
+      commissionPerOrder,
     });
 
     // Make sure the positions are correctly assigned
@@ -434,7 +434,7 @@ describe('test backtest results metrics', () => {
 
     const metrics = calculateMetrics(positions, {
       accountSize,
-      commissionPerTrade,
+      commissionPerOrder,
     });
 
     expect(metrics.byDayOfWeek[0].positions).toBe(2);
@@ -686,70 +686,70 @@ describe('test backtest results metrics', () => {
         ],
         {
           accountSize,
-          commissionPerTrade,
+          commissionPerOrder,
         },
       );
 
       expect(metrics.metricsByPosition).toMatchInlineSnapshot(`
         Array [
           Object {
-            "accountBalance": 1100,
+            "accountBalance": 1098,
             "at": 2022-01-01T14:30:00.000Z,
             "drawdown": 0,
-            "pnl": 100,
+            "pnl": 98,
           },
           Object {
-            "accountBalance": 1200,
+            "accountBalance": 1196,
             "at": 2022-01-01T14:30:00.000Z,
             "drawdown": 0,
-            "pnl": 200,
+            "pnl": 196,
           },
           Object {
-            "accountBalance": 1100,
+            "accountBalance": 1094,
             "at": 2022-01-01T14:30:00.000Z,
-            "drawdown": -100,
-            "pnl": 100,
+            "drawdown": -102,
+            "pnl": 94,
           },
           Object {
-            "accountBalance": 1000,
+            "accountBalance": 992,
             "at": 2022-01-01T14:30:00.000Z,
-            "drawdown": -200,
-            "pnl": 0,
+            "drawdown": -204,
+            "pnl": -8,
           },
           Object {
-            "accountBalance": 900,
+            "accountBalance": 890,
             "at": 2022-01-01T14:30:00.000Z,
-            "drawdown": -300,
-            "pnl": -100,
+            "drawdown": -306,
+            "pnl": -110,
           },
           Object {
-            "accountBalance": 1000,
+            "accountBalance": 988,
             "at": 2022-01-01T14:30:00.000Z,
-            "drawdown": -200,
-            "pnl": 0,
+            "drawdown": -208,
+            "pnl": -12,
           },
           Object {
-            "accountBalance": 1100,
+            "accountBalance": 1086,
             "at": 2022-01-01T14:30:00.000Z,
-            "drawdown": -100,
-            "pnl": 100,
+            "drawdown": -110,
+            "pnl": 86,
           },
           Object {
-            "accountBalance": 1200,
+            "accountBalance": 1184,
             "at": 2022-01-01T14:30:00.000Z,
-            "drawdown": 0,
-            "pnl": 200,
+            "drawdown": -12,
+            "pnl": 184,
           },
           Object {
-            "accountBalance": 1100,
+            "accountBalance": 1082,
             "at": 2022-01-01T14:30:00.000Z,
-            "drawdown": -100,
-            "pnl": 100,
+            "drawdown": -114,
+            "pnl": 82,
           },
         ]
       `);
 
-      expect(metrics.maxDrawdown).toBe(-300);
+      expect(metrics.maxDrawdown).toBe(-306);
     });
   });
 });

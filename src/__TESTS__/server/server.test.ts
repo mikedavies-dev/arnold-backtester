@@ -67,51 +67,53 @@ test('get a backtest by id', async () => {
   );
   const res = await instance.get('/api/backtest/abcd');
   expect(res.status).toBe(200);
-  expect(res.data).toMatchInlineSnapshot(`
-    Object {
-      "id": "abcd",
-      "positions": Array [
-        Object {
-          "closeReason": "test",
-          "data": Object {},
-          "isClosing": false,
-          "orders": Array [
-            Object {
-              "action": "BUY",
-              "avgFillPrice": 1,
-              "filledAt": "2022-01-01T05:00:00.000Z",
-              "id": 1,
-              "openedAt": "2022-01-01T05:00:00.000Z",
-              "parentId": 0,
-              "shares": 100,
-              "state": "FILLED",
-              "symbol": "ZZZZ",
-              "type": "MKT",
-            },
-          ],
-          "size": 100,
-          "symbol": "ZZZZ",
-        },
-      ],
-      "profile": Object {
-        "dates": Object {
-          "dates": Array [
-            "2022-01-01T05:00:00.000Z",
-          ],
-          "from": "2022-01-01T05:00:00.000Z",
-          "to": "2022-01-01T05:00:00.000Z",
-        },
-        "strategy": Object {
-          "name": "test",
-          "source": "test",
-        },
-        "symbols": Array [
-          "ZZZZ",
+  expect(res.data.positions).toMatchInlineSnapshot(`
+    Array [
+      Object {
+        "closeReason": "test",
+        "data": Object {},
+        "isClosing": false,
+        "orders": Array [
+          Object {
+            "action": "BUY",
+            "avgFillPrice": 1,
+            "filledAt": "2022-01-01T05:00:00.000Z",
+            "id": 1,
+            "openedAt": "2022-01-01T05:00:00.000Z",
+            "parentId": 0,
+            "shares": 100,
+            "state": "FILLED",
+            "symbol": "ZZZZ",
+            "type": "MKT",
+          },
         ],
-        "threads": 4,
+        "size": 100,
+        "symbol": "ZZZZ",
       },
+    ]
+  `);
+  expect(res.data.profile).toMatchInlineSnapshot(`
+    Object {
+      "commissionPerOrder": 1,
+      "dates": Object {
+        "dates": Array [
+          "2022-01-01T05:00:00.000Z",
+        ],
+        "from": "2022-01-01T05:00:00.000Z",
+        "to": "2022-01-01T05:00:00.000Z",
+      },
+      "initialBalance": 10000,
+      "strategy": Object {
+        "name": "test",
+        "source": "test",
+      },
+      "symbols": Array [
+        "ZZZZ",
+      ],
+      "threads": 4,
     }
   `);
+
   getBacktestMock.mockReset();
 });
 

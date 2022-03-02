@@ -10,11 +10,12 @@ test('that an invalid profile does exists', async () => {
   expect(exists).toBeFalsy();
 });
 
-test('that loading a valid profile', async () => {
+test('load a valid profile', async () => {
   const profile = await loadProfile('sample');
 
   expect(profile).toMatchInlineSnapshot(`
     Object {
+      "commissionPerOrder": 1,
       "dates": Object {
         "dates": Array [
           2021-12-01T05:00:00.000Z,
@@ -24,6 +25,7 @@ test('that loading a valid profile', async () => {
         "from": 2021-12-01T05:00:00.000Z,
         "to": 2021-12-03T05:00:00.000Z,
       },
+      "initialBalance": 10000,
       "strategy": Object {
         "name": "sample",
         "source": "import {HandleTickParameters} from '../utils/module';
