@@ -598,5 +598,158 @@ describe('test backtest results metrics', () => {
       expect(data.grossProfit).toBe(100);
       expect(data.grossLoss).toBe(50);
     });
+
+    test('average position pnl', () => {
+      const metrics = calculateMetrics(
+        [
+          createTestPosition({
+            time: '09:30',
+            length: 5,
+            action: 'BUY',
+            winner: true,
+            shares: 100,
+            entryPrice: 100,
+            profitLossPerShares: 1,
+          }),
+          createTestPosition({
+            time: '09:30',
+            length: 5,
+            action: 'BUY',
+            winner: true,
+            shares: 100,
+            entryPrice: 100,
+            profitLossPerShares: 1,
+          }),
+          createTestPosition({
+            time: '09:30',
+            length: 5,
+            action: 'BUY',
+            winner: false,
+            shares: 100,
+            entryPrice: 100,
+            profitLossPerShares: 1,
+          }),
+          createTestPosition({
+            time: '09:30',
+            length: 5,
+            action: 'BUY',
+            winner: false,
+            shares: 100,
+            entryPrice: 100,
+            profitLossPerShares: 1,
+          }),
+          createTestPosition({
+            time: '09:30',
+            length: 5,
+            action: 'BUY',
+            winner: false,
+            shares: 100,
+            entryPrice: 100,
+            profitLossPerShares: 1,
+          }),
+          createTestPosition({
+            time: '09:30',
+            length: 5,
+            action: 'BUY',
+            winner: true,
+            shares: 100,
+            entryPrice: 100,
+            profitLossPerShares: 1,
+          }),
+          createTestPosition({
+            time: '09:30',
+            length: 5,
+            action: 'BUY',
+            winner: true,
+            shares: 100,
+            entryPrice: 100,
+            profitLossPerShares: 1,
+          }),
+          createTestPosition({
+            time: '09:30',
+            length: 5,
+            action: 'BUY',
+            winner: true,
+            shares: 100,
+            entryPrice: 100,
+            profitLossPerShares: 1,
+          }),
+          createTestPosition({
+            time: '09:30',
+            length: 5,
+            action: 'BUY',
+            winner: false,
+            shares: 100,
+            entryPrice: 100,
+            profitLossPerShares: 1,
+          }),
+        ],
+        {
+          accountSize,
+          commissionPerTrade,
+        },
+      );
+
+      expect(metrics.metricsByPosition).toMatchInlineSnapshot(`
+        Array [
+          Object {
+            "accountBalance": 1100,
+            "at": 2022-01-01T14:30:00.000Z,
+            "drawdown": 0,
+            "pnl": 100,
+          },
+          Object {
+            "accountBalance": 1200,
+            "at": 2022-01-01T14:30:00.000Z,
+            "drawdown": 0,
+            "pnl": 200,
+          },
+          Object {
+            "accountBalance": 1100,
+            "at": 2022-01-01T14:30:00.000Z,
+            "drawdown": -100,
+            "pnl": 100,
+          },
+          Object {
+            "accountBalance": 1000,
+            "at": 2022-01-01T14:30:00.000Z,
+            "drawdown": -200,
+            "pnl": 0,
+          },
+          Object {
+            "accountBalance": 900,
+            "at": 2022-01-01T14:30:00.000Z,
+            "drawdown": -300,
+            "pnl": -100,
+          },
+          Object {
+            "accountBalance": 1000,
+            "at": 2022-01-01T14:30:00.000Z,
+            "drawdown": -200,
+            "pnl": 0,
+          },
+          Object {
+            "accountBalance": 1100,
+            "at": 2022-01-01T14:30:00.000Z,
+            "drawdown": -100,
+            "pnl": 100,
+          },
+          Object {
+            "accountBalance": 1200,
+            "at": 2022-01-01T14:30:00.000Z,
+            "drawdown": 0,
+            "pnl": 200,
+          },
+          Object {
+            "accountBalance": 1100,
+            "at": 2022-01-01T14:30:00.000Z,
+            "drawdown": -100,
+            "pnl": 100,
+          },
+        ]
+      `);
+
+      expect(metrics.maxDrawdown).toBe(-300);
+    });
   });
 });

@@ -14,56 +14,13 @@ import {Position, Order} from '../backtest/broker';
 import {incIf, ratio, initArrayOfSize} from './logic';
 
 /*
-Take a list of positions and return some stats, return:
-
-DONE:
-- Total positions
-- Total orders
-- Deposit
-- Net profit
-- Gross profit
-
-- Short trades
-- Short trades (percent won)
-
-- Long trades
-- Long trades (percent won)
-
-- Total commission paid
-
-- Max consecutive win count
-- Max consecutive win amount ($)
-- Max consecutive loss count
-- Max consecutive loss amount ($)
-
-- Stats by hours of day: array of number [0-23])
- - Positions
- - PnL
- - PnL %
- 
-- Stats by day of week: array of number [0-6])
- - Positions
- - PnL
- - PnL %
-
-- Gross profits (sum of all winning trades)
-- Gross losses (sum of all loosing trades)
-- Profit factor (the ratio of gross profits to gross losses)
-
 PENDING:
 
 - Sharp ratio
 - Sortino ratio
 
-- Average order PnL (and %)
 - Std div of average order PnL (and %)
 - Some kind of factor from avg order PnL to std div that favors a stable distribution?
-
-- Max drawdown
-
-- Running stats by positions
-  - Current balance
-  - Current drawdown
 
  a way of overriding the shares traded, i.e. some kind of position calculation based on current account
  size and the share price. To do this we'd need to know the max loss per trade and possibly the stoploss?
@@ -81,6 +38,13 @@ PENDING:
 type Options = {
   accountSize: number;
   commissionPerTrade: number;
+};
+
+type RunningPositionMetrics = {
+  at: Date;
+  pnl: number;
+  drawdown: number;
+  accountBalance: number;
 };
 
 export type MetricsByPeriod = {
@@ -297,6 +261,10 @@ export function calculateMetrics(positions: Array<Position>, options: Options) {
     currentConsecutiveLossAmount: 0,
   };
 
+  const metricsByPosition: Array<RunningPositionMetrics> = [];
+
+  let maxDrawdown = 0;
+
   const metrics = positions.reduce((acc, position) => {
     const direction = getPositionDirection(position);
     const positionPnL = getPositionPL(position);
@@ -328,6 +296,32 @@ export function calculateMetrics(positions: Array<Position>, options: Options) {
         updateData,
       );
     }
+
+    // update running totals
+    const {
+      pnl: currentPnL,
+      drawdown: currentDrawdown,
+      accountBalance: currentAccountBalance,
+    } = metricsByPosition.length
+      ? metricsByPosition[metricsByPosition.length - 1]
+      : {drawdown: 0, accountBalance: options.accountSize, pnl: 0};
+
+    // Add the next running total
+    const [firstOrder] = position.orders;
+
+    metricsByPosition.push({
+      at: firstOrder.filledAt || firstOrder.openedAt,
+      pnl: currentPnL + positionPnL,
+      accountBalance: currentAccountBalance + positionPnL,
+      drawdown: Math.min(currentDrawdown + positionPnL, 0),
+    });
+
+    // Calculate the maximum drawdown
+    maxDrawdown = Math.min(
+      metricsByPosition[metricsByPosition.length - 1].drawdown,
+      maxDrawdown,
+    );
+
     return {
       ...acc,
       ...updatePeriodMetrics(acc, updateData),
@@ -336,6 +330,8 @@ export function calculateMetrics(positions: Array<Position>, options: Options) {
 
   return {
     ...metrics,
+    metricsByPosition,
+    maxDrawdown,
 
     // Add consecutive win/loss data
     maxConsecutiveWins: consecutive.maxConsecutiveWins,

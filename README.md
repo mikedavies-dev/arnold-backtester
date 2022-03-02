@@ -37,7 +37,6 @@ todo
 
 - Cleanup project layout
 - Create basic express server
-- Create webpack setup
 - Results viewer
 
 # Ideal folder setup
