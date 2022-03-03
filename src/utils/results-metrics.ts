@@ -3,36 +3,6 @@ import {pipe} from 'fp-ts/lib/function';
 import {Position, Order} from '../backtest/broker';
 import {incIf, ratio, initArrayOfSize} from './logic';
 
-/*
-PENDING:
-
-- Sharp ratio
-- Sortino ratio
-
-- Std div of average order PnL (and %)
-- Some kind of factor from avg order PnL to std div that favors a stable distribution?
-
- a way of overriding the shares traded, i.e. some kind of position calculation based on current account
- size and the share price. To do this we'd need to know the max loss per trade and possibly the stoploss?
-
- We can define the max loss as a percent of the account balance but we need to define the stoploss to be able
- to calculate the number of shares. Or should we leave this down to the system and if we want to adjust the
- settings then we update the profile and re-run the backtest?
-
- I think the strategy should have access to the account balance so it can calculate how many shares to purchase
- this is how the real system would work.. probably.. or would the real system be managed by some kind of
- portfolio management system? Probably not, at least not in the first version, we could potentially allocate
- an account size to each strategy
-
- References:
-  https://github.com/mdeverdelhan/ta4j-origins/blob/master/ta4j/src/main/java/eu/verdelhan/ta4j/analysis/criteria/MaximumDrawdownCriterion.java
-  https://www.javatips.net/api/tradelib-master/src/main/java/net/tradelib/ratio/SharpeRatio.java
-  https://www.javatips.net/api/tradelib-master/src/main/java/net/tradelib/ratio/SortinoRatio.java
-  https://github.com/dcajasn/Riskfolio-Lib/blob/master/riskfolio/RiskFunctions.py
-  https://github.com/lequant40/portfolio_analytics_js
-  https://analyzingalpha.com/profit-factor#:~:text=The%20profit%20factor%20is%20the,above%203.0%20is%20considered%20outstanding.
-*/
-
 type Options = {
   accountSize: number;
   commissionPerOrder: number;
