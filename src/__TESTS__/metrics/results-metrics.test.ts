@@ -40,6 +40,7 @@ function createAndUpdatePeriodMetrics(
       profitFactor: 0,
       commission: 0,
       grossProfitAndLoss: 0,
+      netProfitAndLoss: 0,
       ...data,
     },
     {
@@ -565,6 +566,7 @@ describe('test backtest results metrics', () => {
         direction: 'SHORT',
         commissionPerOrder: 1,
         orderCount: 2,
+        positionPnL: 100,
       });
 
       expect(data.shortPositions).toBe(1);
@@ -572,6 +574,7 @@ describe('test backtest results metrics', () => {
 
       // check commission
       expect(data.commission).toBe(4);
+      expect(data.netProfitAndLoss).toBe(96);
     });
 
     test('gross profit', () => {
@@ -580,6 +583,7 @@ describe('test backtest results metrics', () => {
         {
           direction: 'LONG',
           positionPnL: 100,
+          commissionPerOrder: 1,
         },
       );
 

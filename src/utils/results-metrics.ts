@@ -29,6 +29,7 @@ export type MetricsByPeriod = {
   shortWinnerPercent: number;
   profitFactor: number;
   grossProfitAndLoss: number;
+  netProfitAndLoss: number;
 };
 
 type Metrics = MetricsByPeriod & {
@@ -52,6 +53,7 @@ const emptyPeriodData: MetricsByPeriod = {
   profitFactor: 0,
   commission: 0,
   grossProfitAndLoss: 0,
+  netProfitAndLoss: 0,
 };
 
 export const totalOrderValue = (orders: Array<Order>) =>
@@ -204,8 +206,10 @@ export function updatePeriodMetrics(
     ? metrics.grossLoss + Math.abs(positionPnL)
     : metrics.grossLoss;
 
+  const commission = commissionPerOrder * orderCount;
+
   return {
-    commission: metrics.commission + commissionPerOrder * orderCount,
+    commission: metrics.commission + commission,
     longPositions,
     longWinners,
     shortPositions,
@@ -218,6 +222,7 @@ export function updatePeriodMetrics(
     shortWinnerPercent: ratio(shortWinners, shortPositions),
     profitFactor: ratio(grossProfit, grossLoss || 1),
     grossProfitAndLoss: metrics.grossProfitAndLoss + positionPnL,
+    netProfitAndLoss: metrics.netProfitAndLoss + (positionPnL - commission),
   };
 }
 
@@ -318,5 +323,10 @@ export function calculateMetrics(positions: Array<Position>, options: Options) {
     maxConsecutiveLosses: consecutive.maxConsecutiveLosses,
     maxConsecutiveWinAmount: consecutive.maxConsecutiveWinAmount,
     maxConsecutiveLossAmount: consecutive.maxConsecutiveLossAmount,
+
+    accountSize: options.accountSize,
+    commissionPerOrder: options.commissionPerOrder,
   };
 }
+
+export type ResultsMetrics = ReturnType<typeof calculateMetrics>;

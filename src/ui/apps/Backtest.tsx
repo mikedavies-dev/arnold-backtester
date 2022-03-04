@@ -122,7 +122,7 @@ export default function Backtest() {
             />
           </ButtonGroup>
           <h2>Backtest Results</h2>
-          <BacktestResultsDetails />
+          <BacktestResultsDetails details={state.details} />
         </>
       )}
     </>

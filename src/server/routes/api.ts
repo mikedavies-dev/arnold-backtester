@@ -1,6 +1,7 @@
 import {Express} from 'express';
 
 import {getBacktests, getBacktest} from '../../utils/db';
+import {calculateMetrics} from '../../utils/results-metrics';
 
 export function init(app: Express) {
   app.get('/api/health', (req, res) => {
@@ -37,6 +38,10 @@ export function init(app: Express) {
       id: backtest._id,
       positions: backtest.positions,
       profile: backtest.profile,
+      metrics: calculateMetrics(backtest.positions, {
+        accountSize: backtest.profile.initialBalance || 10000,
+        commissionPerOrder: backtest.profile.commissionPerOrder || 1,
+      }),
     });
   });
 }

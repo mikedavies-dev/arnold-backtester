@@ -1,5 +1,8 @@
 import axios from 'axios';
 import {parseISO} from 'date-fns';
+import {Profile} from '../utils/profile';
+import {Position} from '../backtest/broker';
+import {ResultsMetrics} from '../utils/results-metrics';
 
 const instance = axios.create({
   baseURL: '/api',
@@ -23,15 +26,17 @@ export type BacktestResultSummary = {
 export type RawBacktestResultDetails = {
   id: string;
   createdAt: string;
-  symbols: Array<string>;
-  strategy: string;
+  profile: Profile;
+  metrics: ResultsMetrics;
+  positions: Array<Position>;
 };
 
 export type BacktestResultDetails = {
   id: string;
   createdAt: Date;
-  symbols: Array<string>;
-  strategy: string;
+  profile: Profile;
+  positions: Array<Position>;
+  metrics: ResultsMetrics;
 };
 
 export async function listBacktests(): Promise<Array<BacktestResultSummary>> {

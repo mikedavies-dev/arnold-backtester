@@ -9,25 +9,17 @@ import {setupServer} from 'msw/node';
 
 import Backtest from '../../ui/apps/Backtest';
 
+import {
+  testBacktestDetails,
+  testBacktestResults,
+} from '../test-data/backtest-results';
+
 const server = setupServer(
   rest.get('/api/backtests', (req, res, ctx) => {
-    return res(
-      ctx.json([
-        {
-          id: 'item2',
-          createdAt: '2022-01-20T00:00:00.000Z',
-          symbols: ['ZZZZ'],
-          strategy: 'sample',
-        },
-      ]),
-    );
+    return res(ctx.json(testBacktestResults));
   }),
   rest.get('/api/backtest/item2', (req, res, ctx) => {
-    return res(
-      ctx.json({
-        // TODO, mock contents here
-      }),
-    );
+    return res(ctx.json(testBacktestDetails));
   }),
 );
 
@@ -47,7 +39,8 @@ test('loading results, selecting a result and clicking back', async () => {
   userEvent.click(row);
 
   // Check that we are seeing the results
-  await screen.findByText('Some results');
+  await screen.findByText('Initial Deposit');
+
   expect(await screen.queryByText(/item2/i)).toBeFalsy();
 
   // Click the back button back to results
