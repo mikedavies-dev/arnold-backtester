@@ -780,43 +780,41 @@ export const testBacktestDetails = {
     ],
     metricsByPosition: [
       {
-        at: '2021-10-25T13:30:01.000Z',
+        pnl: 0,
+        accountBalance: 10000,
+        drawdown: 0,
+      },
+      {
         pnl: 42,
         accountBalance: 10042,
         drawdown: 0,
       },
       {
-        at: '2021-10-25T13:30:58.000Z',
         pnl: 37.99999999999818,
         accountBalance: 10037.999999999998,
         drawdown: -4.000000000001819,
       },
       {
-        at: '2021-10-25T13:32:06.000Z',
         pnl: 34.99999999999818,
         accountBalance: 10034.999999999998,
         drawdown: -7.000000000001819,
       },
       {
-        at: '2021-10-25T13:32:07.000Z',
         pnl: 31.999999999996362,
         accountBalance: 10031.999999999996,
         drawdown: -10.000000000003638,
       },
       {
-        at: '2021-10-25T13:32:09.000Z',
         pnl: 27.999999999994543,
         accountBalance: 10027.999999999995,
         drawdown: -14.000000000005457,
       },
       {
-        at: '2021-10-25T13:32:13.000Z',
         pnl: 23.999999999994543,
         accountBalance: 10023.999999999995,
         drawdown: -18.000000000005457,
       },
       {
-        at: '2021-10-25T13:33:50.000Z',
         pnl: -27.000000000003638,
         accountBalance: 9972.999999999996,
         drawdown: -69.00000000000364,
@@ -830,5 +828,4 @@ export const testBacktestDetails = {
     accountSize: 10000,
     commissionPerOrder: 1,
   },
-  createdAt: null,
 };

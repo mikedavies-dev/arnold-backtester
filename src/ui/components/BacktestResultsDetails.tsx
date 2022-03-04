@@ -15,19 +15,20 @@ const MetricColumn = styled.td`
   width: 33%;
 `;
 
-function MetricValue({
-  name,
-  value,
-  format,
-}: {
+type Metric = {
   name: string;
-  value: number;
   format: string;
-}) {
+  value: number;
+};
+
+function MetricValue({metric}: {metric: Metric | null}) {
+  if (!metric) {
+    return <MetricWrapper>&nbsp;</MetricWrapper>;
+  }
   return (
     <MetricWrapper>
-      <div>{name}</div>
-      <div>{numeral(value).format(format)}</div>
+      <div>{metric.name}</div>
+      <div>{numeral(metric.value).format(metric.format)}</div>
     </MetricWrapper>
   );
 }
@@ -36,7 +37,16 @@ const Formats = {
   Number: '0,0',
   Currency: '$0,0',
   CurrencyWithCents: '$0,0.00',
+  Percent: '0.00%',
 };
+
+function metric(name: string, value: number, format: string): Metric {
+  return {
+    name,
+    value,
+    format,
+  };
+}
 
 export default function BacktestResultsDetails({
   details,
@@ -48,83 +58,58 @@ export default function BacktestResultsDetails({
   const grid = [
     // Column 1
     [
-      {
-        name: 'Initial Deposit',
-        value: metrics.accountSize,
-        format: Formats.Currency,
-      },
-      {
-        name: 'Gross Profit',
-        value: metrics.grossProfit,
-        format: '$0,0.00',
-      },
-      {
-        name: 'Gross Loss',
-        value: metrics.grossLoss,
-        format: '$0,0.00',
-      },
-      {
-        name: 'Gross Profit & Loss',
-        value: metrics.grossProfitAndLoss,
-        format: '$0,0.00',
-      },
+      metric('Initial Deposit', metrics.accountSize, Formats.Currency),
+      metric('Gross Profit', metrics.grossProfit, '$0,0.00'),
+      metric('Gross Loss', metrics.grossLoss, '$0,0.00'),
+      metric('Gross Profit & Loss', metrics.grossProfitAndLoss, '$0,0.00'),
       null,
-      {
-        name: 'Commission',
-        value: metrics.commission,
-        format: '$0,0.00',
-      },
-      {
-        name: 'Net Profit & Loss',
-        value: metrics.netProfitAndLoss,
-        format: '$0,0.00',
-      },
+      metric('Commission', metrics.commission, '$0,0.00'),
+      metric('Net Profit & Loss', metrics.netProfitAndLoss, '$0,0.00'),
       null,
-      {
-        name: 'Profit Factor',
-        value: metrics.profitFactor,
-        format: '0.00',
-      },
-      null,
-      {name: 'Positions', value: metrics.positions, format: Formats.Number},
-      {name: 'Orders', value: metrics.orders, format: Formats.Number},
-      null,
+      metric('Profit Factor', metrics.profitFactor, '0.00'),
     ],
     // Column 2
     [
-      {
-        name: 'Max Drawdown',
-        value: metrics.maxDrawdown,
-        format: Formats.CurrencyWithCents,
-      },
+      metric('Max Drawdown', metrics.maxDrawdown, Formats.CurrencyWithCents),
       null,
-      {
-        name: 'Max Consecutive Wins',
-        value: metrics.maxConsecutiveWins,
-        format: Formats.Number,
-      },
-      {
-        name: 'Max Consecutive Wins $',
-        value: metrics.maxConsecutiveWinAmount,
-        format: Formats.CurrencyWithCents,
-      },
+      metric(
+        'Max Consecutive Wins',
+        metrics.maxConsecutiveWins,
+        Formats.Number,
+      ),
+      metric(
+        'Max Consecutive Wins $',
+        metrics.maxConsecutiveWinAmount,
+        Formats.CurrencyWithCents,
+      ),
       null,
-      {
-        name: 'Max Consecutive Losses',
-        value: metrics.maxConsecutiveLosses,
-        format: Formats.Number,
-      },
-      {
-        name: 'Max Consecutive Loss $',
-        value: metrics.maxConsecutiveLossAmount,
-        format: Formats.CurrencyWithCents,
-      },
+      metric(
+        'Max Consecutive Losses',
+        metrics.maxConsecutiveLosses,
+        Formats.Number,
+      ),
+      metric(
+        'Max Consecutive Wins $',
+        metrics.maxConsecutiveLossAmount,
+        Formats.CurrencyWithCents,
+      ),
     ],
     // Column 3
-    [{name: 'Positions', value: metrics.positions, format: Formats.Number}],
+    [
+      metric('Positions', metrics.positions, Formats.Number),
+      metric('Orders', metrics.orders, Formats.Number),
+      null,
+      metric('Long Positions', metrics.longPositions, Formats.Number),
+      metric('Long Winners', metrics.longWinners, Formats.Number),
+      metric('Long Winner %', metrics.longWinnerPercent, Formats.Percent),
+      null,
+      metric('Short Positions', metrics.shortPositions, Formats.Number),
+      metric('Short Winners', metrics.shortWinners, Formats.Number),
+      metric('Short Winner %', metrics.shortWinnerPercent, Formats.Percent),
+    ],
   ];
 
-  const [rows] = grid;
+  const rowCount = grid.reduce((acc, rows) => Math.max(acc, rows.length), 0);
 
   return (
     <table
@@ -137,25 +122,21 @@ export default function BacktestResultsDetails({
       )}
     >
       <tbody>
-        {rows.map((_, ix) => {
-          return (
-            <tr key={`row_${ix}`}>
-              {grid
-                .map(column => column[ix] || null)
-                .map((metric, row) => (
-                  <MetricColumn key={`metric_${ix}_${row}`}>
-                    {metric && (
-                      <MetricValue
-                        name={metric.name}
-                        value={metric.value}
-                        format={metric.format}
-                      />
-                    )}
-                  </MetricColumn>
-                ))}
-            </tr>
-          );
-        })}
+        {Array(rowCount)
+          .fill(0)
+          .map((_, ix) => {
+            return (
+              <tr key={`row_${ix}`}>
+                {grid
+                  .map(column => column[ix] || null)
+                  .map((metric, row) => (
+                    <MetricColumn key={`metric_${ix}_${row}`}>
+                      <MetricValue metric={metric} />
+                    </MetricColumn>
+                  ))}
+              </tr>
+            );
+          })}
       </tbody>
     </table>
   );

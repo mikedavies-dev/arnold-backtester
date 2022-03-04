@@ -9,7 +9,6 @@ type Options = {
 };
 
 type RunningPositionMetrics = {
-  at?: Date;
   pnl: number;
   drawdown: number;
   accountBalance: number;
@@ -248,6 +247,12 @@ export function calculateMetrics(positions: Array<Position>, options: Options) {
 
   let maxDrawdown = 0;
 
+  metricsByPosition.push({
+    pnl: 0,
+    accountBalance: options.accountSize,
+    drawdown: 0,
+  });
+
   const metrics = positions.reduce((acc, position) => {
     const direction = getPositionDirection(position);
     const positionPnL = getPositionPL(position);
@@ -292,10 +297,7 @@ export function calculateMetrics(positions: Array<Position>, options: Options) {
       : {drawdown: 0, accountBalance: options.accountSize, pnl: 0};
 
     // Add the next running total
-    const firstFilledOrder = position.orders.find(o => o.state === 'FILLED');
-
     metricsByPosition.push({
-      at: firstFilledOrder?.filledAt,
       pnl: currentPnL + positionPnLWithCommission,
       accountBalance: currentAccountBalance + positionPnLWithCommission,
       drawdown: Math.min(currentDrawdown + positionPnLWithCommission, 0),

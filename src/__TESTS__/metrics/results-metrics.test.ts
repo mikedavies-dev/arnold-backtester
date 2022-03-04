@@ -697,56 +697,52 @@ describe('test backtest results metrics', () => {
       expect(metrics.metricsByPosition).toMatchInlineSnapshot(`
         Array [
           Object {
+            "accountBalance": 1000,
+            "drawdown": 0,
+            "pnl": 0,
+          },
+          Object {
             "accountBalance": 1098,
-            "at": 2022-01-01T14:30:00.000Z,
             "drawdown": 0,
             "pnl": 98,
           },
           Object {
             "accountBalance": 1196,
-            "at": 2022-01-01T14:30:00.000Z,
             "drawdown": 0,
             "pnl": 196,
           },
           Object {
             "accountBalance": 1094,
-            "at": 2022-01-01T14:30:00.000Z,
             "drawdown": -102,
             "pnl": 94,
           },
           Object {
             "accountBalance": 992,
-            "at": 2022-01-01T14:30:00.000Z,
             "drawdown": -204,
             "pnl": -8,
           },
           Object {
             "accountBalance": 890,
-            "at": 2022-01-01T14:30:00.000Z,
             "drawdown": -306,
             "pnl": -110,
           },
           Object {
             "accountBalance": 988,
-            "at": 2022-01-01T14:30:00.000Z,
             "drawdown": -208,
             "pnl": -12,
           },
           Object {
             "accountBalance": 1086,
-            "at": 2022-01-01T14:30:00.000Z,
             "drawdown": -110,
             "pnl": 86,
           },
           Object {
             "accountBalance": 1184,
-            "at": 2022-01-01T14:30:00.000Z,
             "drawdown": -12,
             "pnl": 184,
           },
           Object {
             "accountBalance": 1082,
-            "at": 2022-01-01T14:30:00.000Z,
             "drawdown": -114,
             "pnl": 82,
           },
