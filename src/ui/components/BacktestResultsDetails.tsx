@@ -4,6 +4,8 @@ import styled from 'styled-components';
 import numeral from 'numeral';
 
 import {BacktestResultDetails} from '../api';
+import SimpleBarChart from './SimpleBarChart';
+import {MetricsByPeriod} from '../../utils/results-metrics';
 
 const MetricWrapper = styled.div`
   display: flex;
@@ -20,6 +22,25 @@ type Metric = {
   format: string;
   value: number;
 };
+
+const ChartWrapper = styled.div`
+  display: flex;
+  height: 300px;
+  margin-bottom: 40px;
+
+  > div {
+    flex-grow: 1;
+    width: 100%;
+  }
+`;
+
+const ChartTitle = styled.div`
+  font-size: 14px;
+  font-weight: bold;
+  text-align: center;
+  margin-top: 20px;
+  margin-bottom: 10px;
+`;
 
 function MetricValue({metric}: {metric: Metric | null}) {
   if (!metric) {
@@ -46,6 +67,23 @@ function metric(name: string, value: number, format: string): Metric {
     value,
     format,
   };
+}
+
+const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+function getChartData(
+  metrics: MetricsByPeriod[],
+  field: keyof MetricsByPeriod,
+  labelFormatter: (val: number) => string,
+  valueFormatter: (val: number) => string,
+) {
+  return metrics
+    .map((entry, ix) => ({
+      name: labelFormatter(ix),
+      value: entry[field],
+      label: valueFormatter(entry[field]),
+    }))
+    .filter(v => v.value);
 }
 
 export default function BacktestResultsDetails({
@@ -112,32 +150,86 @@ export default function BacktestResultsDetails({
   const rowCount = grid.reduce((acc, rows) => Math.max(acc, rows.length), 0);
 
   return (
-    <table
-      width="100%"
-      className={classNames(
-        Classes.HTML_TABLE,
-        Classes.HTML_TABLE_BORDERED,
-        Classes.HTML_TABLE_STRIPED,
-        Classes.HTML_TABLE_CONDENSED,
-      )}
-    >
-      <tbody>
-        {Array(rowCount)
-          .fill(0)
-          .map((_, ix) => {
-            return (
-              <tr key={`row_${ix}`}>
-                {grid
-                  .map(column => column[ix] || null)
-                  .map((metric, row) => (
-                    <MetricColumn key={`metric_${ix}_${row}`}>
-                      <MetricValue metric={metric} />
-                    </MetricColumn>
-                  ))}
-              </tr>
-            );
-          })}
-      </tbody>
-    </table>
+    <>
+      <table
+        width="100%"
+        className={classNames(
+          Classes.HTML_TABLE,
+          Classes.HTML_TABLE_BORDERED,
+          Classes.HTML_TABLE_STRIPED,
+          Classes.HTML_TABLE_CONDENSED,
+        )}
+      >
+        <tbody>
+          {Array(rowCount)
+            .fill(0)
+            .map((_, ix) => {
+              return (
+                <tr key={`row_${ix}`}>
+                  {grid
+                    .map(column => column[ix] || null)
+                    .map((metric, row) => (
+                      <MetricColumn key={`metric_${ix}_${row}`}>
+                        <MetricValue metric={metric} />
+                      </MetricColumn>
+                    ))}
+                </tr>
+              );
+            })}
+        </tbody>
+      </table>
+      <ChartWrapper>
+        <>
+          <div>
+            <ChartTitle>Profit and Loss - By Day</ChartTitle>
+            <SimpleBarChart
+              data={getChartData(
+                metrics.byDayOfWeek,
+                'grossProfitAndLoss',
+                val => days[val],
+                val => numeral(val).format('$0.00'),
+              )}
+            />
+          </div>
+          <div>
+            <ChartTitle>Profit and Loss - By Hour</ChartTitle>
+            <SimpleBarChart
+              data={getChartData(
+                metrics.byHour,
+                'grossProfitAndLoss',
+                val => `${val}h`,
+                val => numeral(val).format('$0.00'),
+              )}
+            />
+          </div>
+        </>
+      </ChartWrapper>
+      <ChartWrapper>
+        <>
+          <div>
+            <ChartTitle>Orders - By Day</ChartTitle>
+            <SimpleBarChart
+              data={getChartData(
+                metrics.byDayOfWeek,
+                'positions',
+                val => days[val],
+                val => numeral(val).format('0,0'),
+              )}
+            />
+          </div>
+          <div>
+            <ChartTitle>Orders - By Hour</ChartTitle>
+            <SimpleBarChart
+              data={getChartData(
+                metrics.byHour,
+                'positions',
+                val => `${val}h`,
+                val => numeral(val).format('0,0'),
+              )}
+            />
+          </div>
+        </>
+      </ChartWrapper>
+    </>
   );
 }

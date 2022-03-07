@@ -292,9 +292,7 @@ export function calculateMetrics(positions: Array<Position>, options: Options) {
       pnl: currentPnL,
       drawdown: currentDrawdown,
       accountBalance: currentAccountBalance,
-    } = metricsByPosition.length
-      ? metricsByPosition[metricsByPosition.length - 1]
-      : {drawdown: 0, accountBalance: options.accountSize, pnl: 0};
+    } = metricsByPosition[metricsByPosition.length - 1];
 
     // Add the next running total
     metricsByPosition.push({

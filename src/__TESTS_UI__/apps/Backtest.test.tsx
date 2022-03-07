@@ -9,6 +9,8 @@ import {setupServer} from 'msw/node';
 
 import Backtest from '../../ui/apps/Backtest';
 
+const log = jest.spyOn(console, 'warn').mockImplementation(() => {});
+
 import {
   testBacktestDetails,
   testBacktestResults,
@@ -24,8 +26,11 @@ const server = setupServer(
 );
 
 beforeAll(() => server.listen({onUnhandledRequest: 'error'}));
-afterAll(() => server.close());
 afterEach(() => server.resetHandlers());
+afterAll(() => {
+  server.close();
+  log.mockReset();
+});
 
 test('loading results, selecting a result and clicking back', async () => {
   render(<Backtest />);

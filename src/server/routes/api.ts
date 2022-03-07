@@ -39,8 +39,8 @@ export function init(app: Express) {
       positions: backtest.positions,
       profile: backtest.profile,
       metrics: calculateMetrics(backtest.positions, {
-        accountSize: backtest.profile.initialBalance || 10000,
-        commissionPerOrder: backtest.profile.commissionPerOrder || 1,
+        accountSize: backtest.profile.initialBalance,
+        commissionPerOrder: backtest.profile.commissionPerOrder,
       }),
     });
   });
