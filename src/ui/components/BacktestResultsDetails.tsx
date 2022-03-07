@@ -116,7 +116,7 @@ export default function BacktestResultsDetails({
         Formats.Number,
       ),
       metric(
-        'Max Consecutive Wins $',
+        'Max Consecutive Win $',
         metrics.maxConsecutiveWinAmount,
         Formats.CurrencyWithCents,
       ),
@@ -127,7 +127,7 @@ export default function BacktestResultsDetails({
         Formats.Number,
       ),
       metric(
-        'Max Consecutive Wins $',
+        'Max Consecutive Loss $',
         metrics.maxConsecutiveLossAmount,
         Formats.CurrencyWithCents,
       ),
