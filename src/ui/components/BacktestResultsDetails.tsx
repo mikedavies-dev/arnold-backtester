@@ -1,11 +1,32 @@
-import {Classes} from '@blueprintjs/core';
+import {useReducer} from 'react';
+import {Classes, Tab, Tabs} from '@blueprintjs/core';
 import classNames from 'classnames';
 import styled from 'styled-components';
 import numeral from 'numeral';
 
 import {BacktestResultDetails} from '../api';
 import SimpleBarChart from './SimpleBarChart';
-import {MetricsByPeriod} from '../../utils/results-metrics';
+import SimpleLineChart from './SimpleLineChart';
+import {MetricsByPeriod, ResultsMetrics} from '../../utils/results-metrics';
+import CodeBlock from './CodeBlock';
+
+type TabOption = 'metrics' | 'positions' | 'code';
+
+type AppState = {
+  selectedTab: TabOption;
+};
+
+type Action = {type: 'setSelectedTab'; tab: TabOption};
+
+function reducer(state: AppState, action: Action): AppState {
+  switch (action.type) {
+    case 'setSelectedTab':
+      return {
+        ...state,
+        selectedTab: action.tab,
+      };
+  }
+}
 
 const MetricWrapper = styled.div`
   display: flex;
@@ -40,6 +61,13 @@ const ChartTitle = styled.div`
   text-align: center;
   margin-top: 20px;
   margin-bottom: 10px;
+`;
+
+const TabWrapper = styled.div`
+  // background-color: #2B2B2B;
+  //  border-top: 1px solid #4e5c68;
+  margin-top: 30px;
+  padding-top: 10px;
 `;
 
 function MetricValue({metric}: {metric: Metric | null}) {
@@ -86,23 +114,114 @@ function getChartData(
     .filter(v => v.value);
 }
 
+const ChartMetrics = ({metrics}: {metrics: ResultsMetrics}) => {
+  return (
+    <>
+      <ChartWrapper>
+        <>
+          <div>
+            <ChartTitle>Account Balance</ChartTitle>
+            <SimpleLineChart
+              data={metrics.metricsByPosition.map(position => {
+                return {
+                  value: position.accountBalance,
+                };
+              })}
+              formatter={value => numeral(value).format('$0,0')}
+            />
+          </div>
+          <div>
+            <ChartTitle>Drawdown</ChartTitle>
+            <SimpleLineChart
+              data={metrics.metricsByPosition.map(position => {
+                return {
+                  value: position.drawdown,
+                };
+              })}
+              formatter={value => numeral(value).format('$0,0')}
+            />
+          </div>
+        </>
+      </ChartWrapper>
+      <ChartWrapper>
+        <>
+          <div>
+            <ChartTitle>Profit and Loss - By Day</ChartTitle>
+            <SimpleBarChart
+              data={getChartData(
+                metrics.byDayOfWeek,
+                'grossProfitAndLoss',
+                val => days[val],
+                val => numeral(val).format('$0,0'),
+              )}
+            />
+          </div>
+          <div>
+            <ChartTitle>Profit and Loss - By Hour</ChartTitle>
+            <SimpleBarChart
+              data={getChartData(
+                metrics.byHour,
+                'grossProfitAndLoss',
+                val => `${val}h`,
+                val => numeral(val).format('$0,0'),
+              )}
+            />
+          </div>
+        </>
+      </ChartWrapper>
+      <ChartWrapper>
+        <>
+          <div>
+            <ChartTitle>Orders - By Day</ChartTitle>
+            <SimpleBarChart
+              data={getChartData(
+                metrics.byDayOfWeek,
+                'positions',
+                val => days[val],
+                val => numeral(val).format('0,0'),
+              )}
+            />
+          </div>
+          <div>
+            <ChartTitle>Orders - By Hour</ChartTitle>
+            <SimpleBarChart
+              data={getChartData(
+                metrics.byHour,
+                'positions',
+                val => `${val}h`,
+                val => numeral(val).format('0,0'),
+              )}
+            />
+          </div>
+        </>
+      </ChartWrapper>
+    </>
+  );
+};
+
 export default function BacktestResultsDetails({
   details,
 }: {
   details: BacktestResultDetails;
 }) {
+  const [state, dispatch] = useReducer(reducer, {
+    selectedTab: 'metrics',
+  });
+
   const {metrics} = details;
 
   const grid = [
     // Column 1
     [
       metric('Initial Deposit', metrics.accountSize, Formats.Currency),
+      metric('Profit & Loss', metrics.netProfitAndLoss, '$0,0.00'),
+      metric('Final Balance', metrics.finalAccountBalance, Formats.Currency),
+      null,
+      metric('Gross P&L', metrics.grossProfitAndLoss, '$0,0.00'),
       metric('Gross Profit', metrics.grossProfit, '$0,0.00'),
       metric('Gross Loss', metrics.grossLoss, '$0,0.00'),
-      metric('Gross Profit & Loss', metrics.grossProfitAndLoss, '$0,0.00'),
-      null,
       metric('Commission', metrics.commission, '$0,0.00'),
-      metric('Net Profit & Loss', metrics.netProfitAndLoss, '$0,0.00'),
+
       null,
       metric('Profit Factor', metrics.profitFactor, '0.00'),
     ],
@@ -149,6 +268,13 @@ export default function BacktestResultsDetails({
 
   const rowCount = grid.reduce((acc, rows) => Math.max(acc, rows.length), 0);
 
+  const handleSelectTab = (tab: TabOption) => {
+    dispatch({
+      type: 'setSelectedTab',
+      tab: tab,
+    });
+  };
+
   return (
     <>
       <table
@@ -178,58 +304,30 @@ export default function BacktestResultsDetails({
             })}
         </tbody>
       </table>
-      <ChartWrapper>
-        <>
-          <div>
-            <ChartTitle>Profit and Loss - By Day</ChartTitle>
-            <SimpleBarChart
-              data={getChartData(
-                metrics.byDayOfWeek,
-                'grossProfitAndLoss',
-                val => days[val],
-                val => numeral(val).format('$0.00'),
-              )}
-            />
-          </div>
-          <div>
-            <ChartTitle>Profit and Loss - By Hour</ChartTitle>
-            <SimpleBarChart
-              data={getChartData(
-                metrics.byHour,
-                'grossProfitAndLoss',
-                val => `${val}h`,
-                val => numeral(val).format('$0.00'),
-              )}
-            />
-          </div>
-        </>
-      </ChartWrapper>
-      <ChartWrapper>
-        <>
-          <div>
-            <ChartTitle>Orders - By Day</ChartTitle>
-            <SimpleBarChart
-              data={getChartData(
-                metrics.byDayOfWeek,
-                'positions',
-                val => days[val],
-                val => numeral(val).format('0,0'),
-              )}
-            />
-          </div>
-          <div>
-            <ChartTitle>Orders - By Hour</ChartTitle>
-            <SimpleBarChart
-              data={getChartData(
-                metrics.byHour,
-                'positions',
-                val => `${val}h`,
-                val => numeral(val).format('0,0'),
-              )}
-            />
-          </div>
-        </>
-      </ChartWrapper>
+      <TabWrapper>
+        <Tabs
+          id="TabsExample"
+          selectedTabId={state.selectedTab}
+          large
+          onChange={tab => handleSelectTab(tab as TabOption)}
+        >
+          <Tab
+            id="metrics"
+            title="Metrics"
+            panel={<ChartMetrics metrics={metrics} />}
+          />
+          <Tab
+            id="positions"
+            title="Positions"
+            panel={<CodeBlock code={details.profile.strategy.source || ''} />}
+          />
+          <Tab
+            id="code"
+            title="Code"
+            panel={<CodeBlock code={details.profile.strategy.source || ''} />}
+          />
+        </Tabs>
+      </TabWrapper>
     </>
   );
 }
