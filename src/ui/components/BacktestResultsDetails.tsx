@@ -64,7 +64,7 @@ const ChartTitle = styled.div`
 `;
 
 const TabWrapper = styled.div`
-  margin-top: 30px;
+  margin-top: 10px;
   padding-top: 10px;
 `;
 
@@ -275,51 +275,55 @@ export default function BacktestResultsDetails({
 
   return (
     <>
-      <table
-        width="100%"
-        className={classNames(
-          Classes.HTML_TABLE,
-          Classes.HTML_TABLE_BORDERED,
-          Classes.HTML_TABLE_STRIPED,
-          Classes.HTML_TABLE_CONDENSED,
-        )}
-      >
-        <tbody>
-          {Array(rowCount)
-            .fill(0)
-            .map((_, ix) => {
-              return (
-                <tr key={`row_${ix}`}>
-                  {grid
-                    .map(column => column[ix] || null)
-                    .map((metric, row) => (
-                      <MetricColumn key={`metric_${ix}_${row}`}>
-                        <MetricValue metric={metric} />
-                      </MetricColumn>
-                    ))}
-                </tr>
-              );
-            })}
-        </tbody>
-      </table>
+      <Navbar>
+        <Navbar.Group align={Alignment.RIGHT}>
+          <Tabs
+            animate={false}
+            id="navbar"
+            large={true}
+            onChange={tab => handleSelectTab(tab as TabOption)}
+            selectedTabId={state.selectedTab}
+          >
+            <Tab id="metrics" title="Metrics" />
+            <Tab id="positions" title="Positions" />
+            <Tab id="code" title="Code" />
+          </Tabs>
+        </Navbar.Group>
+      </Navbar>
 
       <TabWrapper>
-        <Navbar>
-          <Navbar.Group align={Alignment.RIGHT}>
-            <Tabs
-              animate={false}
-              id="navbar"
-              large={true}
-              onChange={tab => handleSelectTab(tab as TabOption)}
-              selectedTabId={state.selectedTab}
+        {state.selectedTab === 'metrics' && (
+          <>
+            <table
+              width="100%"
+              className={classNames(
+                Classes.HTML_TABLE,
+                Classes.HTML_TABLE_BORDERED,
+                Classes.HTML_TABLE_STRIPED,
+                Classes.HTML_TABLE_CONDENSED,
+              )}
             >
-              <Tab id="metrics" title="Metrics" />
-              <Tab id="positions" title="Positions" />
-              <Tab id="code" title="Code" />
-            </Tabs>
-          </Navbar.Group>
-        </Navbar>
-        {state.selectedTab === 'metrics' && <ChartMetrics metrics={metrics} />}
+              <tbody>
+                {Array(rowCount)
+                  .fill(0)
+                  .map((_, ix) => {
+                    return (
+                      <tr key={`row_${ix}`}>
+                        {grid
+                          .map(column => column[ix] || null)
+                          .map((metric, row) => (
+                            <MetricColumn key={`metric_${ix}_${row}`}>
+                              <MetricValue metric={metric} />
+                            </MetricColumn>
+                          ))}
+                      </tr>
+                    );
+                  })}
+              </tbody>
+            </table>
+            <ChartMetrics metrics={metrics} />
+          </>
+        )}
         {state.selectedTab === 'code' && (
           <CodeBlock code={details.profile.strategy.source || ''} />
         )}
