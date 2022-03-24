@@ -1,5 +1,5 @@
 import {useReducer} from 'react';
-import {Classes, Tab, Tabs} from '@blueprintjs/core';
+import {Classes, Tab, Tabs, Navbar, Alignment} from '@blueprintjs/core';
 import classNames from 'classnames';
 import styled from 'styled-components';
 import numeral from 'numeral';
@@ -64,8 +64,6 @@ const ChartTitle = styled.div`
 `;
 
 const TabWrapper = styled.div`
-  // background-color: #2B2B2B;
-  //  border-top: 1px solid #4e5c68;
   margin-top: 30px;
   padding-top: 10px;
 `;
@@ -304,29 +302,27 @@ export default function BacktestResultsDetails({
             })}
         </tbody>
       </table>
+
       <TabWrapper>
-        <Tabs
-          id="TabsExample"
-          selectedTabId={state.selectedTab}
-          large
-          onChange={tab => handleSelectTab(tab as TabOption)}
-        >
-          <Tab
-            id="metrics"
-            title="Metrics"
-            panel={<ChartMetrics metrics={metrics} />}
-          />
-          <Tab
-            id="positions"
-            title="Positions"
-            panel={<CodeBlock code={details.profile.strategy.source || ''} />}
-          />
-          <Tab
-            id="code"
-            title="Code"
-            panel={<CodeBlock code={details.profile.strategy.source || ''} />}
-          />
-        </Tabs>
+        <Navbar>
+          <Navbar.Group align={Alignment.RIGHT}>
+            <Tabs
+              animate={false}
+              id="navbar"
+              large={true}
+              onChange={tab => handleSelectTab(tab as TabOption)}
+              selectedTabId={state.selectedTab}
+            >
+              <Tab id="metrics" title="Metrics" />
+              <Tab id="positions" title="Positions" />
+              <Tab id="code" title="Code" />
+            </Tabs>
+          </Navbar.Group>
+        </Navbar>
+        {state.selectedTab === 'metrics' && <ChartMetrics metrics={metrics} />}
+        {state.selectedTab === 'code' && (
+          <CodeBlock code={details.profile.strategy.source || ''} />
+        )}
       </TabWrapper>
     </>
   );

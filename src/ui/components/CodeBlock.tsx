@@ -1,9 +1,9 @@
 import {Prism as SyntaxHighlighter} from 'react-syntax-highlighter';
-import {a11yDark} from 'react-syntax-highlighter/dist/cjs/styles/prism';
+import {dracula} from 'react-syntax-highlighter/dist/cjs/styles/prism';
 
 export default function CodeBlock({code}: {code: string}) {
   return (
-    <SyntaxHighlighter language="javascript" style={a11yDark} showLineNumbers>
+    <SyntaxHighlighter language="javascript" style={dracula} showLineNumbers>
       {code}
     </SyntaxHighlighter>
   );

@@ -99,6 +99,15 @@ todo
 - Cleanup project layout
 - Create basic express server
 - Results viewer
+- Eventually move into global module via npm
+
+### Results viewer
+
+- Show symbols/dates/in results
+- Show PnL etc in results summary list
+- Show list of positions
+- Show position details (4 charts, SPY 1m, stock 1m, stock 60m, stock daily) and
+  entry/exit positions.
 
 ## Ideal folder setup
 
