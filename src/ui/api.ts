@@ -1,11 +1,16 @@
 import axios from 'axios';
-import {parseISO} from 'date-fns';
 import {Profile} from '../utils/profile';
 import {Position} from '../backtest/broker';
 import {ResultsMetrics} from '../utils/results-metrics';
+import {deepParseDates} from '../utils/data-structures';
 
 const instance = axios.create({
   baseURL: '/api',
+});
+
+instance.interceptors.response.use(originalResponse => {
+  deepParseDates(originalResponse.data);
+  return originalResponse;
 });
 
 export type RawBacktestResultSummary = {
@@ -40,25 +45,17 @@ export type BacktestResultDetails = {
 };
 
 export async function listBacktests(): Promise<Array<BacktestResultSummary>> {
-  const {data}: {data: Array<RawBacktestResultSummary>} = await instance.get(
+  const {data}: {data: Array<BacktestResultSummary>} = await instance.get(
     'backtests',
   );
 
-  return data.map(result => {
-    return {
-      ...result,
-      createdAt: parseISO(result.createdAt),
-    };
-  }) as Array<BacktestResultSummary>;
+  return data;
 }
 
 export async function listBacktest(id: string): Promise<BacktestResultDetails> {
-  const {data}: {data: RawBacktestResultDetails} = await instance.get(
+  const {data}: {data: BacktestResultDetails} = await instance.get(
     `backtest/${id}`,
   );
 
-  return {
-    ...data,
-    createdAt: parseISO(data.createdAt),
-  };
+  return data;
 }

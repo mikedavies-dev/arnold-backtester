@@ -1,3 +1,5 @@
+import {parseISO} from 'date-fns';
+
 export function mergeSortedArrays<Type>(
   arrays: Array<Array<Type>>,
   sortFn: (v1: Type, v2: Type) => number,
@@ -31,4 +33,21 @@ export function mergeSortedArrays<Type>(
 
     // test
   }, arrays[0]);
+}
+
+export function deepParseDates(body: any) {
+  if (body === null || body === undefined || typeof body !== 'object')
+    return body;
+
+  for (const key of Object.keys(body)) {
+    const value = body[key];
+    if (value && typeof value === 'string') {
+      const dateValue = parseISO(value);
+      if (!isNaN(dateValue.getTime())) {
+        body[key] = dateValue;
+      }
+    } else if (typeof value === 'object') {
+      deepParseDates(value);
+    }
+  }
 }

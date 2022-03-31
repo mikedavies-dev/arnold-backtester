@@ -9,14 +9,21 @@ import SimpleBarChart from './SimpleBarChart';
 import SimpleLineChart from './SimpleLineChart';
 import {MetricsByPeriod, ResultsMetrics} from '../../utils/results-metrics';
 import CodeBlock from './CodeBlock';
+import PositionList from './PositionList';
+import PositionDetails from './PositionDetails';
+import {Position} from '../../backtest/broker';
 
 type TabOption = 'metrics' | 'positions' | 'code';
 
 type AppState = {
   selectedTab: TabOption;
+  selectedPosition: Position | null;
 };
 
-type Action = {type: 'setSelectedTab'; tab: TabOption};
+type Action =
+  | {type: 'setSelectedTab'; tab: TabOption}
+  | {type: 'setSelectedPosition'; position: Position}
+  | {type: 'unselectPosition'};
 
 function reducer(state: AppState, action: Action): AppState {
   switch (action.type) {
@@ -24,6 +31,18 @@ function reducer(state: AppState, action: Action): AppState {
       return {
         ...state,
         selectedTab: action.tab,
+      };
+
+    case 'setSelectedPosition':
+      return {
+        ...state,
+        selectedPosition: action.position,
+      };
+
+    case 'unselectPosition':
+      return {
+        ...state,
+        selectedPosition: null,
       };
   }
 }
@@ -204,6 +223,7 @@ export default function BacktestResultsDetails({
 }) {
   const [state, dispatch] = useReducer(reducer, {
     selectedTab: 'metrics',
+    selectedPosition: null,
   });
 
   const {metrics} = details;
@@ -273,8 +293,24 @@ export default function BacktestResultsDetails({
     });
   };
 
+  const handleSelectPosition = (position: Position) => {
+    dispatch({
+      type: 'setSelectedPosition',
+      position,
+    });
+  };
+
+  const handleClosePosition = () => {
+    dispatch({
+      type: 'unselectPosition',
+    });
+  };
+
   return (
-    <>
+    <div>
+      {state.selectedPosition && (
+        <PositionDetails onClose={handleClosePosition} />
+      )}
       <Navbar>
         <Navbar.Group align={Alignment.RIGHT}>
           <Tabs
@@ -324,10 +360,16 @@ export default function BacktestResultsDetails({
             <ChartMetrics metrics={metrics} />
           </>
         )}
+        {state.selectedTab === 'positions' && (
+          <PositionList
+            positions={details.positions}
+            onSelectPosition={position => handleSelectPosition(position)}
+          />
+        )}
         {state.selectedTab === 'code' && (
           <CodeBlock code={details.profile.strategy.source || ''} />
         )}
       </TabWrapper>
-    </>
+    </div>
   );
 }
