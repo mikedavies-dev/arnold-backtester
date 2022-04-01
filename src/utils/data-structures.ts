@@ -36,8 +36,9 @@ export function mergeSortedArrays<Type>(
 }
 
 export function deepParseDates(body: any) {
-  if (body === null || body === undefined || typeof body !== 'object')
-    return body;
+  if (body === null || body === undefined || typeof body !== 'object') {
+    return;
+  }
 
   for (const key of Object.keys(body)) {
     const value = body[key];

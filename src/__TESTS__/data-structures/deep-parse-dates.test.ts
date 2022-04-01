@@ -35,3 +35,9 @@ test('deep parse dates', () => {
     }
   `);
 });
+
+test('deep parse dates on null object', () => {
+  const src = null;
+  deepParseDates(src);
+  expect(src).toMatchInlineSnapshot(`null`);
+});
