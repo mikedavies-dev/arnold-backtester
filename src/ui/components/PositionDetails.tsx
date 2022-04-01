@@ -1,9 +1,21 @@
 import {useMemo} from 'react';
 import styled from 'styled-components';
+import {parseISO} from 'date-fns';
 
 import {useHotkeys} from '@blueprintjs/core';
 
 import {FrameManager, Frame} from './ReactWindowFrames';
+
+import StockChart from './StockChart';
+
+import {initialData} from '../temp/data';
+
+const data = initialData.map(d => {
+  return {
+    ...d,
+    date: parseISO(d.date),
+  };
+});
 
 const defaultFramePositions = {
   market_time: {
@@ -99,16 +111,24 @@ export default function PositionDetails({onClose}: {onClose: () => void}) {
       onKeyUp={handleKeyUp}
     >
       <Frame key="spy_1_minute">
-        <FrameContents />
+        <FrameContents>
+          <StockChart title="SPY / 1M" barData={data} />
+        </FrameContents>
       </Frame>
       <Frame key="stock_1_minute">
-        <FrameContents />
+        <FrameContents>
+          <StockChart title="1M" barData={data} />
+        </FrameContents>
       </Frame>
       <Frame key="stock_5_minute">
-        <FrameContents />
+        <FrameContents>
+          <StockChart title="5M" barData={data} />
+        </FrameContents>
       </Frame>
       <Frame key="stock_daily">
-        <FrameContents />
+        <FrameContents>
+          <StockChart title="DAILY" barData={data} />
+        </FrameContents>
       </Frame>
       <Frame key="summary">
         <FrameContents />
