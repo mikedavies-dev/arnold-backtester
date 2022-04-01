@@ -48,7 +48,7 @@ export async function storeBacktestResults(results: BacktestResults) {
 
 export async function getBacktests(): Promise<Array<DbBacktest>> {
   const Backtest = mongoose.model<DbBacktest>('Backtest');
-  return (await Backtest.find()).map(r => r.toObject());
+  return (await Backtest.find().sort({_id: -1})).map(r => r.toObject());
 }
 
 export async function getBacktest(id: string): Promise<DbBacktest | null> {

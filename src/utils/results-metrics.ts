@@ -326,6 +326,9 @@ export function calculateMetrics(positions: Array<Position>, options: Options) {
 
     accountSize: options.accountSize,
     commissionPerOrder: options.commissionPerOrder,
+
+    finalAccountBalance:
+      metricsByPosition[metricsByPosition.length - 1].accountBalance,
   };
 }
 

@@ -11,7 +11,13 @@ body {
 
 .page {
   padding-top: 50px;
-  max-width: 1024px;
+  max-width: 1124px;
   width: 100%;
   margin: 0 auto;
+}
+
+.bp3-tabs {
+  div {
+    outline: none;
+  }
 }
