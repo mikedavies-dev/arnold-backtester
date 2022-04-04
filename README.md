@@ -108,6 +108,33 @@ todo
 - Show list of positions
 - Show position details (4 charts, SPY 1m, stock 1m, stock 60m, stock daily) and
   entry/exit positions.
+- When viewing results we should request the data from the server.
+
+### Data loader
+
+We need a way to load all required data before running a backtest, so the
+backtest will check for required data first, downloading:
+
+- Tick
+- Minute
+- Hour
+- Daily
+
+This data will then be available for the backtester and the results viewer.
+
+Store the data in Mongo (apart from tick)?
+
+### Next steps
+
+1. Data loader (see above)
+2. Store data in Mongo
+3. Provide data to backtest (including daily, 60 mins etc)
+4. Load data in results viewer
+5. Add keyboard commands to see next/prev results
+6. Add trade markers to results viewer
+7. Add summary to results viewer (PnL, Orders, Open time, Close time, Duration)
+8. Store results of calls to `log(...)` with results so we cna view them in the
+   results viewer
 
 ## Ideal folder setup
 
