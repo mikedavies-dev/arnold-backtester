@@ -6,9 +6,9 @@ import {
   getTestDate,
 } from '../test-utils/tick';
 
-import {loadTsForSymbolAndDate} from '../../utils/data';
+import {loadTsForSymbolAndDate} from '../../utils/tick-storage';
 
-jest.mock('../../utils/data');
+jest.mock('../../utils/tick-storage');
 
 const loadTsForSymbolAndDateMock =
   loadTsForSymbolAndDate as jest.MockedFunction<typeof loadTsForSymbolAndDate>;

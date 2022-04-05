@@ -7,6 +7,7 @@ import {LoggerCallback} from '../core';
 import {profileExists, loadProfile, Profile} from '../utils/profile';
 import {BackTestWorkerErrorCode} from '../backtest/worker';
 import {Position} from './broker';
+import {ensureDataIsAvailable} from '../utils/data-storage';
 
 const baseFolder = path.parse(__filename).dir;
 const filePath = path.join(baseFolder, './worker.js');
@@ -68,6 +69,13 @@ export async function runBacktestController({
     workerData: {
       profile: runProfile,
     },
+  });
+
+  // Make sure we have the data available
+  await ensureDataIsAvailable({
+    symbols: runProfile.symbols,
+    dates: runProfile.dates.dates,
+    log,
   });
 
   const start = Date.now();

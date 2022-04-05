@@ -3,7 +3,7 @@ import {format} from 'date-fns';
 import numeral from 'numeral';
 import path from 'path';
 
-import {loadTsForSymbolAndDate} from '../utils/data';
+import {loadTsForSymbolAndDate} from '../utils/tick-storage';
 import {Profile} from '../utils/profile';
 import {loadStrategy} from '../utils/module';
 import {mergeSortedArrays} from '../utils/data-structures';

@@ -1,7 +1,7 @@
 import {format, startOfDay, fromUnixTime} from 'date-fns';
 import {Tick} from '../core';
 
-type Bar = {
+export type Bar = {
   time: string;
   open: number;
   high: number;

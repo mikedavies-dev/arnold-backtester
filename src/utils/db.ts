@@ -1,7 +1,12 @@
 import mongoose from 'mongoose';
+import {startOfDay, endOfDay} from 'date-fns';
 
 // Register the models
-import {DbBacktest, registerMongooseModels} from '../models/models';
+import {
+  DbBacktest,
+  DbTimeSeriesBar,
+  registerMongooseModels,
+} from '../models/models';
 
 import Env from './env';
 import {BacktestResults} from '../backtest/controller';
@@ -55,4 +60,34 @@ export async function getBacktest(id: string): Promise<DbBacktest | null> {
   const Backtest = mongoose.model<DbBacktest>('Backtest');
   const backtest = await Backtest.findById(id);
   return backtest;
+}
+
+export async function listAvailablePeriodsForSymbolAndDate(
+  symbol: string,
+  date: Date,
+): Promise<string[]> {
+  const TimeSeriesBar = mongoose.model<DbTimeSeriesBar>('TimeSeriesBar');
+
+  const types = await TimeSeriesBar.aggregate<{
+    _id: string;
+    count: number;
+  }>([
+    {
+      $match: {
+        symbol,
+        time: {
+          $gte: startOfDay(date),
+          $lte: endOfDay(date),
+        },
+      },
+    },
+    {
+      $group: {
+        _id: '$period',
+        count: {$sum: 1},
+      },
+    },
+  ]);
+
+  return types.map(t => t._id);
 }

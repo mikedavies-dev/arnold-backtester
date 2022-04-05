@@ -1,4 +1,9 @@
-import {fileExists, loadTsFile, loadTsForSymbolAndDate} from '../../utils/data';
+import {
+  fileExists,
+  loadTsFile,
+  loadTsForSymbolAndDate,
+  hasTsForSymbolAndDate,
+} from '../../utils/tick-storage';
 import {getTestDate} from '../test-utils/tick';
 
 test('file does not exist', async () => {
@@ -225,4 +230,9 @@ test('return invalid ts file as an empty array', async () => {
 test('that we fail to load symbol data', async () => {
   const data = await loadTsForSymbolAndDate('ZZZZ', getTestDate());
   expect(data).toBeNull();
+});
+
+test('that we dont have tick data', async () => {
+  const hasData = await hasTsForSymbolAndDate('ZZZZ', getTestDate());
+  expect(hasData).toBeFalsy();
 });
