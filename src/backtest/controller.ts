@@ -1,4 +1,4 @@
-import {format} from 'date-fns';
+import {format, subDays, startOfDay} from 'date-fns';
 import {StaticPool} from 'node-worker-threads-pool';
 import numeral from 'numeral';
 import path from 'path';
@@ -72,10 +72,12 @@ export async function runBacktestController({
   });
 
   // Make sure we have the data available
+  const yesterday = startOfDay(subDays(new Date(), 1));
+
   await ensureDataIsAvailable({
     symbols: runProfile.symbols,
-    dates: runProfile.dates.dates,
     log,
+    until: yesterday,
   });
 
   const start = Date.now();

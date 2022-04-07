@@ -1,12 +1,15 @@
 import mongoose from 'mongoose';
-import {startOfDay, endOfDay} from 'date-fns';
 
 // Register the models
 import {
   DbBacktest,
   DbTimeSeriesBar,
   registerMongooseModels,
+  DbTimeSeriesDataAvailability,
 } from '../models/models';
+
+import {TimeSeriesPeriod} from '../core';
+import {Bar} from '../utils/tracker';
 
 import Env from './env';
 import {BacktestResults} from '../backtest/controller';
@@ -62,32 +65,59 @@ export async function getBacktest(id: string): Promise<DbBacktest | null> {
   return backtest;
 }
 
-export async function listAvailablePeriodsForSymbolAndDate(
+export async function storeSeries(
   symbol: string,
-  date: Date,
-): Promise<string[]> {
+  period: TimeSeriesPeriod,
+  bars: Bar[],
+) {
   const TimeSeriesBar = mongoose.model<DbTimeSeriesBar>('TimeSeriesBar');
 
-  const types = await TimeSeriesBar.aggregate<{
-    _id: string;
-    count: number;
-  }>([
-    {
-      $match: {
-        symbol,
-        time: {
-          $gte: startOfDay(date),
-          $lte: endOfDay(date),
-        },
-      },
-    },
-    {
-      $group: {
-        _id: '$period',
-        count: {$sum: 1},
-      },
-    },
-  ]);
+  await TimeSeriesBar.insertMany(
+    bars.map(bar => ({
+      ...bar,
+      symbol,
+      period,
+    })),
+  );
+}
 
-  return types.map(t => t._id);
+export async function getDataAvailableTo(
+  symbol: string,
+  period: TimeSeriesPeriod,
+): Promise<Date | undefined> {
+  const TimeSeriesDataAvailability =
+    mongoose.model<DbTimeSeriesDataAvailability>('TimeSeriesDataAvailability');
+
+  const record = await TimeSeriesDataAvailability.findOne({
+    symbol,
+    period,
+  });
+
+  return record?.dataAvailableTo;
+}
+
+export async function updateDataAvailableTo(
+  symbol: string,
+  period: TimeSeriesPeriod,
+  dataAvailableTo: Date,
+): Promise<Date | undefined> {
+  const TimeSeriesDataAvailability =
+    mongoose.model<DbTimeSeriesDataAvailability>('TimeSeriesDataAvailability');
+
+  const record = await TimeSeriesDataAvailability.findOneAndUpdate(
+    {
+      symbol,
+      period,
+    },
+    {
+      $set: {
+        dataAvailableTo,
+      },
+    },
+    {
+      upsert: true,
+    },
+  );
+
+  return record?.dataAvailableTo;
 }

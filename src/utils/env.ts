@@ -32,6 +32,8 @@ const environment: {
   IB_CLIENT_ID_BROKER: string;
   IB_CLIENT_ID_DATA_PROVIDER: string;
 
+  EARLIEST_DATA: string;
+
   // Other..
   getEnv: (name: string, def: string) => string;
 } = {
@@ -57,6 +59,8 @@ const environment: {
   IB_PORT: getEnv('IB_PORT', '4002'),
   IB_CLIENT_ID_BROKER: getEnv('IB_CLIENT_ID_BROKER', '1'),
   IB_CLIENT_ID_DATA_PROVIDER: getEnv('IB_CLIENT_ID_DATA_PROVIDER', '2'),
+
+  EARLIEST_DATA: getEnv('EARLIEST_DATA', '2021-01-01'),
 
   getEnv,
 };

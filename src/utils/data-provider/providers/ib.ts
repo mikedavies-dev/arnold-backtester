@@ -7,7 +7,8 @@ export function create(): DataProvider {
 
   async function getTimeSeries(
     symbol: string,
-    date: Date,
+    from: Date,
+    to: Date,
     period: TimeSeriesPeriod,
   ): Promise<Array<Bar>> {
     return [];

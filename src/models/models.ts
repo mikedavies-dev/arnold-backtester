@@ -75,7 +75,36 @@ const TimeSeriesBar = new Schema<DbTimeSeriesBar>({
   volume: Number,
 });
 
+TimeSeriesBar.index(
+  {
+    symbol: 1,
+    time: 1,
+    period: 1,
+  },
+  {
+    unique: true,
+  },
+);
+
+export type DbTimeSeriesDataAvailability = {
+  _id?: MongoObjectId;
+  symbol: string;
+  period: TimeSeriesPeriod;
+  dataAvailableTo: Date;
+};
+
+const TimeSeriesDataAvailability = new Schema<DbTimeSeriesDataAvailability>({
+  symbol: String,
+  period: String,
+  dataAvailableTo: Date,
+});
+
 export async function registerMongooseModels() {
   await model('Backtest', Backtest, 'backtests');
   await model('TimeSeriesBar', TimeSeriesBar, 'timeseries_bars');
+  await model(
+    'TimeSeriesDataAvailability',
+    TimeSeriesDataAvailability,
+    'timeseries_data_availability',
+  );
 }

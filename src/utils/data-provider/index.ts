@@ -8,7 +8,8 @@ export type DataProvider = {
   init(): Promise<void>;
   getTimeSeries(
     symbol: string,
-    date: Date,
+    from: Date,
+    to: Date,
     period: TimeSeriesPeriod,
   ): Promise<Array<Bar>>;
 };

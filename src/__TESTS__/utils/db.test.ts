@@ -8,7 +8,6 @@ import {
   getBacktests,
   resetDatabase,
   storeBacktestResults,
-  listAvailablePeriodsForSymbolAndDate,
 } from '../../utils/db';
 
 import {DbTimeSeriesBar} from '../../models/models';
@@ -95,50 +94,5 @@ describe('mongo db tests', () => {
       storedBacktest._id?.toString() || '',
     );
     expect(storedSingleBacktest).toMatchObject(results);
-  });
-
-  test('check available bar data for symbol', async () => {
-    const periods1 = await listAvailablePeriodsForSymbolAndDate(
-      'ZZZZ',
-      getTestDate(),
-    );
-    expect(periods1).toMatchInlineSnapshot(`Array []`);
-
-    // Insert some test data
-    const TimeSeriesBar = mongoose.model<DbTimeSeriesBar>('TimeSeriesBar');
-
-    await TimeSeriesBar.create({
-      symbol: 'ZZZZ',
-      time: getTestDate(),
-      period: 'm1',
-      open: 1,
-      high: 1,
-      low: 1,
-      close: 1,
-      volume: 1,
-    });
-
-    await TimeSeriesBar.create({
-      symbol: 'ZZZZ',
-      time: getTestDate(),
-      period: 'daily',
-      open: 1,
-      high: 1,
-      low: 1,
-      close: 1,
-      volume: 1,
-    });
-
-    const periods2 = await listAvailablePeriodsForSymbolAndDate(
-      'ZZZZ',
-      getTestDate(),
-    );
-
-    expect(periods2).toMatchInlineSnapshot(`
-      Array [
-        "daily",
-        "m1",
-      ]
-    `);
   });
 });
