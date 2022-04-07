@@ -22,6 +22,6 @@
   "ts-node": {
     "files": true
   },
-  "include": ["**/*.ts", "**/*.tsx", "**/*.js"],
+  "include": ["**/*.ts", "**/*.tsx", "**/*.js", "src/utils/data-providers"],
   "exclude": ["node_modules"]
 }

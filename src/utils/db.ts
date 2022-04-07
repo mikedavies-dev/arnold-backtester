@@ -1,7 +1,15 @@
 import mongoose from 'mongoose';
 
 // Register the models
-import {DbBacktest, registerMongooseModels} from '../models/models';
+import {
+  DbBacktest,
+  DbTimeSeriesBar,
+  registerMongooseModels,
+  DbTimeSeriesDataAvailability,
+} from '../models/models';
+
+import {TimeSeriesPeriod} from '../core';
+import {Bar} from '../utils/tracker';
 
 import Env from './env';
 import {BacktestResults} from '../backtest/controller';
@@ -55,4 +63,61 @@ export async function getBacktest(id: string): Promise<DbBacktest | null> {
   const Backtest = mongoose.model<DbBacktest>('Backtest');
   const backtest = await Backtest.findById(id);
   return backtest;
+}
+
+export async function storeSeries(
+  symbol: string,
+  period: TimeSeriesPeriod,
+  bars: Bar[],
+) {
+  const TimeSeriesBar = mongoose.model<DbTimeSeriesBar>('TimeSeriesBar');
+
+  await TimeSeriesBar.insertMany(
+    bars.map(bar => ({
+      ...bar,
+      symbol,
+      period,
+    })),
+  );
+}
+
+export async function getDataAvailableTo(
+  symbol: string,
+  period: TimeSeriesPeriod,
+): Promise<Date | undefined> {
+  const TimeSeriesDataAvailability =
+    mongoose.model<DbTimeSeriesDataAvailability>('TimeSeriesDataAvailability');
+
+  const record = await TimeSeriesDataAvailability.findOne({
+    symbol,
+    period,
+  });
+
+  return record?.dataAvailableTo;
+}
+
+export async function updateDataAvailableTo(
+  symbol: string,
+  period: TimeSeriesPeriod,
+  dataAvailableTo: Date,
+): Promise<Date | undefined> {
+  const TimeSeriesDataAvailability =
+    mongoose.model<DbTimeSeriesDataAvailability>('TimeSeriesDataAvailability');
+
+  const record = await TimeSeriesDataAvailability.findOneAndUpdate(
+    {
+      symbol,
+      period,
+    },
+    {
+      $set: {
+        dataAvailableTo,
+      },
+    },
+    {
+      upsert: true,
+    },
+  );
+
+  return record?.dataAvailableTo;
 }

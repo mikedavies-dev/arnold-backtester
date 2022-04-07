@@ -1,11 +1,4 @@
-import {
-  fromUnixTime,
-  parse,
-  getUnixTime,
-  format,
-  addSeconds,
-  startOfDay,
-} from 'date-fns';
+import {fromUnixTime, parse, getUnixTime, format, addSeconds} from 'date-fns';
 import {Tick, TickType} from '../../core';
 import {flow} from 'fp-ts/lib/function';
 

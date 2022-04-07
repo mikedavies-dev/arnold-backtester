@@ -8,11 +8,11 @@ import {
 
 import {loadStrategy} from '../../utils/module';
 
-import {loadTsForSymbolAndDate} from '../../utils/data';
+import {loadTsForSymbolAndDate} from '../../utils/tick-storage';
 
 import {Tick} from '../../core';
 
-jest.mock('../../utils/data');
+jest.mock('../../utils/tick-storage');
 jest.mock('../../utils/module');
 
 const loadTsForSymbolAndDateMock =

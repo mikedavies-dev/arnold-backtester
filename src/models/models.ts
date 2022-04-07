@@ -1,6 +1,8 @@
 import {Schema, model} from 'mongoose';
 import {Position} from '../backtest/broker';
 import {Profile} from '../utils/profile';
+import {TimeSeriesPeriod} from '../core';
+import {Bar} from '../utils/tracker';
 
 type MongoObjectId = {
   toString(): string;
@@ -56,6 +58,53 @@ const Backtest = new Schema<DbBacktest>({
   },
 });
 
+export type DbTimeSeriesBar = {
+  _id?: MongoObjectId;
+  symbol: string;
+  period: TimeSeriesPeriod;
+} & Bar;
+
+const TimeSeriesBar = new Schema<DbTimeSeriesBar>({
+  symbol: String,
+  time: Date,
+  period: String,
+  open: Number,
+  high: Number,
+  low: Number,
+  close: Number,
+  volume: Number,
+});
+
+TimeSeriesBar.index(
+  {
+    symbol: 1,
+    time: 1,
+    period: 1,
+  },
+  {
+    unique: true,
+  },
+);
+
+export type DbTimeSeriesDataAvailability = {
+  _id?: MongoObjectId;
+  symbol: string;
+  period: TimeSeriesPeriod;
+  dataAvailableTo: Date;
+};
+
+const TimeSeriesDataAvailability = new Schema<DbTimeSeriesDataAvailability>({
+  symbol: String,
+  period: String,
+  dataAvailableTo: Date,
+});
+
 export async function registerMongooseModels() {
   await model('Backtest', Backtest, 'backtests');
+  await model('TimeSeriesBar', TimeSeriesBar, 'timeseries_bars');
+  await model(
+    'TimeSeriesDataAvailability',
+    TimeSeriesDataAvailability,
+    'timeseries_data_availability',
+  );
 }

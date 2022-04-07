@@ -11,3 +11,5 @@ export type Tick = {
   size: number;
   value: number;
 };
+
+export type TimeSeriesPeriod = 'm1' | 'm5' | 'm60' | 'daily';

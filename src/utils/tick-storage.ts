@@ -82,11 +82,22 @@ export async function loadTsFile(
   return data;
 }
 
+function formatDataFilename(symbol: string, date: Date) {
+  return `./data/${symbol}_${format(date, 'yyyyMMdd')}_merged.csv`;
+}
+
 export async function loadTsForSymbolAndDate(
   symbol: string,
   date: Date,
 ): Promise<Array<Tick> | null> {
-  const filename = `./data/${symbol}_${format(date, 'yyyyMMdd')}_merged.csv`;
-
+  const filename = formatDataFilename(symbol, date);
   return loadTsFile(filename);
+}
+
+export async function hasTsForSymbolAndDate(
+  symbol: string,
+  date: Date,
+): Promise<boolean> {
+  const filename = formatDataFilename(symbol, date);
+  return fileExists(filename);
 }
