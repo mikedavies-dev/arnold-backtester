@@ -1,19 +1,10 @@
 import {Schema, model} from 'mongoose';
-import {Position} from '../backtest/broker';
-import {Profile} from '../utils/profile';
-import {TimeSeriesPeriod} from '../core';
-import {Bar} from '../utils/tracker';
-
-type MongoObjectId = {
-  toString(): string;
-};
-
-export type DbBacktest = {
-  _id?: MongoObjectId;
-  createdAt: Date;
-  positions: Array<Position>;
-  profile: Profile;
-};
+import {
+  DbBacktest,
+  DbTimeSeriesBar,
+  DbTimeSeriesDataAvailability,
+  DbInstrument,
+} from '../core';
 
 const Backtest = new Schema<DbBacktest>({
   createdAt: Date,
@@ -58,12 +49,6 @@ const Backtest = new Schema<DbBacktest>({
   },
 });
 
-export type DbTimeSeriesBar = {
-  _id?: MongoObjectId;
-  symbol: string;
-  period: TimeSeriesPeriod;
-} & Bar;
-
 const TimeSeriesBar = new Schema<DbTimeSeriesBar>({
   symbol: String,
   time: Date,
@@ -86,18 +71,28 @@ TimeSeriesBar.index(
   },
 );
 
-export type DbTimeSeriesDataAvailability = {
-  _id?: MongoObjectId;
-  symbol: string;
-  period: TimeSeriesPeriod;
-  dataAvailableTo: Date;
-};
-
 const TimeSeriesDataAvailability = new Schema<DbTimeSeriesDataAvailability>({
   symbol: String,
   period: String,
   dataAvailableTo: Date,
 });
+
+const Instrument = new Schema<DbInstrument>({
+  provider: String,
+  symbol: String,
+  name: String,
+  data: {},
+});
+
+Instrument.index(
+  {
+    provider: 1,
+    symbol: 1,
+  },
+  {
+    unique: true,
+  },
+);
 
 export async function registerMongooseModels() {
   await model('Backtest', Backtest, 'backtests');
@@ -107,4 +102,5 @@ export async function registerMongooseModels() {
     TimeSeriesDataAvailability,
     'timeseries_data_availability',
   );
+  await model('Instrument', Instrument, 'instruments');
 }

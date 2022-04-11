@@ -11,7 +11,7 @@ import {MetricsByPeriod, ResultsMetrics} from '../../utils/results-metrics';
 import CodeBlock from './CodeBlock';
 import PositionList from './PositionList';
 import PositionDetails from './PositionDetails';
-import {Position} from '../../backtest/broker';
+import {Position} from '../../core';
 
 type TabOption = 'metrics' | 'positions' | 'code';
 

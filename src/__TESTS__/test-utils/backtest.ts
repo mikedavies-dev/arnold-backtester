@@ -1,5 +1,5 @@
 import {getTestDate} from './tick';
-import {DbBacktest} from '../../models/models';
+import {DbBacktest} from '../../core';
 
 export const backtestResults: Array<DbBacktest> = [
   {

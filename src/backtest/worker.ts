@@ -4,22 +4,26 @@ import numeral from 'numeral';
 import path from 'path';
 
 import {loadTsForSymbolAndDate} from '../utils/tick-storage';
-import {Profile} from '../utils/profile';
 import {loadStrategy} from '../utils/module';
 import {mergeSortedArrays} from '../utils/data-structures';
-import {initTracker, handleTrackerTick, Tracker} from '../utils/tracker';
+import {initTracker, handleTrackerTick} from '../utils/tracker';
 import {
   getPreMarketOpen,
   getMarketOpen,
   getMarketClose,
   getMarketState,
 } from '../utils/market';
-import {Tick, LoggerCallback} from '../core';
+import {
+  Tick,
+  LoggerCallback,
+  Tracker,
+  OrderSpecification,
+  Profile,
+} from '../core';
 import {
   initBroker,
   placeOrder,
   handleBrokerTick,
-  OrderSpecification,
   hasOpenOrders,
   getPositionSize,
 } from './broker';

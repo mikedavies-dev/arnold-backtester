@@ -2,17 +2,7 @@ import LineByLine from 'n-readlines';
 import {format, fromUnixTime} from 'date-fns';
 import * as Fs from 'fs/promises';
 
-import {TickType, Tick} from '../core';
-
-type RawTick = {
-  time: number;
-  index: number;
-  dateTime: string;
-  symbol: string;
-  type: TickType;
-  size: number;
-  value: number;
-};
+import {Tick, RawTick} from '../core';
 
 export async function fileExists(path: string) {
   try {

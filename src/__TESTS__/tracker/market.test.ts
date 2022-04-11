@@ -1,10 +1,10 @@
 import {initTracker, handleTrackerTick} from '../../utils/tracker';
+import {MarketStatus} from '../../core';
 import {
   getMarketOpen,
   getMarketClose,
   getMarketState,
   getPreMarketOpen,
-  MarketStatus,
 } from '../../utils/market';
 import {createTick, createTimeAsUnix, getTestDate} from '../test-utils/tick';
 

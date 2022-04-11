@@ -1,6 +1,6 @@
 import {addMinutes} from 'date-fns';
 
-import {OrderAction, Position, Order} from '../../backtest/broker';
+import {OrderAction, Position, Order} from '../../core';
 import {createTimeAsDate} from './tick';
 
 type TestOrderSpec = {

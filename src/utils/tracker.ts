@@ -1,23 +1,5 @@
 import {format, startOfDay, fromUnixTime} from 'date-fns';
-import {Tick} from '../core';
-
-export type Bar = {
-  time: string;
-  open: number;
-  high: number;
-  low: number;
-  close: number;
-  volume: number;
-};
-
-// export type Bars = Record<number, Array<Bar>>;
-export type Bars = {
-  m1: Array<Bar>;
-  m5: Array<Bar>;
-  daily: Array<Bar>;
-};
-
-type BarPeriod = keyof Bars;
+import {Tick, Bars, Tracker, BarPeriod} from '../core';
 
 export const Periods = {
   m1: 1,
@@ -26,20 +8,6 @@ export const Periods = {
 };
 
 const periods: Array<BarPeriod> = ['m1', 'm5', 'daily'];
-
-export type Tracker = {
-  open: number;
-  high: number;
-  low: number;
-  last: number;
-  volume: number;
-  bid: number;
-  ask: number;
-  preMarketHigh: number;
-  preMarketLow: number;
-  preMarketVolume: number;
-  bars: Bars;
-};
 
 export const MaximumBarCount = 250;
 

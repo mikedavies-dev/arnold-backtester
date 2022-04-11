@@ -1,4 +1,4 @@
-import {Position} from '../../backtest/broker';
+import {Position} from '../../core';
 import {
   calculateMetrics,
   updatePeriodMetrics,

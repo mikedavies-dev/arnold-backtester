@@ -1,5 +1,3 @@
-import mongoose from 'mongoose';
-
 import {BacktestResults} from '../../backtest/controller';
 import {
   connect,
@@ -9,8 +7,6 @@ import {
   resetDatabase,
   storeBacktestResults,
 } from '../../utils/db';
-
-import {DbTimeSeriesBar} from '../../models/models';
 
 import {getTestDate} from '../test-utils/tick';
 

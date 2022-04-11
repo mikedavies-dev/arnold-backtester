@@ -32,6 +32,7 @@ describe('mongo db tests', () => {
 
   test('check data storage', async () => {
     const mockProvider = {
+      name: 'test',
       init: jest.fn(async () => {}),
       getTimeSeries: jest.fn(async (symbol: string, from: Date) => {
         return [
@@ -45,10 +46,14 @@ describe('mongo db tests', () => {
           },
         ];
       }),
+      instrumentLookup: async () => [],
     };
     createDataProviderMock.mockReturnValue(mockProvider);
 
+    const dataProvider = createDataProvider();
+
     await ensureDataIsAvailable({
+      dataProvider,
       symbols: ['ZZZZ'],
       log: () => {},
       until: getTestDate(),
@@ -83,6 +88,7 @@ describe('mongo db tests', () => {
 
     // Call again
     await ensureDataIsAvailable({
+      dataProvider,
       symbols: ['ZZZZ'],
       log: () => {},
       until: getTestDate(),

@@ -4,7 +4,7 @@ import {HTMLTable, NonIdealState} from '@blueprintjs/core';
 import {getPositionPL} from '../../utils/results-metrics';
 import numeral from 'numeral';
 
-import {Position} from '../../backtest/broker';
+import {Position} from '../../core';
 
 const Table = styled(HTMLTable)`
   width: 100%;

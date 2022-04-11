@@ -1,6 +1,6 @@
 import {getHours, getDay} from 'date-fns';
 import {pipe} from 'fp-ts/lib/function';
-import {Position, Order} from '../backtest/broker';
+import {Position, Order} from '../core';
 import {incIf, ratio, initArrayOfSize} from './logic';
 
 type Options = {

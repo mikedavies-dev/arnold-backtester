@@ -12,7 +12,7 @@ test('create a data provider (ib)', () => {
   expect(provider).not.toBe(null);
 });
 
-test('create a data provider (invalid)', () => {
+test('fail to create an invalid data provider', () => {
   Env.DATA_PROVIDER = 'INVALID';
   expect(() => {
     createDataProvider();
