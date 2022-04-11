@@ -15,3 +15,9 @@ test('get timeseries', async () => {
   const ts = await ib.getTimeSeries('ZZZZ', from, to, 'm1');
   expect(ts).toMatchInlineSnapshot(`Array []`);
 });
+
+test('instrument lookups', async () => {
+  const ib = createIB();
+  const results = await ib.instrumentLookup('MSFT');
+  expect(results).toMatchInlineSnapshot(`Array []`);
+});
