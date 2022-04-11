@@ -110,6 +110,8 @@ export type Position = {
   isClosing: boolean;
 };
 
+export type PositionDirection = 'LONG' | 'SHORT' | 'UNKNOWN';
+
 export type BrokerState = {
   getMarketTime: () => Date;
   nextOrderId: number;
@@ -188,4 +190,21 @@ export type HandleTickParameters = {
     hasOpenOrders: (symbol: string) => boolean;
     getPositionSize: (symbol: string) => number;
   };
+};
+
+export type MetricsByPeriod = {
+  positions: number;
+  orders: number;
+  commission: number;
+  grossProfit: number;
+  grossLoss: number;
+  longPositions: number;
+  longWinners: number;
+  shortPositions: number;
+  shortWinners: number;
+  longWinnerPercent: number;
+  shortWinnerPercent: number;
+  profitFactor: number;
+  grossProfitAndLoss: number;
+  netProfitAndLoss: number;
 };
