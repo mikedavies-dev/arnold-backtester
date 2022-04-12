@@ -6,9 +6,10 @@ import path from 'path';
 import {LoggerCallback, Position, Profile} from '../core';
 import {profileExists, loadProfile} from '../utils/profile';
 import {BackTestWorkerErrorCode} from '../backtest/worker';
-import {ensureDataIsAvailable} from '../utils/data-storage';
-
-import {ensureSymbolsAreAvailable} from '../utils/instrument-lookup';
+import {
+  ensureDataIsAvailable,
+  ensureSymbolsAreAvailable,
+} from '../utils/data-storage';
 import {createDataProvider} from '../utils/data-provider';
 
 const baseFolder = path.parse(__filename).dir;

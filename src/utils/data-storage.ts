@@ -10,9 +10,16 @@ TODO:
 import series from 'promise-series2';
 import {parse, isBefore} from 'date-fns';
 
-import {LoggerCallback, TimeSeriesPeriod} from '../core';
+import {LoggerCallback, TimeSeriesPeriod, Instrument} from '../core';
 // import {hasTsForSymbolAndDate} from './tick-storage';
-import {getDataAvailableTo, storeSeries, updateDataAvailableTo} from './db';
+import {lookupSymbol} from './instrument-lookup';
+import {
+  getDataAvailableTo,
+  storeSeries,
+  updateDataAvailableTo,
+  instrumentLookup,
+  storeInstrument,
+} from './db';
 import {DataProvider} from '../core';
 import Env from './env';
 
@@ -69,5 +76,44 @@ export async function ensureDataIsAvailable({
     },
     null,
     symbols,
+  );
+}
+
+export async function ensureSymbolsAreAvailable({
+  dataProvider,
+  symbols,
+}: {
+  dataProvider: DataProvider;
+  symbols: string[];
+}) {
+  // Find any instruments that we don't have in the DB
+  const existingInstruments = await instrumentLookup({
+    provider: dataProvider.name,
+    symbols,
+  });
+
+  // find the symbols we need
+  const requiredSymbols = symbols.filter(
+    s => !existingInstruments.find(instrument => instrument.symbol === s),
+  );
+
+  const instruments = await series<string, Instrument>(
+    symbol =>
+      lookupSymbol({
+        symbol,
+        dataProvider,
+      }),
+    false,
+    requiredSymbols,
+  );
+
+  // Store the instruments in the database
+  await Promise.all(
+    instruments.map(instrument => {
+      return storeInstrument({
+        provider: dataProvider.name,
+        instrument,
+      });
+    }),
   );
 }
