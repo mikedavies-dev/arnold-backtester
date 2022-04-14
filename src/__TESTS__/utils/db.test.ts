@@ -9,6 +9,7 @@ import {
   storeBacktestResults,
   instrumentLookup,
   storeInstrument,
+  getInstrument,
 } from '../../utils/db';
 
 import {getTestDate} from '../test-utils/tick';
@@ -137,5 +138,66 @@ describe('mongo db tests', () => {
 
     expect(firstLookups.length).toBe(1);
     expect(firstLookups[0]).toMatchObject(testInstruments[0]);
+  });
+
+  test('load an instrument from db', async () => {
+    const provider = 'test';
+
+    const instrument: Instrument = {
+      symbol: 'AAAA',
+      name: 'AAAA INC',
+      data: {
+        contractId: 123,
+        exchange: 'nyse',
+      },
+    };
+
+    // Store the instruments
+    await storeInstrument({
+      provider,
+      instrument,
+    });
+
+    // Test finding an instrument with instrument
+    const storedInstrument = await getInstrument({
+      provider,
+      symbol: instrument.symbol,
+    });
+
+    expect(storedInstrument?.symbol).toBe(instrument.symbol);
+    expect(storedInstrument?.name).toBe(instrument.name);
+  });
+
+  test('store the same instrument multiple times', async () => {
+    const provider = 'test';
+
+    const instrument: Instrument = {
+      symbol: 'DUPLICATE',
+      name: 'DUPLICATE INC',
+      data: {
+        contractId: 123,
+        exchange: 'nyse',
+      },
+    };
+
+    // Store the instruments
+    await storeInstrument({
+      provider,
+      instrument,
+    });
+
+    await storeInstrument({
+      provider,
+      instrument,
+    });
+
+    // Test finding an instrument with instrument
+    const storedInstrument = await getInstrument({
+      provider,
+      symbol: instrument.symbol,
+    });
+
+    expect(storedInstrument?.symbol).toBe(instrument.symbol);
+    expect(storedInstrument?.name).toBe(instrument.name);
   });
 });

@@ -52,7 +52,7 @@ export type DataProvider = {
   init(): Promise<void>;
   shutdown(): Promise<void>;
   getTimeSeries(
-    symbol: string,
+    instrument: Instrument,
     from: Date,
     to: Date,
     period: TimeSeriesPeriod,

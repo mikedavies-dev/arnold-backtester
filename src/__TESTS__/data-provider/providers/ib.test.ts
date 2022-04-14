@@ -23,7 +23,16 @@ if (!Env.DISABLE_PROVIDER_TESTS) {
     expect(Env.IB_PORT).toMatchInlineSnapshot(`"4002"`);
     const from = subDays(getTestDate(), 2);
     const to = getTestDate();
-    const ts = await ib.getTimeSeries('ZZZZ', from, to, 'm1');
+    const ts = await ib.getTimeSeries(
+      {
+        symbol: 'MSFT',
+        name: 'Microsoft',
+        data: {},
+      },
+      from,
+      to,
+      'm1',
+    );
     expect(ts).toMatchInlineSnapshot(`Array []`);
     await ib.shutdown();
   });

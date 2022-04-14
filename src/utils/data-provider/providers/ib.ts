@@ -44,11 +44,12 @@ export function create(): DataProvider {
   }
 
   async function getTimeSeries(
-    symbol: string,
+    instrument: Instrument,
     from: Date,
     to: Date,
     period: TimeSeriesPeriod,
   ): Promise<Bar[]> {
+    return new Promise((resolve, reject) => {});
     return [];
   }
 

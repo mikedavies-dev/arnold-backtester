@@ -1,5 +1,4 @@
 import dotenv from 'dotenv';
-import {boolean} from 'fp-ts';
 import path from 'path';
 
 const nodeEnv = process.env.NODE_ENV;
@@ -53,7 +52,7 @@ const environment: {
   // Current env
   isDevelopment: nodeEnv === 'development',
   isProduction: nodeEnv === 'production',
-  isTesting: nodeEnv === 'test' || nodeEnv === 'test_ci',
+  isTesting: ['test', 'test_ci'].indexOf(nodeEnv as string) !== -1,
 
   // Load specific variables with defaults
   MONGO_CONNECTION_STRING: getEnv(

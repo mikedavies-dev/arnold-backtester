@@ -139,6 +139,21 @@ export async function instrumentLookup({
   });
 }
 
+export async function getInstrument({
+  provider,
+  symbol,
+}: {
+  provider: string;
+  symbol: string;
+}) {
+  const Instrument = mongoose.model<DbInstrument>('Instrument');
+
+  return Instrument.findOne({
+    provider,
+    symbol: symbol,
+  });
+}
+
 export async function storeInstrument({
   provider,
   instrument,
@@ -148,8 +163,23 @@ export async function storeInstrument({
 }) {
   const Instrument = mongoose.model<DbInstrument>('Instrument');
 
-  await Instrument.create({
+  const existing = await Instrument.findOne({
     provider,
-    ...instrument,
+    symbol: instrument.symbol,
   });
+
+  // Update the existing record
+  if (existing) {
+    await Instrument.findByIdAndUpdate(existing._id, {
+      $set: {
+        name: instrument.name,
+        data: instrument.data,
+      },
+    });
+  } else {
+    await Instrument.create({
+      provider,
+      ...instrument,
+    });
+  }
 }
