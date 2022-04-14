@@ -38,6 +38,7 @@ const instruments = [
 const dataProvider: DataProvider = {
   name: 'TEST',
   init: async () => {},
+  shutdown: async () => {},
   getTimeSeries: async () => [],
   instrumentLookup: async searchTerm => {
     return instruments.filter(

@@ -10,6 +10,7 @@ test('instrument lookup', async () => {
   const mockProvider = {
     name: 'test',
     init: jest.fn(async () => {}),
+    shutdown: jest.fn(async () => {}),
     getTimeSeries: jest.fn(async () => {
       return [];
     }),

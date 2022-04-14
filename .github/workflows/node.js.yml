@@ -33,7 +33,7 @@ jobs:
       - run: npm ci
       - run: npm run check
       - run: npm install jest
-      - run: npm run test:coverage
+      - run: npm run test:ci
       - uses: codecov/codecov-action@v2
         with:
           directory: ./coverage/

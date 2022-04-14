@@ -50,6 +50,7 @@ export type Instrument = {
 export type DataProvider = {
   name: string;
   init(): Promise<void>;
+  shutdown(): Promise<void>;
   getTimeSeries(
     symbol: string,
     from: Date,

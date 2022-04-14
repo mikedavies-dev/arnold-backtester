@@ -34,6 +34,7 @@ describe('mongo db tests', () => {
     const mockProvider = {
       name: 'test',
       init: jest.fn(async () => {}),
+      shutdown: jest.fn(async () => {}),
       getTimeSeries: jest.fn(async (symbol: string, from: Date) => {
         return [
           {

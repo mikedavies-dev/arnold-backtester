@@ -16,6 +16,7 @@ module.exports = {
     '!./src/__TESTS_UI__/jest.ts',
     '!src/web/**',
     '!./src/ui/hooks/use-dimensions.ts',
+    '!./src/utils/data-provider/providers/**',
   ],
   projects: [
     {
