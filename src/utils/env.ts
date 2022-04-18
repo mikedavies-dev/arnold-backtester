@@ -43,6 +43,7 @@ const environment: {
   EARLIEST_DATA: string;
 
   DISABLE_PROVIDER_TESTS: string;
+  NODE_ENV: string;
 
   // Other..
   getEnv: (name: string, def: string) => string;
@@ -72,7 +73,9 @@ const environment: {
 
   EARLIEST_DATA: getEnv('EARLIEST_DATA', '2021-01-01'),
 
-  DISABLE_PROVIDER_TESTS: getEnv('DISABLE_PROVIDER_TESTS', '1'),
+  DISABLE_PROVIDER_TESTS: getEnv('DISABLE_PROVIDER_TESTS', ''),
+
+  NODE_ENV: getEnv('NODE_ENV', 'development'),
 
   getEnv,
 };
