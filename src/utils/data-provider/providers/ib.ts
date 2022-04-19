@@ -17,6 +17,8 @@ import {
   parse,
 } from 'date-fns';
 
+import {deDuplicateObjectArray} from '../../data-structures';
+
 const barSizeLookup: Record<TimeSeriesPeriod, BarSizeSetting> = {
   m1: BarSizeSetting.MINUTES_ONE,
   m5: BarSizeSetting.MINUTES_FIVE,
@@ -25,9 +27,9 @@ const barSizeLookup: Record<TimeSeriesPeriod, BarSizeSetting> = {
 };
 
 const barSizeParseLookup: Record<TimeSeriesPeriod, string> = {
-  m1: 'yyyyMMdd',
-  m5: 'yyyyMMdd',
-  m60: 'yyyyMMdd',
+  m1: 'yyyyMMdd  HH:mm:ss',
+  m5: 'yyyyMMdd  HH:mm:ss',
+  m60: 'yyyyMMdd  HH:mm:ss',
   daily: 'yyyyMMdd',
 };
 
@@ -143,7 +145,7 @@ export function create(): DataProvider {
       blocks,
     );
 
-    return bars.flat().map(bar => {
+    const results = bars.flat().map(bar => {
       const parseFormat = barSizeParseLookup[period];
       const time = parse(bar.time || '', parseFormat, new Date());
       return {
@@ -155,6 +157,12 @@ export function create(): DataProvider {
         time: format(time, 'yyyy-MM-dd HH:mm:ss'),
       };
     });
+
+    // Deduplicate the results array because we don't have a reliable way of knowing if the market
+    // was open or not the days requested. If the market was not open then IB will return data for the
+    // previous day which can result in duplicates
+
+    return deDuplicateObjectArray(results, bar => bar.time);
   }
 
   async function instrumentLookup(searchTerm: string): Promise<Instrument[]> {

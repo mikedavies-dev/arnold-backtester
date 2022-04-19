@@ -52,3 +52,18 @@ export function deepParseDates(body: any) {
     }
   }
 }
+
+export function deDuplicateObjectArray<ObjectType>(
+  data: ObjectType[],
+  getKey: (value: ObjectType) => string,
+) {
+  const barDates: Set<string> = new Set();
+  return data.filter(value => {
+    const key = getKey(value);
+    if (barDates.has(key)) {
+      return false;
+    }
+    barDates.add(key);
+    return true;
+  });
+}
