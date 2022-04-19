@@ -1,4 +1,4 @@
-import {format, parse} from 'date-fns';
+import {format, parse, addDays} from 'date-fns';
 
 import {Instrument} from '../../core';
 import {ensureDataIsAvailable} from '../../utils/data-storage';
@@ -41,6 +41,20 @@ describe('mongo db tests', () => {
       name: 'test',
       init: jest.fn(async () => {}),
       shutdown: jest.fn(async () => {}),
+      getTimeSeriesBlock: jest.fn(
+        async (instrument: Instrument, from: Date) => {
+          return [
+            {
+              time: format(from, 'yyyy-MM-dd HH:mm:ss'),
+              open: 1,
+              high: 1,
+              low: 1,
+              close: 1,
+              volume: 1,
+            },
+          ];
+        },
+      ),
       getTimeSeries: jest.fn(async (instrument: Instrument, from: Date) => {
         return [
           {
@@ -81,25 +95,25 @@ describe('mongo db tests', () => {
     const earliestDataDate = parse(Env.EARLIEST_DATA, 'yyyy-MM-dd', new Date());
 
     // Check variables
-    expect(mockProvider.getTimeSeries).toBeCalledWith(
+    expect(mockProvider.getTimeSeriesBlock).toBeCalledWith(
       expect.anything(),
-      earliestDataDate,
-      getTestDate(),
+      addDays(earliestDataDate, 1),
+      1,
       'm1',
     );
 
-    expect(mockProvider.getTimeSeries).toBeCalledWith(
+    expect(mockProvider.getTimeSeriesBlock).toBeCalledWith(
       expect.anything(),
-      earliestDataDate,
-      getTestDate(),
+      addDays(earliestDataDate, 60),
+      60,
       'm60',
     );
 
-    expect(mockProvider.getTimeSeries).toBeCalledWith(
+    expect(mockProvider.getTimeSeriesBlock).toBeCalledWith(
       expect.anything(),
-      earliestDataDate,
-      getTestDate(),
-      'daily',
+      addDays(earliestDataDate, 5),
+      5,
+      'm5',
     );
 
     mockProvider.getTimeSeries.mockReset();

@@ -38,6 +38,7 @@ const dataProvider: DataProvider = {
   init: async () => {},
   shutdown: async () => {},
   getTimeSeries: async () => [],
+  getTimeSeriesBlock: async () => [],
   instrumentLookup: async () => [],
 };
 

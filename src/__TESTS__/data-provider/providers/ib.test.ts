@@ -2,12 +2,10 @@ import {subDays, addWeeks} from 'date-fns';
 
 import {Bar} from '../../../core';
 import {getTestDate} from '../../test-utils/tick';
-import {
-  create as createIB,
-  splitDatesIntoBlocks,
-} from '../../../utils/data-provider/providers/ib';
+import {create as createIB} from '../../../utils/data-provider/providers/ib';
 import Env from '../../../utils/env';
 import {Instrument} from '../../../core';
+import {splitDatesIntoBlocks} from '../../../utils/timeseries';
 
 const microsoft = {
   id: 272093,
@@ -60,7 +58,7 @@ test('splitting dates into block sizes', () => {
   );
 
   expect(testOneWeekOfDaily.length).toBe(1);
-  expect(testOneWeekOfDaily[0].duration).toBe('7 D');
+  expect(testOneWeekOfDaily[0].days).toBe(7);
 
   // One week of daily data
   const testMinuteDate = splitDatesIntoBlocks(
@@ -72,20 +70,20 @@ test('splitting dates into block sizes', () => {
   expect(testMinuteDate).toMatchInlineSnapshot(`
     Array [
       Object {
-        "duration": "1 D",
-        "end": "20220102 00:00:00",
+        "days": 1,
+        "end": 2022-01-02T05:00:00.000Z,
       },
       Object {
-        "duration": "1 D",
-        "end": "20220104 00:00:00",
+        "days": 1,
+        "end": 2022-01-04T05:00:00.000Z,
       },
       Object {
-        "duration": "1 D",
-        "end": "20220106 00:00:00",
+        "days": 1,
+        "end": 2022-01-06T05:00:00.000Z,
       },
       Object {
-        "duration": "1 D",
-        "end": "20220108 00:00:00",
+        "days": 1,
+        "end": 2022-01-08T05:00:00.000Z,
       },
     ]
   `);

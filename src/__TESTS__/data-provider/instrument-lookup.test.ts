@@ -14,6 +14,7 @@ test('instrument lookup', async () => {
     getTimeSeries: jest.fn(async () => {
       return [];
     }),
+    getTimeSeriesBlock: async () => [],
     instrumentLookup: async () => [
       {
         symbol: 'ABCD',

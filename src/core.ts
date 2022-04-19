@@ -57,6 +57,12 @@ export type DataProvider = {
     to: Date,
     period: TimeSeriesPeriod,
   ): Promise<Array<Bar>>;
+  getTimeSeriesBlock(
+    instrument: Instrument,
+    end: Date,
+    days: number,
+    period: TimeSeriesPeriod,
+  ): Promise<Bar[]>;
   instrumentLookup(searchTerm: string): Promise<Instrument[]>;
 };
 
@@ -208,4 +214,9 @@ export type MetricsByPeriod = {
   profitFactor: number;
   grossProfitAndLoss: number;
   netProfitAndLoss: number;
+};
+
+export type TimeSeriesRequestBlock = {
+  end: Date;
+  days: number;
 };
