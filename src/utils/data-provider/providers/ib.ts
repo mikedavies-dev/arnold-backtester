@@ -119,7 +119,9 @@ export function create(): DataProvider {
     return details.map(contract => ({
       id: contract.contract.conId,
       symbol: String(contract.contract.symbol),
-      name: String(contract.longName),
+      name: `${String(contract.longName)} (${contract.contract.symbol}/${
+        contract.contract.secType
+      }/${contract.contract.exchange}/${contract.contract.currency})`,
       data: contract.contract,
     }));
   }

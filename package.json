@@ -74,6 +74,7 @@
   },
   "scripts": {
     "backtest": "TZ=America/New_York node dist/bin/backtest.js",
+    "ensure-data": "TZ=America/New_York node dist/bin/ensure-data.js",
     "test": "is-ci-cli test:coverage test:watch",
     "test:coverage": "TZ=America/New_York NODE_ENV=test_ci jest --coverage",
     "test:watch": "TZ=America/New_York jest --watch",
@@ -127,6 +128,14 @@
     },
     "backtest-worker": {
       "source": "./src/bin/worker.ts",
+      "distDir": "./dist/bin",
+      "context": "node",
+      "engines": {
+        "node": ">=12.x"
+      }
+    },
+    "ensure-data": {
+      "source": "./src/bin/ensure-data.ts",
       "distDir": "./dist/bin",
       "context": "node",
       "engines": {

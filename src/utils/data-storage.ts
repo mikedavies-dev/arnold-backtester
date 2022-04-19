@@ -8,7 +8,7 @@ TODO:
 */
 
 import series from 'promise-series2';
-import {parse, isBefore} from 'date-fns';
+import {parse, isBefore, format} from 'date-fns';
 
 import {LoggerCallback, TimeSeriesPeriod, Instrument} from '../core';
 // import {hasTsForSymbolAndDate} from './tick-storage';
@@ -54,7 +54,7 @@ export async function ensureDataIsAvailable({
       log(`Ensuring data for ${instrument.symbol}`);
       await series(
         async period => {
-          log(`> Preloading ${period}`);
+          log(`> Preloading ${period} for ${instrument.symbol}`);
 
           const dataAvailableTo = await getDataAvailableTo(
             instrument.symbol,
@@ -69,7 +69,12 @@ export async function ensureDataIsAvailable({
             await series(
               async ({end, days}) => {
                 log(
-                  `> Loading ${period}, ${days} days until ${end} for ${instrument.symbol}`,
+                  `> Loading ${
+                    instrument.symbol
+                  } / ${days} day(s) of ${period} until ${format(
+                    end,
+                    'yyyy-MM-dd',
+                  )}`,
                 );
 
                 // Load the data from the provider
@@ -84,11 +89,13 @@ export async function ensureDataIsAvailable({
                 await storeSeries(instrument.symbol, period, bars);
 
                 // Update the new latest date so we don't load it again
-                await updateDataAvailableTo(instrument.symbol, period, until);
+                await updateDataAvailableTo(instrument.symbol, period, end);
               },
               0,
               blocks,
             );
+          } else {
+            log(`> All data available ${period} for ${instrument.symbol}`);
           }
         },
         null,

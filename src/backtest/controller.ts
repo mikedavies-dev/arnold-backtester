@@ -76,6 +76,9 @@ export async function runBacktestController({
 
   const dataProvider = createDataProvider();
 
+  // connect
+  await dataProvider.init();
+
   // Make sure we have
   await ensureSymbolsAreAvailable({
     dataProvider,

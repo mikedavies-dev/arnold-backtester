@@ -30,7 +30,7 @@ export async function lookupSymbol({
         message: `Results for ${symbol}`,
         choices: [
           ...suggestions.map(r => ({
-            name: r.name,
+            name: `${r.name}`,
             value: r.symbol,
           })),
           new inquirer.Separator(),

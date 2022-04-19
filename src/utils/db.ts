@@ -74,11 +74,24 @@ export async function storeSeries(
 ) {
   const TimeSeriesBar = mongoose.model<DbTimeSeriesBar>('TimeSeriesBar');
 
-  await TimeSeriesBar.insertMany(
+  // Insert with upsert to avoid duplicates
+  await TimeSeriesBar.bulkWrite(
     bars.map(bar => ({
-      ...bar,
-      symbol,
-      period,
+      updateOne: {
+        filter: {
+          symbol,
+          period,
+          time: bar.time,
+        },
+        update: {
+          $set: {
+            ...bar,
+            symbol,
+            period,
+          },
+        },
+        upsert: true,
+      },
     })),
   );
 }
