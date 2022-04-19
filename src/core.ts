@@ -53,10 +53,10 @@ export type DataProvider = {
   shutdown(): Promise<void>;
   getTimeSeries(
     instrument: Instrument,
-    from: Date,
-    to: Date,
+    end: Date,
+    days: number,
     period: TimeSeriesPeriod,
-  ): Promise<Array<Bar>>;
+  ): Promise<Bar[]>;
   instrumentLookup(searchTerm: string): Promise<Instrument[]>;
 };
 
@@ -208,4 +208,9 @@ export type MetricsByPeriod = {
   profitFactor: number;
   grossProfitAndLoss: number;
   netProfitAndLoss: number;
+};
+
+export type TimeSeriesRequestBlock = {
+  end: Date;
+  days: number;
 };

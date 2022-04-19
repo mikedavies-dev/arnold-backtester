@@ -19,10 +19,10 @@ import {
   updateDataAvailableTo,
   instrumentLookup,
   storeInstrument,
-  getInstrument,
 } from './db';
 import {DataProvider} from '../core';
 import Env from './env';
+import {splitDatesIntoBlocks} from './timeseries';
 
 export async function ensureDataIsAvailable({
   symbols,
@@ -64,19 +64,31 @@ export async function ensureDataIsAvailable({
 
           // If the latest data we have is before the latest load data then load more
           if (isBefore(startDate, until)) {
-            // Load the data from the provider
-            const series = await dataProvider.getTimeSeries(
-              instrument,
-              startDate,
-              until,
-              period,
+            const blocks = splitDatesIntoBlocks(startDate, until, period);
+
+            await series(
+              async ({end, days}) => {
+                log(
+                  `> Loading ${period}, ${days} days until ${end} for ${instrument.symbol}`,
+                );
+
+                // Load the data from the provider
+                const bars = await dataProvider.getTimeSeries(
+                  instrument,
+                  end,
+                  days,
+                  period,
+                );
+
+                // Store the data in the database
+                await storeSeries(instrument.symbol, period, bars);
+
+                // Update the new latest date so we don't load it again
+                await updateDataAvailableTo(instrument.symbol, period, until);
+              },
+              0,
+              blocks,
             );
-
-            // Store the data in the database
-            await storeSeries(instrument.symbol, period, series);
-
-            // Update the new latest date so we don't load it again
-            await updateDataAvailableTo(instrument.symbol, period, until);
           }
         },
         null,

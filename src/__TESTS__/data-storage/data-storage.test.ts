@@ -1,4 +1,4 @@
-import {format, parse} from 'date-fns';
+import {format, parse, addDays} from 'date-fns';
 
 import {Instrument} from '../../core';
 import {ensureDataIsAvailable} from '../../utils/data-storage';
@@ -83,23 +83,23 @@ describe('mongo db tests', () => {
     // Check variables
     expect(mockProvider.getTimeSeries).toBeCalledWith(
       expect.anything(),
-      earliestDataDate,
-      getTestDate(),
+      addDays(earliestDataDate, 1),
+      1,
       'm1',
     );
 
     expect(mockProvider.getTimeSeries).toBeCalledWith(
       expect.anything(),
-      earliestDataDate,
-      getTestDate(),
+      addDays(earliestDataDate, 60),
+      60,
       'm60',
     );
 
     expect(mockProvider.getTimeSeries).toBeCalledWith(
       expect.anything(),
-      earliestDataDate,
-      getTestDate(),
-      'daily',
+      addDays(earliestDataDate, 5),
+      5,
+      'm5',
     );
 
     mockProvider.getTimeSeries.mockReset();

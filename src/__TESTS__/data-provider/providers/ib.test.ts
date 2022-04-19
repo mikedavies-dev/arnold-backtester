@@ -1,11 +1,6 @@
-import {subDays, addWeeks} from 'date-fns';
-
 import {Bar} from '../../../core';
 import {getTestDate} from '../../test-utils/tick';
-import {
-  create as createIB,
-  splitDatesIntoBlocks,
-} from '../../../utils/data-provider/providers/ib';
+import {create as createIB} from '../../../utils/data-provider/providers/ib';
 import Env from '../../../utils/env';
 import {Instrument} from '../../../core';
 
@@ -43,61 +38,15 @@ function findDuplicates(bars: Bar[]) {
     .filter(t => t.count > 1);
 }
 
-test('splitting dates into block sizes', () => {
-  // The same dates should not return anything
-  const testSameDates = splitDatesIntoBlocks(
-    getTestDate(),
-    getTestDate(),
-    'daily',
-  );
-  expect(testSameDates).toStrictEqual([]);
-
-  // One week of daily data
-  const testOneWeekOfDaily = splitDatesIntoBlocks(
-    getTestDate(),
-    addWeeks(getTestDate(), 1),
-    'daily',
-  );
-
-  expect(testOneWeekOfDaily.length).toBe(1);
-  expect(testOneWeekOfDaily[0].duration).toBe('7 D');
-
-  // One week of daily data
-  const testMinuteDate = splitDatesIntoBlocks(
-    getTestDate(),
-    addWeeks(getTestDate(), 1),
-    'm1',
-  );
-
-  expect(testMinuteDate).toMatchInlineSnapshot(`
-    Array [
-      Object {
-        "duration": "1 D",
-        "end": "20220102 00:00:00",
-      },
-      Object {
-        "duration": "1 D",
-        "end": "20220104 00:00:00",
-      },
-      Object {
-        "duration": "1 D",
-        "end": "20220106 00:00:00",
-      },
-      Object {
-        "duration": "1 D",
-        "end": "20220108 00:00:00",
-      },
-    ]
-  `);
-});
-
 // These tests require IB to be connected
 let nextClientId = 1000;
 const originalClientId = Env.IB_CLIENT_ID_DATA_PROVIDER;
 
 jest.setTimeout(60000);
 
-if (!Env.DISABLE_PROVIDER_TESTS) {
+if (Env.DISABLE_PROVIDER_TESTS) {
+  test('ib sanity', () => {});
+} else {
   test('init ib', async () => {
     const ib = createIB();
     await ib.init();
@@ -119,8 +68,8 @@ if (!Env.DISABLE_PROVIDER_TESTS) {
     // Daily data
     const bars = await ib.getTimeSeries(
       microsoft as Instrument,
-      subDays(getTestDate(), 10),
       getTestDate(),
+      10,
       'daily',
     );
     expect(bars.length).toMatchInlineSnapshot(`10`);
@@ -147,8 +96,8 @@ if (!Env.DISABLE_PROVIDER_TESTS) {
     // 60 mins
     const bars = await ib.getTimeSeries(
       microsoft as Instrument,
-      subDays(getTestDate(), 10),
       getTestDate(),
+      10,
       'm60',
     );
     expect(bars.length).toMatchInlineSnapshot(`160`);
@@ -175,11 +124,11 @@ if (!Env.DISABLE_PROVIDER_TESTS) {
     // 5 mins
     const bars = await ib.getTimeSeries(
       microsoft as Instrument,
-      subDays(getTestDate(), 10),
       getTestDate(),
+      10,
       'm5',
     );
-    expect(bars.length).toMatchInlineSnapshot(`1720`);
+    expect(bars.length).toMatchInlineSnapshot(`1912`);
     expect(bars[0]).toMatchInlineSnapshot(`
       Object {
         "close": 323.37,
@@ -203,19 +152,19 @@ if (!Env.DISABLE_PROVIDER_TESTS) {
     // 1 min
     const m1 = await ib.getTimeSeries(
       microsoft as Instrument,
-      subDays(getTestDate(), 10),
       getTestDate(),
+      2,
       'm1',
     );
-    expect(m1.length).toMatchInlineSnapshot(`3792`);
+    expect(m1.length).toMatchInlineSnapshot(`1901`);
     expect(m1[0]).toMatchInlineSnapshot(`
       Object {
-        "close": 326.75,
-        "high": 326.75,
-        "low": 326.75,
-        "open": 326.75,
-        "time": "2021-12-22 04:12:00",
-        "volume": 2,
+        "close": 341.94,
+        "high": 342.23,
+        "low": 341.94,
+        "open": 342.02,
+        "time": "2021-12-30 04:19:00",
+        "volume": 18,
       }
     `);
     expect(findDuplicates(m1)).toStrictEqual([]);
