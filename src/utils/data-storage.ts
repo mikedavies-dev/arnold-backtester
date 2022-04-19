@@ -73,7 +73,7 @@ export async function ensureDataIsAvailable({
                 );
 
                 // Load the data from the provider
-                const bars = await dataProvider.getTimeSeriesBlock(
+                const bars = await dataProvider.getTimeSeries(
                   instrument,
                   end,
                   days,

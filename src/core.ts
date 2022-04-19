@@ -53,12 +53,6 @@ export type DataProvider = {
   shutdown(): Promise<void>;
   getTimeSeries(
     instrument: Instrument,
-    from: Date,
-    to: Date,
-    period: TimeSeriesPeriod,
-  ): Promise<Array<Bar>>;
-  getTimeSeriesBlock(
-    instrument: Instrument,
     end: Date,
     days: number,
     period: TimeSeriesPeriod,

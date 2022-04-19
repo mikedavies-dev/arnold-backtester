@@ -41,20 +41,6 @@ describe('mongo db tests', () => {
       name: 'test',
       init: jest.fn(async () => {}),
       shutdown: jest.fn(async () => {}),
-      getTimeSeriesBlock: jest.fn(
-        async (instrument: Instrument, from: Date) => {
-          return [
-            {
-              time: format(from, 'yyyy-MM-dd HH:mm:ss'),
-              open: 1,
-              high: 1,
-              low: 1,
-              close: 1,
-              volume: 1,
-            },
-          ];
-        },
-      ),
       getTimeSeries: jest.fn(async (instrument: Instrument, from: Date) => {
         return [
           {
@@ -95,21 +81,21 @@ describe('mongo db tests', () => {
     const earliestDataDate = parse(Env.EARLIEST_DATA, 'yyyy-MM-dd', new Date());
 
     // Check variables
-    expect(mockProvider.getTimeSeriesBlock).toBeCalledWith(
+    expect(mockProvider.getTimeSeries).toBeCalledWith(
       expect.anything(),
       addDays(earliestDataDate, 1),
       1,
       'm1',
     );
 
-    expect(mockProvider.getTimeSeriesBlock).toBeCalledWith(
+    expect(mockProvider.getTimeSeries).toBeCalledWith(
       expect.anything(),
       addDays(earliestDataDate, 60),
       60,
       'm60',
     );
 
-    expect(mockProvider.getTimeSeriesBlock).toBeCalledWith(
+    expect(mockProvider.getTimeSeries).toBeCalledWith(
       expect.anything(),
       addDays(earliestDataDate, 5),
       5,

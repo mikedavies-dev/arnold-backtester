@@ -8,9 +8,6 @@ import {
 import series from 'promise-series2';
 import {format, parse} from 'date-fns';
 
-import {deDuplicateObjectArray} from '../../data-structures';
-import {splitDatesIntoBlocks} from '../../timeseries';
-
 const barSizeLookup: Record<TimeSeriesPeriod, BarSizeSetting> = {
   m1: BarSizeSetting.MINUTES_ONE,
   m5: BarSizeSetting.MINUTES_FIVE,
@@ -25,13 +22,7 @@ const barSizeParseLookup: Record<TimeSeriesPeriod, string> = {
   daily: 'yyyyMMdd',
 };
 
-import {
-  TimeSeriesPeriod,
-  DataProvider,
-  Instrument,
-  Bar,
-  TimeSeriesRequestBlock,
-} from '../../../core';
+import {TimeSeriesPeriod, DataProvider, Instrument, Bar} from '../../../core';
 import Logger from '../../../utils/logger';
 import Env from '../../../utils/env';
 
@@ -81,7 +72,7 @@ export function create(): DataProvider {
     });
   }
 
-  async function getTimeSeriesBlock(
+  async function getTimeSeries(
     instrument: Instrument,
     end: Date,
     days: number,
@@ -113,27 +104,6 @@ export function create(): DataProvider {
     });
   }
 
-  async function getTimeSeries(
-    instrument: Instrument,
-    from: Date,
-    to: Date,
-    period: TimeSeriesPeriod,
-  ): Promise<Bar[]> {
-    const blocks = splitDatesIntoBlocks(from, to, period);
-
-    const bars = await series<TimeSeriesRequestBlock, Bar[]>(
-      async ({end, days}) => getTimeSeriesBlock(instrument, end, days, period),
-      null,
-      blocks,
-    );
-
-    // Deduplicate the results array because we don't have a reliable way of knowing if the market
-    // was open or not the days requested. If the market was not open then IB will return data for the
-    // previous day which can result in duplicates
-
-    return deDuplicateObjectArray(bars.flat(), bar => bar.time);
-  }
-
   async function instrumentLookup(searchTerm: string): Promise<Instrument[]> {
     const contracts = await api.searchContracts(searchTerm);
 
@@ -159,7 +129,6 @@ export function create(): DataProvider {
     init,
     shutdown,
     getTimeSeries,
-    getTimeSeriesBlock,
     instrumentLookup,
   };
 }

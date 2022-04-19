@@ -21,7 +21,7 @@ export function splitDatesIntoBlocks(
   for (
     let date = startOfDay(from);
     isBefore(date, startOfDay(to));
-    date = addDays(date, dayIncrement + 1)
+    date = addDays(date, dayIncrement)
   ) {
     const blockTo = min([addDays(date, dayIncrement), to]);
 
