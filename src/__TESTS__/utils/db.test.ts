@@ -1,6 +1,5 @@
-import mongoose from 'mongoose';
-
 import {BacktestResults} from '../../backtest/controller';
+import {Instrument} from '../../core';
 import {
   connect,
   disconnect,
@@ -8,9 +7,10 @@ import {
   getBacktests,
   resetDatabase,
   storeBacktestResults,
+  instrumentLookup,
+  storeInstrument,
+  getInstrument,
 } from '../../utils/db';
-
-import {DbTimeSeriesBar} from '../../models/models';
 
 import {getTestDate} from '../test-utils/tick';
 
@@ -94,5 +94,110 @@ describe('mongo db tests', () => {
       storedBacktest._id?.toString() || '',
     );
     expect(storedSingleBacktest).toMatchObject(results);
+  });
+
+  test('load and save instruments to db', async () => {
+    const provider = 'test';
+
+    const testInstruments: Instrument[] = [
+      {
+        symbol: 'AAAA',
+        name: 'AAAA INC',
+        data: {
+          contractId: 123,
+          exchange: 'nyse',
+        },
+      },
+      {
+        symbol: 'BBBB',
+        name: 'BBBB INC',
+        data: {
+          contractId: 123,
+          exchange: 'nyse',
+        },
+      },
+    ];
+
+    const emptyLookups = await instrumentLookup({
+      provider,
+      symbols: testInstruments.map(i => i.symbol),
+    });
+
+    expect(emptyLookups.length).toBe(0);
+
+    // Store the instruments
+    await storeInstrument({
+      provider,
+      instrument: testInstruments[0],
+    });
+
+    const firstLookups = await instrumentLookup({
+      provider,
+      symbols: testInstruments.map(i => i.symbol),
+    });
+
+    expect(firstLookups.length).toBe(1);
+    expect(firstLookups[0]).toMatchObject(testInstruments[0]);
+  });
+
+  test('load an instrument from db', async () => {
+    const provider = 'test';
+
+    const instrument: Instrument = {
+      symbol: 'AAAA',
+      name: 'AAAA INC',
+      data: {
+        contractId: 123,
+        exchange: 'nyse',
+      },
+    };
+
+    // Store the instruments
+    await storeInstrument({
+      provider,
+      instrument,
+    });
+
+    // Test finding an instrument with instrument
+    const storedInstrument = await getInstrument({
+      provider,
+      symbol: instrument.symbol,
+    });
+
+    expect(storedInstrument?.symbol).toBe(instrument.symbol);
+    expect(storedInstrument?.name).toBe(instrument.name);
+  });
+
+  test('store the same instrument multiple times', async () => {
+    const provider = 'test';
+
+    const instrument: Instrument = {
+      symbol: 'DUPLICATE',
+      name: 'DUPLICATE INC',
+      data: {
+        contractId: 123,
+        exchange: 'nyse',
+      },
+    };
+
+    // Store the instruments
+    await storeInstrument({
+      provider,
+      instrument,
+    });
+
+    await storeInstrument({
+      provider,
+      instrument,
+    });
+
+    // Test finding an instrument with instrument
+    const storedInstrument = await getInstrument({
+      provider,
+      symbol: instrument.symbol,
+    });
+
+    expect(storedInstrument?.symbol).toBe(instrument.symbol);
+    expect(storedInstrument?.name).toBe(instrument.name);
   });
 });

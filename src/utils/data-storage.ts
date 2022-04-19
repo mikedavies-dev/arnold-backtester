@@ -10,20 +10,30 @@ TODO:
 import series from 'promise-series2';
 import {parse, isBefore} from 'date-fns';
 
-import {LoggerCallback, TimeSeriesPeriod} from '../core';
+import {LoggerCallback, TimeSeriesPeriod, Instrument} from '../core';
 // import {hasTsForSymbolAndDate} from './tick-storage';
-import {getDataAvailableTo, storeSeries, updateDataAvailableTo} from './db';
-import {createDataProvider} from './data-provider';
+import {lookupSymbol} from './instrument-lookup';
+import {
+  getDataAvailableTo,
+  storeSeries,
+  updateDataAvailableTo,
+  instrumentLookup,
+  storeInstrument,
+  getInstrument,
+} from './db';
+import {DataProvider} from '../core';
 import Env from './env';
 
 export async function ensureDataIsAvailable({
   symbols,
   log,
   until,
+  dataProvider,
 }: {
   symbols: string[];
   log: LoggerCallback;
   until: Date;
+  dataProvider: DataProvider;
 }) {
   const requiredBarPeriods: Array<TimeSeriesPeriod> = [
     'm1',
@@ -32,34 +42,41 @@ export async function ensureDataIsAvailable({
     'daily',
   ];
 
-  const dataProvider = createDataProvider();
   const earliestDataDate = parse(Env.EARLIEST_DATA, 'yyyy-MM-dd', new Date());
 
+  const instruments = await instrumentLookup({
+    provider: dataProvider.name,
+    symbols,
+  });
+
   await series(
-    async symbol => {
-      log(`Ensuring data for ${symbol}`);
+    async instrument => {
+      log(`Ensuring data for ${instrument.symbol}`);
       await series(
         async period => {
           log(`> Preloading ${period}`);
 
-          const dataAvailableTo = await getDataAvailableTo(symbol, period);
+          const dataAvailableTo = await getDataAvailableTo(
+            instrument.symbol,
+            period,
+          );
           const startDate = dataAvailableTo || earliestDataDate;
 
           // If the latest data we have is before the latest load data then load more
           if (isBefore(startDate, until)) {
             // Load the data from the provider
             const series = await dataProvider.getTimeSeries(
-              symbol,
+              instrument,
               startDate,
               until,
               period,
             );
 
             // Store the data in the database
-            await storeSeries(symbol, period, series);
+            await storeSeries(instrument.symbol, period, series);
 
             // Update the new latest date so we don't load it again
-            await updateDataAvailableTo(symbol, period, until);
+            await updateDataAvailableTo(instrument.symbol, period, until);
           }
         },
         null,
@@ -67,6 +84,45 @@ export async function ensureDataIsAvailable({
       );
     },
     null,
+    instruments,
+  );
+}
+
+export async function ensureSymbolsAreAvailable({
+  dataProvider,
+  symbols,
+}: {
+  dataProvider: DataProvider;
+  symbols: string[];
+}) {
+  // Find any instruments that we don't have in the DB
+  const existingInstruments = await instrumentLookup({
+    provider: dataProvider.name,
     symbols,
+  });
+
+  // find the symbols we need
+  const requiredSymbols = symbols.filter(
+    s => !existingInstruments.find(instrument => instrument.symbol === s),
+  );
+
+  const instruments = await series<string, Instrument>(
+    symbol =>
+      lookupSymbol({
+        symbol,
+        dataProvider,
+      }),
+    false,
+    requiredSymbols,
+  );
+
+  // Store the instruments in the database
+  await Promise.all(
+    instruments.map(instrument => {
+      return storeInstrument({
+        provider: dataProvider.name,
+        instrument,
+      });
+    }),
   );
 }

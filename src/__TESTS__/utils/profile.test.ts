@@ -28,7 +28,7 @@ test('load a valid profile', async () => {
       "initialBalance": 10000,
       "strategy": Object {
         "name": "sample",
-        "source": "import {HandleTickParameters} from '../utils/module';
+        "source": "import {HandleTickParameters} from '../core';
 
     export const extraSymbols = ['SPY'];
 

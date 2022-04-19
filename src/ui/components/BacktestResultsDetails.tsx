@@ -7,11 +7,11 @@ import numeral from 'numeral';
 import {BacktestResultDetails} from '../api';
 import SimpleBarChart from './SimpleBarChart';
 import SimpleLineChart from './SimpleLineChart';
-import {MetricsByPeriod, ResultsMetrics} from '../../utils/results-metrics';
+import {ResultsMetrics} from '../../utils/results-metrics';
 import CodeBlock from './CodeBlock';
 import PositionList from './PositionList';
 import PositionDetails from './PositionDetails';
-import {Position} from '../../backtest/broker';
+import {Position, MetricsByPeriod} from '../../core';
 
 type TabOption = 'metrics' | 'positions' | 'code';
 

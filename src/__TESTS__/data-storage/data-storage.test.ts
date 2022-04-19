@@ -1,10 +1,16 @@
 import {format, parse} from 'date-fns';
 
+import {Instrument} from '../../core';
 import {ensureDataIsAvailable} from '../../utils/data-storage';
 import {getTestDate} from '../test-utils/tick';
 import Env from '../../utils/env';
 
-import {connect, disconnect, resetDatabase} from '../../utils/db';
+import {
+  connect,
+  disconnect,
+  resetDatabase,
+  storeInstrument,
+} from '../../utils/db';
 
 jest.mock('../../utils/data-provider');
 
@@ -32,8 +38,10 @@ describe('mongo db tests', () => {
 
   test('check data storage', async () => {
     const mockProvider = {
+      name: 'test',
       init: jest.fn(async () => {}),
-      getTimeSeries: jest.fn(async (symbol: string, from: Date) => {
+      shutdown: jest.fn(async () => {}),
+      getTimeSeries: jest.fn(async (instrument: Instrument, from: Date) => {
         return [
           {
             time: format(from, 'yyyy-MM-dd HH:mm:ss'),
@@ -45,10 +53,26 @@ describe('mongo db tests', () => {
           },
         ];
       }),
+      instrumentLookup: async () => [],
     };
     createDataProviderMock.mockReturnValue(mockProvider);
 
+    const dataProvider = createDataProvider();
+
+    const instrument = {
+      symbol: 'ZZZZ',
+      name: 'ZZZZ',
+      data: {},
+    };
+
+    // store the instrument
+    await storeInstrument({
+      provider: dataProvider.name,
+      instrument,
+    });
+
     await ensureDataIsAvailable({
+      dataProvider,
       symbols: ['ZZZZ'],
       log: () => {},
       until: getTestDate(),
@@ -58,21 +82,21 @@ describe('mongo db tests', () => {
 
     // Check variables
     expect(mockProvider.getTimeSeries).toBeCalledWith(
-      'ZZZZ',
+      expect.anything(),
       earliestDataDate,
       getTestDate(),
       'm1',
     );
 
     expect(mockProvider.getTimeSeries).toBeCalledWith(
-      'ZZZZ',
+      expect.anything(),
       earliestDataDate,
       getTestDate(),
       'm60',
     );
 
     expect(mockProvider.getTimeSeries).toBeCalledWith(
-      'ZZZZ',
+      expect.anything(),
       earliestDataDate,
       getTestDate(),
       'daily',
@@ -83,6 +107,7 @@ describe('mongo db tests', () => {
 
     // Call again
     await ensureDataIsAvailable({
+      dataProvider,
       symbols: ['ZZZZ'],
       log: () => {},
       until: getTestDate(),

@@ -1,6 +1,6 @@
 import axios from 'axios';
-import {Profile} from '../utils/profile';
-import {Position} from '../backtest/broker';
+
+import {Position, Profile} from '../core';
 import {ResultsMetrics} from '../utils/results-metrics';
 import {deepParseDates} from '../utils/data-structures';
 

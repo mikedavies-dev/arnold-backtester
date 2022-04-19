@@ -2,6 +2,8 @@ import fs from 'fs/promises';
 import {parse, differenceInDays, startOfDay, add} from 'date-fns';
 import path from 'path';
 
+import {Profile} from '../core';
+
 async function loadStrategySource(path: string) {
   try {
     return await fs.readFile(path, 'utf-8');
@@ -23,23 +25,6 @@ type RawProfile = {
   dates: {
     from: string;
     to: string;
-  };
-  symbols: Array<string>;
-  threads: number;
-  initialBalance: number;
-  commissionPerOrder: number;
-};
-
-// Parsed format
-export type Profile = {
-  strategy: {
-    name: string;
-    source: string | null;
-  };
-  dates: {
-    from: Date;
-    to: Date;
-    dates: Array<Date>;
   };
   symbols: Array<string>;
   threads: number;

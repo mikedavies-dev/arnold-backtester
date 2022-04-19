@@ -1,15 +1,17 @@
 import mongoose from 'mongoose';
 
 // Register the models
+import {registerMongooseModels} from '../models/models';
+
 import {
+  Instrument,
+  Bar,
+  TimeSeriesPeriod,
   DbBacktest,
   DbTimeSeriesBar,
-  registerMongooseModels,
   DbTimeSeriesDataAvailability,
-} from '../models/models';
-
-import {TimeSeriesPeriod} from '../core';
-import {Bar} from '../utils/tracker';
+  DbInstrument,
+} from '../core';
 
 import Env from './env';
 import {BacktestResults} from '../backtest/controller';
@@ -120,4 +122,64 @@ export async function updateDataAvailableTo(
   );
 
   return record?.dataAvailableTo;
+}
+
+export async function instrumentLookup({
+  provider,
+  symbols,
+}: {
+  provider: string;
+  symbols: string[];
+}) {
+  const Instrument = mongoose.model<DbInstrument>('Instrument');
+
+  return Instrument.find({
+    provider,
+    symbol: {$in: symbols},
+  });
+}
+
+export async function getInstrument({
+  provider,
+  symbol,
+}: {
+  provider: string;
+  symbol: string;
+}) {
+  const Instrument = mongoose.model<DbInstrument>('Instrument');
+
+  return Instrument.findOne({
+    provider,
+    symbol: symbol,
+  });
+}
+
+export async function storeInstrument({
+  provider,
+  instrument,
+}: {
+  provider: string;
+  instrument: Instrument;
+}) {
+  const Instrument = mongoose.model<DbInstrument>('Instrument');
+
+  const existing = await Instrument.findOne({
+    provider,
+    symbol: instrument.symbol,
+  });
+
+  // Update the existing record
+  if (existing) {
+    await Instrument.findByIdAndUpdate(existing._id, {
+      $set: {
+        name: instrument.name,
+        data: instrument.data,
+      },
+    });
+  } else {
+    await Instrument.create({
+      provider,
+      ...instrument,
+    });
+  }
 }

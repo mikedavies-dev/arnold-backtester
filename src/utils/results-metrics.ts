@@ -1,6 +1,6 @@
 import {getHours, getDay} from 'date-fns';
 import {pipe} from 'fp-ts/lib/function';
-import {Position, Order} from '../backtest/broker';
+import {Position, Order, PositionDirection, MetricsByPeriod} from '../core';
 import {incIf, ratio, initArrayOfSize} from './logic';
 
 type Options = {
@@ -14,29 +14,10 @@ type RunningPositionMetrics = {
   accountBalance: number;
 };
 
-export type MetricsByPeriod = {
-  positions: number;
-  orders: number;
-  commission: number;
-  grossProfit: number;
-  grossLoss: number;
-  longPositions: number;
-  longWinners: number;
-  shortPositions: number;
-  shortWinners: number;
-  longWinnerPercent: number;
-  shortWinnerPercent: number;
-  profitFactor: number;
-  grossProfitAndLoss: number;
-  netProfitAndLoss: number;
-};
-
 type Metrics = MetricsByPeriod & {
   byHour: Array<MetricsByPeriod>;
   byDayOfWeek: Array<MetricsByPeriod>;
 };
-
-export type PositionDirection = 'LONG' | 'SHORT' | 'UNKNOWN';
 
 const emptyPeriodData: MetricsByPeriod = {
   orders: 0,

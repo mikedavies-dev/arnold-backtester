@@ -1,9 +1,7 @@
-import {Position} from '../../backtest/broker';
+import {Position, PositionDirection, MetricsByPeriod} from '../../core';
 import {
   calculateMetrics,
   updatePeriodMetrics,
-  MetricsByPeriod,
-  PositionDirection,
 } from '../../utils/results-metrics';
 
 import {createTestPosition} from '../test-utils/broker';

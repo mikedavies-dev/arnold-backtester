@@ -1,10 +1,10 @@
 import {fromUnixTime, parse, getUnixTime, format, addSeconds} from 'date-fns';
-import {Tick, TickType} from '../../core';
+import {Tick, TickType, Tracker, BrokerState} from '../../core';
 import {flow} from 'fp-ts/lib/function';
 
-import {Tracker, handleTrackerTick, initTracker} from '../../utils/tracker';
+import {handleTrackerTick, initTracker} from '../../utils/tracker';
 import {getMarketOpen, getMarketClose} from '../../utils/market';
-import {handleBrokerTick, initBroker, BrokerState} from '../../backtest/broker';
+import {handleBrokerTick, initBroker} from '../../backtest/broker';
 
 export function createTick({
   type,

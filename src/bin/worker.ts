@@ -3,7 +3,7 @@ import {parentPort, workerData, threadId} from 'worker_threads';
 
 import Logger from '../utils/logger';
 import {runBacktest, BacktestWorkerError} from '../backtest/worker';
-import {Profile} from '../utils/profile';
+import {Profile} from '../core';
 
 const log = Logger(`Worker#${threadId}`);
 

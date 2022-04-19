@@ -1,4 +1,4 @@
-import {HandleTickParameters} from '../utils/module';
+import {HandleTickParameters} from '../core';
 
 export const extraSymbols = ['SPY'];
 

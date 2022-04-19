@@ -1,25 +1,7 @@
-import {BrokerState, OrderSpecification} from '../backtest/broker';
-import {LoggerCallback, Tick} from '../core';
-import {Tracker} from '../utils/tracker';
-import {MarketStatus} from './market';
+import {HandleTickParameters} from '../core';
 
 type InitStrategy = () => void;
 type ExtraSymbols = Array<string>;
-
-export type HandleTickParameters = {
-  log: LoggerCallback;
-  tick: Tick;
-  symbol: string;
-  tracker: Tracker;
-  trackers: Record<string, Tracker>;
-  marketState: MarketStatus;
-  broker: {
-    state: BrokerState;
-    placeOrder: (spec: OrderSpecification) => number;
-    hasOpenOrders: (symbol: string) => boolean;
-    getPositionSize: (symbol: string) => number;
-  };
-};
 
 export type HandleTick = (args: HandleTickParameters) => void;
 

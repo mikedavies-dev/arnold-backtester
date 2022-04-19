@@ -5,7 +5,7 @@ const createMarketOpen = flow(setHours(9), setMinutes(30), getUnixTime);
 const createMarketClose = flow(setHours(16), setMinutes(30), getUnixTime);
 const createPreMarketOpen = flow(setHours(4), setMinutes(0), getUnixTime);
 
-export type MarketStatus = 'CLOSED' | 'PREMARKET' | 'OPEN';
+import {MarketStatus} from '../core';
 
 export function getMarketOpen(date: Date) {
   return createMarketOpen(date);

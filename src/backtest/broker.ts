@@ -9,57 +9,8 @@ So, against my better judgement I'm making functions that mutate on purpose :)
 
 import {differenceInMilliseconds} from 'date-fns';
 
-import {Tracker} from '../utils/tracker';
+import {Tracker, Order, BrokerState, OrderSpecification} from '../core';
 import {getPositionPL, getPositionCommission} from '../utils/results-metrics';
-
-export type OrderAction = 'BUY' | 'SELL';
-export type OrderType = 'MKT' | 'LMT' | 'STP' | 'TRAIL';
-export type OrderState = 'ACCEPTED' | 'PENDING' | 'FILLED' | 'CANCELLED';
-
-export type BaseOrder = {
-  type: OrderType;
-  parentId?: number;
-  symbol: string;
-  action: OrderAction;
-  shares: number;
-};
-
-// Order specification using TypeScript magic..
-export type OrderSpecification =
-  | (BaseOrder & {type: 'MKT'})
-  | (BaseOrder & {type: 'STP'; price: number})
-  | (BaseOrder & {type: 'LMT'; price: number})
-  | (BaseOrder & {type: 'TRAIL'; price: number; triggerPrice?: number});
-
-// Define the full order
-export type Order = OrderSpecification & {
-  id: number;
-  openedAt: Date;
-  state: OrderState;
-  filledAt?: Date;
-  avgFillPrice?: number;
-};
-
-export type Position = {
-  symbol: string;
-  orders: Array<Order>;
-  size: number;
-  data: any;
-  closeReason: string | null;
-  isClosing: boolean;
-};
-
-export type BrokerState = {
-  getMarketTime: () => Date;
-  nextOrderId: number;
-  orders: Array<Order>;
-  openOrders: Record<number, Order>;
-  positions: Array<Position>;
-  openPositions: Record<string, Position>;
-  orderExecutionDelayMs: number;
-  balance: number;
-  commissionPerOrder: number;
-};
 
 export function initBroker({
   getMarketTime,
