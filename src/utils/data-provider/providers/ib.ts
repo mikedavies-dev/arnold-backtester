@@ -26,7 +26,7 @@ import {TimeSeriesPeriod, DataProvider, Instrument, Bar} from '../../../core';
 import Logger from '../../../utils/logger';
 import Env from '../../../utils/env';
 
-const log = Logger('IB');
+const log = Logger('ib');
 
 export function formatIbRequestDate(date: Date) {
   return format(date, 'yyyyMMdd HH:mm:ss');
@@ -40,18 +40,22 @@ export function create(): DataProvider {
   });
 
   api.errorSubject.subscribe(err => {
-    console.log('Err', err);
+    log(`Error: ${err.error.message} (${err.code})`);
   });
 
   async function init() {
-    return new Promise<void>(resolve => {
+    return new Promise<void>((resolve, reject) => {
       api.logLevel = LogLevel.INFO;
-      api.errorSubject.subscribe(err => {
-        log('Error', err);
-      });
+
+      // Set a timeout
+      const timeoutTimer = setTimeout(async () => {
+        await api.disconnect();
+        reject(new Error('Timeout connecting to IB'));
+      }, 10000);
 
       api.connectionState.subscribe(async state => {
         if (state === ConnectionState.Connected) {
+          clearTimeout(timeoutTimer);
           resolve();
         }
       });

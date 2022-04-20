@@ -179,7 +179,9 @@ if (Env.DISABLE_PROVIDER_TESTS) {
     await ib.init();
     const results = await ib.instrumentLookup('MSFT');
 
-    expect(results.find(r => r.name === 'MICROSOFT CORP')).toBeTruthy();
+    expect(
+      results.find(r => r.name.indexOf('MICROSOFT CORP') !== -1),
+    ).toBeTruthy();
     await ib.shutdown();
   });
 }

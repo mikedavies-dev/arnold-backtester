@@ -54,7 +54,7 @@ export async function ensureDataIsAvailable({
       log(`Ensuring data for ${instrument.symbol}`);
       await series(
         async period => {
-          log(`> Preloading ${period} for ${instrument.symbol}`);
+          log(`Preloading ${period} for ${instrument.symbol}`);
 
           const dataAvailableTo = await getDataAvailableTo(
             instrument.symbol,
@@ -69,7 +69,7 @@ export async function ensureDataIsAvailable({
             await series(
               async ({end, days}) => {
                 log(
-                  `> Loading ${
+                  `Loading ${
                     instrument.symbol
                   } / ${days} day(s) of ${period} until ${format(
                     end,
@@ -95,7 +95,7 @@ export async function ensureDataIsAvailable({
               blocks,
             );
           } else {
-            log(`> All data available ${period} for ${instrument.symbol}`);
+            log(`All data available ${period} for ${instrument.symbol}`);
           }
         },
         null,

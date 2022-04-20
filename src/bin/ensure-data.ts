@@ -8,53 +8,73 @@ import {
   ensureDataIsAvailable,
   ensureSymbolsAreAvailable,
 } from '../utils/data-storage';
+import series from 'promise-series2';
 
 const log = Logger('ensure-data');
 
 async function run() {
   try {
-    const args = process.argv.slice(2);
-
-    if (!args.length) {
-      log('Please specify a profile');
+    try {
+      log('Connecting to database');
+      await connect();
+    } catch (err) {
+      log('Failed to connect to database, check connection');
       return;
     }
-
-    const [profile] = args;
-
-    if (!(await profileExists(profile))) {
-      throw new Error('This profile is not valid');
-    }
-
-    const runProfile = await loadProfile(profile);
-
-    log('Connecting to database');
-    await connect();
 
     const dataProvider = createDataProvider();
 
     // Connect to data provider
-    await dataProvider.init();
+    try {
+      await dataProvider.init();
+    } catch (err) {
+      log('Failed to connect to the data provider, check connection');
+      await disconnect();
+      return;
+    }
 
-    const {symbols} = runProfile;
+    const profiles = process.argv.slice(2);
 
-    // Make sure we have
-    await ensureSymbolsAreAvailable({
-      dataProvider,
-      symbols,
-    });
+    if (!profiles.length) {
+      log('Please specify a profile');
+    }
 
-    // Make sure we have the data available
-    const yesterday = startOfDay(subDays(new Date(), 1));
+    await series(
+      async profile => {
+        if (!(await profileExists(profile))) {
+          log(`Profile '${profile}' is not valid, ignoring`);
+          return;
+        }
 
-    await ensureDataIsAvailable({
-      dataProvider,
-      symbols,
-      log,
-      until: yesterday,
-    });
+        const runProfile = await loadProfile(profile);
 
+        const {symbols} = runProfile;
+
+        // Make sure we have
+        await ensureSymbolsAreAvailable({
+          dataProvider,
+          symbols,
+        });
+
+        // Make sure we have the data available
+        const yesterday = startOfDay(subDays(new Date(), 1));
+
+        await ensureDataIsAvailable({
+          dataProvider,
+          symbols,
+          log,
+          until: yesterday,
+        });
+      },
+      false,
+      profiles,
+    );
+
+    // Disconnect from the db
     await disconnect();
+
+    // Disconnect from the data provider
+    await dataProvider.shutdown();
 
     log('Finished!');
   } catch (err) {
