@@ -6,12 +6,14 @@ import {
   getTestDate,
 } from '../test-utils/tick';
 
-import {loadTsForSymbolAndDate} from '../../utils/tick-storage';
+import {loadTickForSymbolAndDate} from '../../utils/tick-storage';
 
 jest.mock('../../utils/tick-storage');
 
-const loadTsForSymbolAndDateMock =
-  loadTsForSymbolAndDate as jest.MockedFunction<typeof loadTsForSymbolAndDate>;
+const loadTickForSymbolAndDateMock =
+  loadTickForSymbolAndDate as jest.MockedFunction<
+    typeof loadTickForSymbolAndDate
+  >;
 
 describe('test worker module', () => {
   beforeEach(() => {
@@ -37,7 +39,7 @@ describe('test worker module', () => {
   test('worker with valid profile and strategy', async () => {
     const profile = await loadProfile('sample');
 
-    loadTsForSymbolAndDateMock.mockResolvedValue([
+    loadTickForSymbolAndDateMock.mockResolvedValue([
       {
         symbol: 'MSFT',
         type: 'ASK',
@@ -77,13 +79,13 @@ describe('test worker module', () => {
     });
 
     expect(data).toMatchInlineSnapshot(`Array []`);
-    loadTsForSymbolAndDateMock.mockClear();
+    loadTickForSymbolAndDateMock.mockClear();
   });
 
   test('worker with valid profile and strategy but invalid data', async () => {
     const profile = await loadProfile('sample');
 
-    loadTsForSymbolAndDateMock.mockResolvedValue([
+    loadTickForSymbolAndDateMock.mockResolvedValue([
       {
         symbol: 'ZZZZ',
         type: 'ASK',

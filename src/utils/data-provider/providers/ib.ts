@@ -22,7 +22,13 @@ const barSizeParseLookup: Record<TimeSeriesPeriod, string> = {
   daily: 'yyyyMMdd',
 };
 
-import {TimeSeriesPeriod, DataProvider, Instrument, Bar} from '../../../core';
+import {
+  TimeSeriesPeriod,
+  DataProvider,
+  Instrument,
+  Bar,
+  Tick,
+} from '../../../core';
 import Logger from '../../../utils/logger';
 import Env from '../../../utils/env';
 
@@ -130,11 +136,20 @@ export function create(): DataProvider {
     }));
   }
 
+  async function downloadTickData(
+    instrument: Instrument,
+    date: Date,
+    writeData: (ticks: Tick[]) => Promise<void>,
+  ) {
+    return;
+  }
+
   return {
     name: 'ib',
     init,
     shutdown,
     getTimeSeries,
     instrumentLookup,
+    downloadTickData,
   };
 }

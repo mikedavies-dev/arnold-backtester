@@ -8,15 +8,17 @@ import {
 
 import {loadStrategy} from '../../utils/module';
 
-import {loadTsForSymbolAndDate} from '../../utils/tick-storage';
+import {loadTickForSymbolAndDate} from '../../utils/tick-storage';
 
 import {Tick} from '../../core';
 
 jest.mock('../../utils/tick-storage');
 jest.mock('../../utils/module');
 
-const loadTsForSymbolAndDateMock =
-  loadTsForSymbolAndDate as jest.MockedFunction<typeof loadTsForSymbolAndDate>;
+const loadTickForSymbolAndDateMock =
+  loadTickForSymbolAndDate as jest.MockedFunction<
+    typeof loadTickForSymbolAndDate
+  >;
 
 const loadStrategyMock = loadStrategy as jest.MockedFunction<
   typeof loadStrategy
@@ -83,7 +85,7 @@ describe('test worker module', () => {
       },
     });
 
-    loadTsForSymbolAndDateMock.mockResolvedValue(testMarketData);
+    loadTickForSymbolAndDateMock.mockResolvedValue(testMarketData);
 
     const data = await runBacktest({
       profile,
@@ -116,7 +118,7 @@ describe('test worker module', () => {
         },
       ]
     `);
-    loadTsForSymbolAndDateMock.mockClear();
+    loadTickForSymbolAndDateMock.mockClear();
     loadStrategyMock.mockClear();
   });
 });

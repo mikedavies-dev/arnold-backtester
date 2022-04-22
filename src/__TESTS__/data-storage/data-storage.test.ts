@@ -1,7 +1,10 @@
 import {format, parse, addDays} from 'date-fns';
 
 import {Instrument} from '../../core';
-import {ensureDataIsAvailable} from '../../utils/data-storage';
+import {
+  ensureBarDataIsAvailable,
+  ensureTickDataIsAvailable,
+} from '../../utils/data-storage';
 import {getTestDate} from '../test-utils/tick';
 import Env from '../../utils/env';
 
@@ -54,6 +57,7 @@ describe('mongo db tests', () => {
         ];
       }),
       instrumentLookup: async () => [],
+      downloadTickData: async () => {},
     };
     createDataProviderMock.mockReturnValue(mockProvider);
 
@@ -71,7 +75,7 @@ describe('mongo db tests', () => {
       instrument,
     });
 
-    await ensureDataIsAvailable({
+    await ensureBarDataIsAvailable({
       dataProvider,
       symbols: ['ZZZZ'],
       log: () => {},
@@ -106,7 +110,7 @@ describe('mongo db tests', () => {
     mockProvider.init.mockReset();
 
     // Call again
-    await ensureDataIsAvailable({
+    await ensureBarDataIsAvailable({
       dataProvider,
       symbols: ['ZZZZ'],
       log: () => {},
@@ -115,5 +119,28 @@ describe('mongo db tests', () => {
 
     // We should already have the data
     expect(mockProvider.getTimeSeries).toBeCalledTimes(0);
+  });
+
+  test('ensure tick data is available', async () => {
+    const mockProvider = {
+      name: 'test',
+      init: jest.fn(async () => {}),
+      shutdown: jest.fn(async () => {}),
+      getTimeSeries: jest.fn(async () => {
+        return [];
+      }),
+      instrumentLookup: async () => [],
+      downloadTickData: async () => {},
+    };
+    createDataProviderMock.mockReturnValue(mockProvider);
+
+    const dataProvider = createDataProvider();
+
+    await ensureTickDataIsAvailable({
+      dataProvider,
+      symbols: ['ZZZZ'],
+      log: () => {},
+      dates: [getTestDate()],
+    });
   });
 });

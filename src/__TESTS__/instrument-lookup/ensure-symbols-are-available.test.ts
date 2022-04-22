@@ -39,6 +39,7 @@ const dataProvider: DataProvider = {
   shutdown: async () => {},
   getTimeSeries: async () => [],
   instrumentLookup: async () => [],
+  downloadTickData: async () => {},
 };
 
 describe('mongo db tests', () => {

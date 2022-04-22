@@ -12,6 +12,7 @@ test('instrument lookup', async () => {
     init: jest.fn(async () => {}),
     shutdown: jest.fn(async () => {}),
     getTimeSeries: async () => [],
+    downloadTickData: async () => {},
     instrumentLookup: async () => [
       {
         symbol: 'ABCD',

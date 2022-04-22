@@ -3,7 +3,7 @@ import {format} from 'date-fns';
 import numeral from 'numeral';
 import path from 'path';
 
-import {loadTsForSymbolAndDate} from '../utils/tick-storage';
+import {loadTickForSymbolAndDate} from '../utils/tick-storage';
 import {loadStrategy} from '../utils/module';
 import {mergeSortedArrays} from '../utils/data-structures';
 import {initTracker, handleTrackerTick} from '../utils/tracker';
@@ -92,7 +92,7 @@ export async function runBacktest({
 
   // Load the main symbol data
   const symbolData = await Promise.all(
-    symbols.map(async symbol => await loadTsForSymbolAndDate(symbol, date)),
+    symbols.map(async symbol => await loadTickForSymbolAndDate(symbol, date)),
   );
 
   if (symbolData.some(data => !data)) {

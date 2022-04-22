@@ -7,7 +7,7 @@ import {LoggerCallback, Position, Profile} from '../core';
 import {profileExists, loadProfile} from '../utils/profile';
 import {BackTestWorkerErrorCode} from '../backtest/worker';
 import {
-  ensureDataIsAvailable,
+  ensureBarDataIsAvailable,
   ensureSymbolsAreAvailable,
 } from '../utils/data-storage';
 import {createDataProvider} from '../utils/data-provider';
@@ -88,7 +88,7 @@ export async function runBacktestController({
   // Make sure we have the data available
   const yesterday = startOfDay(subDays(new Date(), 1));
 
-  await ensureDataIsAvailable({
+  await ensureBarDataIsAvailable({
     dataProvider,
     symbols: runProfile.symbols,
     log,

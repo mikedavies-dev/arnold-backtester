@@ -2,16 +2,17 @@
 TODO:
 1. Store data in Mongo
 2. Store tick data in Mongo
-3. Make call again to ensureDataIsAvailable and ensure that data is not loaded (because we already have it)
+3. Make call again to ensureBarDataIsAvailable and ensure that data is not loaded (because we already have it)
 
 4. Load TS data from IB (IBNext?)
 */
 
 import series from 'promise-series2';
-import {parse, isBefore, format} from 'date-fns';
+import {parse, isBefore} from 'date-fns';
+import {format} from 'date-fns/fp';
 
 import {LoggerCallback, TimeSeriesPeriod, Instrument} from '../core';
-// import {hasTsForSymbolAndDate} from './tick-storage';
+import {hasTickForSymbolAndDate} from './tick-storage';
 import {lookupSymbol} from './instrument-lookup';
 import {
   getDataAvailableTo,
@@ -24,7 +25,9 @@ import {DataProvider} from '../core';
 import Env from './env';
 import {splitDatesIntoBlocks} from './timeseries';
 
-export async function ensureDataIsAvailable({
+const formatDate = format('yyyy-MM-dd');
+
+export async function ensureBarDataIsAvailable({
   symbols,
   log,
   until,
@@ -71,10 +74,7 @@ export async function ensureDataIsAvailable({
                 log(
                   `Loading ${
                     instrument.symbol
-                  } / ${days} day(s) of ${period} until ${format(
-                    end,
-                    'yyyy-MM-dd',
-                  )}`,
+                  } / ${days} day(s) of ${period} until ${formatDate(end)}`,
                 );
 
                 // Load the data from the provider
@@ -143,5 +143,41 @@ export async function ensureSymbolsAreAvailable({
         instrument,
       });
     }),
+  );
+}
+
+export async function ensureTickDataIsAvailable({
+  symbols,
+  dates,
+  dataProvider,
+  log,
+}: {
+  symbols: string[];
+  dates: Date[];
+  dataProvider: DataProvider;
+  log: LoggerCallback;
+}) {
+  const instruments = await instrumentLookup({
+    provider: dataProvider.name,
+    symbols,
+  });
+
+  return series(
+    instrument => {
+      return series(
+        async date => {
+          if (await hasTickForSymbolAndDate(instrument.symbol, date)) {
+            return;
+          }
+          // download the data
+          log(`Downloading tick data for ${instrument} @ ${formatDate(date)}`);
+          await dataProvider.downloadTickData(instrument, date, async () => {});
+        },
+        1,
+        dates,
+      );
+    },
+    4,
+    instruments,
   );
 }

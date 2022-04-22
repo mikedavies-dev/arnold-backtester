@@ -5,8 +5,9 @@ import {connect, disconnect} from '../utils/db';
 import {createDataProvider} from '../utils/data-provider';
 import {profileExists, loadProfile} from '../utils/profile';
 import {
-  ensureDataIsAvailable,
+  ensureBarDataIsAvailable,
   ensureSymbolsAreAvailable,
+  ensureTickDataIsAvailable,
 } from '../utils/data-storage';
 import series from 'promise-series2';
 
@@ -59,11 +60,18 @@ async function run() {
         // Make sure we have the data available
         const yesterday = startOfDay(subDays(new Date(), 1));
 
-        await ensureDataIsAvailable({
+        await ensureBarDataIsAvailable({
           dataProvider,
           symbols,
           log,
           until: yesterday,
+        });
+
+        await ensureTickDataIsAvailable({
+          dataProvider,
+          symbols,
+          dates: runProfile.dates.dates,
+          log,
         });
       },
       false,
