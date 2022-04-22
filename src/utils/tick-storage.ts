@@ -1,6 +1,8 @@
 import LineByLine from 'n-readlines';
 import {format, fromUnixTime} from 'date-fns';
 import * as Fs from 'fs/promises';
+import Env from './env';
+import path from 'path';
 
 import {Tick, RawTick} from '../core';
 
@@ -73,7 +75,10 @@ export async function loadTickFile(
 }
 
 function formatDataFilename(symbol: string, date: Date) {
-  return `./data/${symbol}_${format(date, 'yyyyMMdd')}_merged.csv`;
+  return path.join(
+    Env.DATA_FOLDER,
+    `${symbol}_${format(date, 'yyyyMMdd')}_merged.csv`,
+  );
 }
 
 export async function loadTickForSymbolAndDate(

@@ -236,3 +236,8 @@ test('that we dont have tick data', async () => {
   const hasData = await hasTickForSymbolAndDate('ZZZZ', getTestDate());
   expect(hasData).toBeFalsy();
 });
+
+test('that we have tick data', async () => {
+  const hasData = await hasTickForSymbolAndDate('YYYY', getTestDate());
+  expect(hasData).toBeTruthy();
+});

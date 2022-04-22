@@ -5,6 +5,9 @@ import {
   ensureBarDataIsAvailable,
   ensureTickDataIsAvailable,
 } from '../../utils/data-storage';
+
+import {hasTickForSymbolAndDate} from '../../utils/tick-storage';
+
 import {getTestDate} from '../test-utils/tick';
 import Env from '../../utils/env';
 
@@ -134,6 +137,8 @@ describe('mongo db tests', () => {
     };
     createDataProviderMock.mockReturnValue(mockProvider);
 
+    expect(await hasTickForSymbolAndDate('ZZZZ', getTestDate())).toBeFalsy();
+
     const dataProvider = createDataProvider();
 
     await ensureTickDataIsAvailable({
@@ -142,5 +147,7 @@ describe('mongo db tests', () => {
       log: () => {},
       dates: [getTestDate()],
     });
+
+    // expect(await hasTickForSymbolAndDate('ZZZZ', getTestDate())).toBeTruthy();
   });
 });
