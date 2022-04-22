@@ -3,8 +3,12 @@ import {format, fromUnixTime} from 'date-fns';
 import * as Fs from 'fs/promises';
 import Env from './env';
 import path from 'path';
+import series from 'promise-series2';
 
-import {Tick, RawTick} from '../core';
+import {Tick, RawTick, LoggerCallback, DataProvider} from '../core';
+import {instrumentLookup} from './db';
+
+import {formatDate} from './dates';
 
 export async function fileExists(path: string) {
   try {
@@ -95,4 +99,41 @@ export async function hasTickForSymbolAndDate(
 ): Promise<boolean> {
   const filename = formatDataFilename(symbol, date);
   return fileExists(filename);
+}
+
+export async function ensureTickDataIsAvailable({
+  symbols,
+  dates,
+  dataProvider,
+  log,
+}: {
+  symbols: string[];
+  dates: Date[];
+  dataProvider: DataProvider;
+  log: LoggerCallback;
+}) {
+  const instruments = await instrumentLookup({
+    provider: dataProvider.name,
+    symbols,
+  });
+
+  return series(
+    instrument => {
+      return series(
+        async date => {
+          if (await hasTickForSymbolAndDate(instrument.symbol, date)) {
+            return;
+          }
+          // download the data
+          log(`Downloading tick data for ${instrument} @ ${formatDate(date)}`);
+          const outputFilename = formatDataFilename(instrument.symbol, date);
+          await dataProvider.downloadTickData(instrument, date, outputFilename);
+        },
+        1,
+        dates,
+      );
+    },
+    4,
+    instruments,
+  );
 }

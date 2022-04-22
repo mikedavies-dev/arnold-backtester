@@ -1,12 +1,11 @@
 import {format, parse, addDays} from 'date-fns';
 
 import {Instrument} from '../../core';
+import {ensureBarDataIsAvailable} from '../../utils/data-storage';
 import {
-  ensureBarDataIsAvailable,
+  hasTickForSymbolAndDate,
   ensureTickDataIsAvailable,
-} from '../../utils/data-storage';
-
-import {hasTickForSymbolAndDate} from '../../utils/tick-storage';
+} from '../../utils/tick-storage';
 
 import {getTestDate} from '../test-utils/tick';
 import Env from '../../utils/env';
@@ -133,7 +132,13 @@ describe('mongo db tests', () => {
         return [];
       }),
       instrumentLookup: async () => [],
-      downloadTickData: async () => {},
+      downloadTickData: jest.fn(
+        async (
+          instrument: Instrument,
+          date: Date,
+          outputFilename: string,
+        ) => {},
+      ),
     };
     createDataProviderMock.mockReturnValue(mockProvider);
 
@@ -148,6 +153,12 @@ describe('mongo db tests', () => {
       dates: [getTestDate()],
     });
 
-    // expect(await hasTickForSymbolAndDate('ZZZZ', getTestDate())).toBeTruthy();
+    expect(mockProvider.downloadTickData).toBeCalledWith(
+      expect.anything(),
+      getTestDate(),
+      'src/__TESTS__/test-data/data/ZZZZ_20220101_merged.csv',
+    );
+
+    expect(await hasTickForSymbolAndDate('ZZZZ', getTestDate())).toBeTruthy();
   });
 });

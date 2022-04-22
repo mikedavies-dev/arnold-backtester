@@ -60,7 +60,7 @@ export type DataProvider = {
   downloadTickData(
     instrument: Instrument,
     date: Date,
-    writeData: (ticks: Tick[]) => Promise<void>,
+    outputFilename: string,
   ): Promise<void>;
   instrumentLookup(searchTerm: string): Promise<Instrument[]>;
 };

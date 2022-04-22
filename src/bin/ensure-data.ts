@@ -1,4 +1,5 @@
 import {startOfDay, subDays} from 'date-fns';
+import series from 'promise-series2';
 
 import Logger from '../utils/logger';
 import {connect, disconnect} from '../utils/db';
@@ -7,9 +8,9 @@ import {profileExists, loadProfile} from '../utils/profile';
 import {
   ensureBarDataIsAvailable,
   ensureSymbolsAreAvailable,
-  ensureTickDataIsAvailable,
 } from '../utils/data-storage';
-import series from 'promise-series2';
+
+import {ensureTickDataIsAvailable} from '../utils/tick-storage';
 
 const log = Logger('ensure-data');
 

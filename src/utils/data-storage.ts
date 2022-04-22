@@ -9,10 +9,8 @@ TODO:
 
 import series from 'promise-series2';
 import {parse, isBefore} from 'date-fns';
-import {format} from 'date-fns/fp';
 
 import {LoggerCallback, TimeSeriesPeriod, Instrument} from '../core';
-import {hasTickForSymbolAndDate} from './tick-storage';
 import {lookupSymbol} from './instrument-lookup';
 import {
   getDataAvailableTo,
@@ -24,8 +22,7 @@ import {
 import {DataProvider} from '../core';
 import Env from './env';
 import {splitDatesIntoBlocks} from './timeseries';
-
-const formatDate = format('yyyy-MM-dd');
+import {formatDate} from './dates';
 
 export async function ensureBarDataIsAvailable({
   symbols,
@@ -143,41 +140,5 @@ export async function ensureSymbolsAreAvailable({
         instrument,
       });
     }),
-  );
-}
-
-export async function ensureTickDataIsAvailable({
-  symbols,
-  dates,
-  dataProvider,
-  log,
-}: {
-  symbols: string[];
-  dates: Date[];
-  dataProvider: DataProvider;
-  log: LoggerCallback;
-}) {
-  const instruments = await instrumentLookup({
-    provider: dataProvider.name,
-    symbols,
-  });
-
-  return series(
-    instrument => {
-      return series(
-        async date => {
-          if (await hasTickForSymbolAndDate(instrument.symbol, date)) {
-            return;
-          }
-          // download the data
-          log(`Downloading tick data for ${instrument} @ ${formatDate(date)}`);
-          await dataProvider.downloadTickData(instrument, date, async () => {});
-        },
-        1,
-        dates,
-      );
-    },
-    4,
-    instruments,
   );
 }
