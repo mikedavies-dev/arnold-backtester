@@ -1,11 +1,14 @@
-import {format, parse, addDays} from 'date-fns';
+import {parse, addDays} from 'date-fns';
+import * as Fs from 'fs/promises';
 
-import {Instrument} from '../../core';
+import {Instrument, Tick} from '../../core';
 import {ensureBarDataIsAvailable} from '../../utils/data-storage';
 import {
   hasTickForSymbolAndDate,
   ensureTickDataIsAvailable,
 } from '../../utils/tick-storage';
+
+import {formatDateTime} from '../../utils/dates';
 
 import {getTestDate} from '../test-utils/tick';
 import Env from '../../utils/env';
@@ -39,6 +42,9 @@ describe('mongo db tests', () => {
     await disconnect();
 
     createDataProviderMock.mockReset();
+
+    // Delete test data
+    await Fs.rm(`${Env.DATA_FOLDER}/ZZZZ_20220101_merged.csv`);
   });
 
   test('check data storage', async () => {
@@ -49,7 +55,7 @@ describe('mongo db tests', () => {
       getTimeSeries: jest.fn(async (instrument: Instrument, from: Date) => {
         return [
           {
-            time: format(from, 'yyyy-MM-dd HH:mm:ss'),
+            time: formatDateTime(from),
             open: 1,
             high: 1,
             low: 1,
@@ -136,8 +142,20 @@ describe('mongo db tests', () => {
         async (
           instrument: Instrument,
           date: Date,
-          outputFilename: string,
-        ) => {},
+          writeData: (ticks: Tick[]) => Promise<void>,
+        ) => {
+          writeData([
+            {
+              symbol: instrument.symbol,
+              dateTime: date,
+              time: date.getTime(),
+              index: 0,
+              type: 'TRADE',
+              value: 100,
+              size: 1,
+            },
+          ]);
+        },
       ),
     };
     createDataProviderMock.mockReturnValue(mockProvider);
@@ -156,9 +174,22 @@ describe('mongo db tests', () => {
     expect(mockProvider.downloadTickData).toBeCalledWith(
       expect.anything(),
       getTestDate(),
-      'src/__TESTS__/test-data/data/ZZZZ_20220101_merged.csv',
+      expect.anything(),
     );
 
+    expect(mockProvider.downloadTickData).toBeCalledTimes(1);
     expect(await hasTickForSymbolAndDate('ZZZZ', getTestDate())).toBeTruthy();
+
+    mockProvider.downloadTickData.mockReset();
+
+    // If we make the call again we should not download data
+    await ensureTickDataIsAvailable({
+      dataProvider,
+      symbols: ['ZZZZ'],
+      log: () => {},
+      dates: [getTestDate()],
+    });
+
+    expect(mockProvider.downloadTickData).toBeCalledTimes(0);
   });
 });

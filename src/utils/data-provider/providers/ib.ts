@@ -139,7 +139,7 @@ export function create(): DataProvider {
   async function downloadTickData(
     instrument: Instrument,
     date: Date,
-    outputFilename: string,
+    writeData: (ticks: Tick[]) => Promise<void>,
   ) {
     return;
   }

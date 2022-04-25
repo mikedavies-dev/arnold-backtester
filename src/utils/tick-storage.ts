@@ -8,7 +8,7 @@ import series from 'promise-series2';
 import {Tick, RawTick, LoggerCallback, DataProvider} from '../core';
 import {instrumentLookup} from './db';
 
-import {formatDate} from './dates';
+import {formatDate, formatDateTime} from './dates';
 
 export async function fileExists(path: string) {
   try {
@@ -52,6 +52,16 @@ function readCSV<
   }
 
   return data;
+}
+
+function writeCsv<CsvType extends Record<string, any>>(
+  outputFilename: string,
+  data: CsvType[],
+  headers: string[],
+  transform: (entry: CsvType) => (string | number)[],
+) {
+  const fileData = data.map(transform).join('\n');
+  return Fs.appendFile(outputFilename, `${headers.join(',')}\n${fileData}\n`);
 }
 
 export async function loadTickFile(
@@ -125,9 +135,35 @@ export async function ensureTickDataIsAvailable({
             return;
           }
           // download the data
-          log(`Downloading tick data for ${instrument} @ ${formatDate(date)}`);
-          const outputFilename = formatDataFilename(instrument.symbol, date);
-          await dataProvider.downloadTickData(instrument, date, outputFilename);
+          log(
+            `Downloading tick data for ${instrument.symbol} @ ${formatDate(
+              date,
+            )}`,
+          );
+
+          await dataProvider.downloadTickData(instrument, date, async ticks => {
+            log(
+              `Writing ${ticks.length} ticks for ${
+                instrument.symbol
+              } @ ${formatDate(date)}`,
+            );
+
+            const outputFilename = formatDataFilename(instrument.symbol, date);
+            await writeCsv(
+              outputFilename,
+              ticks,
+              ['time', 'index', 'dateTime', 'symbol', 'type', 'value', 'size'],
+              record => [
+                record.time,
+                record.index,
+                formatDateTime(record.dateTime),
+                record.symbol,
+                record.type,
+                record.value,
+                record.size,
+              ],
+            );
+          });
         },
         1,
         dates,
