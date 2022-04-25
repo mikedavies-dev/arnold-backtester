@@ -28,9 +28,11 @@ import {
   Instrument,
   Bar,
   Tick,
+  DownloadTickDataArgs,
 } from '../../../core';
 import Logger from '../../../utils/logger';
 import Env from '../../../utils/env';
+import {formatDate} from '../../dates';
 
 const log = Logger('ib');
 
@@ -136,11 +138,56 @@ export function create(): DataProvider {
     }));
   }
 
-  async function downloadTickData(
-    instrument: Instrument,
-    date: Date,
-    writeData: (ticks: Tick[]) => Promise<void>,
-  ) {
+  // async function downloadTickData(
+  //   instrument: Instrument,
+  //   date: Date,
+  //   writeData: (ticks: Tick[]) => Promise<void>,
+  // ) {
+
+  //   const getTickBlock = () => {
+  //   }
+
+  //   const getTickHistory = async (type: string) => {
+  //     const startFrom = await tickStorage.getLatestTempData(
+  //       instrument.symbol,
+  //       date,
+  //       type,
+  //     );
+
+  //     return new Promise<void>(resolve => {
+  //       getTickBlock({
+  //         type,
+  //         date,
+  //         from: startFrom,
+  //         to: moment(startFrom).endOf('day'),
+  //         onDone: () => {
+  //           resolve();
+  //         },
+  //       });
+  //     });
+  //   }
+
+  //   log(`Downloading tick data for ${instrument.symbol} @ ${formatDate(date)}`);
+
+  //   // Request TRADES data
+  //   await getTickHistory('TRADES');
+
+  //   // Request BID_ASK data
+  //   await getTickHistory('BID_ASK');
+
+  //   // Merge the data
+  //   log(`Merging data for ${instrument.symbol} ${formatDate(date)}`);
+  //   //await tickStorage.mergeTempData(stock.symbol, date, ['TRADES', 'BID_ASK']);
+  //   return;
+  // }
+
+  async function downloadTickData({
+    instrument,
+    date,
+    write,
+    merge,
+  }: DownloadTickDataArgs) {
+    log(`Downloading tick data for ${instrument.symbol} @ ${formatDate(date)}`);
     return;
   }
 

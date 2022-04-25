@@ -1,18 +1,9 @@
 import {
-  fileExists,
   loadTickFile,
   loadTickForSymbolAndDate,
   hasTickForSymbolAndDate,
 } from '../../utils/tick-storage';
 import {getTestDate} from '../test-utils/tick';
-
-test('file does not exist', async () => {
-  expect(await fileExists('./invalid-file')).toBe(false);
-});
-
-test('file exists', async () => {
-  expect(await fileExists('./README.md')).toBe(true);
-});
 
 test('load valid ts data', async () => {
   const data = await loadTickFile('./src/__TESTS__/test-data/tick-data.csv');

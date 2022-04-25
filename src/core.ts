@@ -47,6 +47,19 @@ export type Instrument = {
   data?: any;
 };
 
+export enum TickFileType {
+  Merged = 'merged',
+  Trades = 'trades',
+  BidAsk = 'bidask',
+}
+
+export type DownloadTickDataArgs = {
+  instrument: Instrument;
+  date: Date;
+  write: (type: TickFileType, ticks: Tick[]) => Promise<void>;
+  merge: () => Promise<void>;
+};
+
 export type DataProvider = {
   name: string;
   init(): Promise<void>;
@@ -57,11 +70,7 @@ export type DataProvider = {
     days: number,
     period: TimeSeriesPeriod,
   ): Promise<Bar[]>;
-  downloadTickData(
-    instrument: Instrument,
-    date: Date,
-    writeData: (ticks: Tick[]) => Promise<void>,
-  ): Promise<void>;
+  downloadTickData(args: DownloadTickDataArgs): Promise<void>;
   instrumentLookup(searchTerm: string): Promise<Instrument[]>;
 };
 

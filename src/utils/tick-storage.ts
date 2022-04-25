@@ -1,68 +1,20 @@
-import LineByLine from 'n-readlines';
 import {format, fromUnixTime} from 'date-fns';
-import * as Fs from 'fs/promises';
+
 import Env from './env';
 import path from 'path';
 import series from 'promise-series2';
 
-import {Tick, RawTick, LoggerCallback, DataProvider} from '../core';
+import {
+  Tick,
+  RawTick,
+  LoggerCallback,
+  DataProvider,
+  TickFileType,
+} from '../core';
 import {instrumentLookup} from './db';
 
 import {formatDate, formatDateTime} from './dates';
-
-export async function fileExists(path: string) {
-  try {
-    await Fs.access(path);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-function isNumeric(n: any) {
-  return !isNaN(parseFloat(n)) && isFinite(n); // eslint-disable-line
-}
-
-function readCSV<
-  CsvType extends Record<string, string | number>,
-  ReturnType extends Record<string, any>,
->(csvPath: string, transform: (data: CsvType) => ReturnType) {
-  const liner = new LineByLine(csvPath);
-
-  const data: Array<ReturnType> = [];
-  let index = 0;
-  let headers: Array<string> = [];
-  let line: Buffer | boolean = false;
-
-  while ((line = liner.next())) {
-    const parts = line.toString('ascii').split(',');
-
-    index += 1;
-
-    if (index === 1) {
-      headers = parts;
-    } else {
-      const row = parts.reduce((acc, value, ix) => {
-        acc[headers[ix]] = isNumeric(value) ? parseFloat(value) : value;
-        return acc;
-      }, {} as Record<string, string | number>);
-
-      data.push(transform(row as CsvType));
-    }
-  }
-
-  return data;
-}
-
-function writeCsv<CsvType extends Record<string, any>>(
-  outputFilename: string,
-  data: CsvType[],
-  headers: string[],
-  transform: (entry: CsvType) => (string | number)[],
-) {
-  const fileData = data.map(transform).join('\n');
-  return Fs.appendFile(outputFilename, `${headers.join(',')}\n${fileData}\n`);
-}
+import {fileExists, getLastLine, writeCsv, readCSV} from './files';
 
 export async function loadTickFile(
   filename: string,
@@ -88,10 +40,17 @@ export async function loadTickFile(
   return data;
 }
 
-function formatDataFilename(symbol: string, date: Date) {
+function formatDataFilename(symbol: string, date: Date, type: TickFileType) {
   return path.join(
     Env.DATA_FOLDER,
-    `${symbol}_${format(date, 'yyyyMMdd')}_merged.csv`,
+    `${symbol}_${format(date, 'yyyyMMdd')}_${type}.csv`,
+  );
+}
+
+function formatTemporaryDataFilename(symbol: string, type: string, date: Date) {
+  return path.join(
+    Env.DATA_FOLDER,
+    `${symbol}_${format(date, 'yyyyMMdd')}_${type}.csv`,
   );
 }
 
@@ -99,7 +58,7 @@ export async function loadTickForSymbolAndDate(
   symbol: string,
   date: Date,
 ): Promise<Array<Tick> | null> {
-  const filename = formatDataFilename(symbol, date);
+  const filename = formatDataFilename(symbol, date, TickFileType.Merged);
   return loadTickFile(filename);
 }
 
@@ -107,8 +66,32 @@ export async function hasTickForSymbolAndDate(
   symbol: string,
   date: Date,
 ): Promise<boolean> {
-  const filename = formatDataFilename(symbol, date);
+  const filename = formatDataFilename(symbol, date, TickFileType.Merged);
   return fileExists(filename);
+}
+
+export async function writeTickData(
+  symbol: string,
+  date: Date,
+  type: TickFileType,
+  data: Tick[],
+) {
+  const outputFilename = formatDataFilename(symbol, date, type);
+  await writeCsv(
+    outputFilename,
+    data,
+    ['time', 'index', 'dateTime', 'symbol', 'type', 'value', 'size'],
+    record => [
+      record.time,
+      record.index,
+      formatDateTime(record.dateTime),
+      record.symbol,
+      record.type,
+      record.value,
+      record.size,
+    ],
+    true,
+  );
 }
 
 export async function ensureTickDataIsAvailable({
@@ -134,35 +117,28 @@ export async function ensureTickDataIsAvailable({
           if (await hasTickForSymbolAndDate(instrument.symbol, date)) {
             return;
           }
-          // download the data
+
           log(
             `Downloading tick data for ${instrument.symbol} @ ${formatDate(
               date,
             )}`,
           );
 
-          await dataProvider.downloadTickData(instrument, date, async ticks => {
-            log(
-              `Writing ${ticks.length} ticks for ${
-                instrument.symbol
-              } @ ${formatDate(date)}`,
-            );
+          await dataProvider.downloadTickData({
+            instrument,
+            date,
+            write: async (type, ticks) => {
+              log(
+                `Writing ${ticks.length} ${type} ticks for ${
+                  instrument.symbol
+                } @ ${formatDate(date)}`,
+              );
 
-            const outputFilename = formatDataFilename(instrument.symbol, date);
-            await writeCsv(
-              outputFilename,
-              ticks,
-              ['time', 'index', 'dateTime', 'symbol', 'type', 'value', 'size'],
-              record => [
-                record.time,
-                record.index,
-                formatDateTime(record.dateTime),
-                record.symbol,
-                record.type,
-                record.value,
-                record.size,
-              ],
-            );
+              await writeTickData(instrument.symbol, date, type, ticks);
+            },
+            merge: async () => {
+              // merge..
+            },
           });
         },
         1,
@@ -173,3 +149,21 @@ export async function ensureTickDataIsAvailable({
     instruments,
   );
 }
+
+export async function getLatestTemporaryTickDate(
+  symbol: string,
+  type: string,
+  date: Date,
+) {
+  const filename = formatTemporaryDataFilename(symbol, type, date);
+  const lastLine = await getLastLine(filename);
+  const values = lastLine.split(',');
+
+  if (!values) {
+    return null;
+  }
+
+  return new Date(Number(values[0]));
+}
+
+// export async function appendTemporaryTickData();
