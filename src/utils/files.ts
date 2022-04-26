@@ -33,9 +33,10 @@ export async function writeCsv<CsvType extends Record<string, any>>(
   const fileData = data.map(transform).join('\n');
   const exists = await fileExists(outputFilename);
 
-  const output = exists
-    ? `${fileData}\n`
-    : `${headers.join(',')}\n${fileData}\n`;
+  const output =
+    !exists || overwrite
+      ? `${headers.join(',')}\n${fileData}\n`
+      : `${fileData}\n`;
 
   const operation =
     overwrite || !exists

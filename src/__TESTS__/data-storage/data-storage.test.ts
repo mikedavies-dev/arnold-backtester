@@ -1,10 +1,11 @@
 import {parse, addDays} from 'date-fns';
-import * as Fs from 'fs/promises';
+import del from 'del';
 
-import {Instrument, Tick, DownloadTickDataArgs, TickFileType} from '../../core';
+import {Instrument, DownloadTickDataArgs, TickFileType, Tick} from '../../core';
 import {ensureBarDataIsAvailable} from '../../utils/data-storage';
 import {
   hasTickForSymbolAndDate,
+  loadTickForSymbolAndDate,
   ensureTickDataIsAvailable,
 } from '../../utils/tick-storage';
 
@@ -44,9 +45,7 @@ describe('mongo db tests', () => {
     createDataProviderMock.mockReset();
 
     // Delete test data
-    await Fs.rm(`${Env.DATA_FOLDER}/ZZZZ_20220101_trades.csv`);
-    await Fs.rm(`${Env.DATA_FOLDER}/ZZZZ_20220101_bidask.csv`);
-    await Fs.rm(`${Env.DATA_FOLDER}/ZZZZ_20220101_merged.csv`);
+    await del(`${Env.DATA_FOLDER}/ZZZZ_*.csv`);
   });
 
   test('check data storage', async () => {
@@ -132,6 +131,61 @@ describe('mongo db tests', () => {
   });
 
   test('ensure tick data is available', async () => {
+    const testDate = getTestDate();
+    const startTime = testDate.getTime() / 1000;
+    const symbol = 'ZZZZ';
+
+    const tradeData: Tick[] = [
+      {
+        symbol,
+        dateTime: testDate,
+        time: startTime + 0,
+        index: 0,
+        type: 'TRADE',
+        value: 100,
+        size: 1,
+      },
+      {
+        symbol,
+        dateTime: testDate,
+        time: startTime + 60,
+        index: 0,
+        type: 'TRADE',
+        value: 101,
+        size: 1,
+      },
+    ];
+
+    const bidAskData: Tick[] = [
+      {
+        symbol,
+        dateTime: testDate,
+        time: startTime,
+        index: 0,
+        type: 'BID',
+        value: 99,
+        size: 1,
+      },
+      {
+        symbol,
+        dateTime: testDate,
+        time: startTime + 30,
+        index: 0,
+        type: 'BID',
+        value: 100,
+        size: 1,
+      },
+      {
+        symbol,
+        dateTime: testDate,
+        time: startTime + 90,
+        index: 0,
+        type: 'ASK',
+        value: 101,
+        size: 1,
+      },
+    ];
+
     const mockProvider = {
       name: 'test',
       init: jest.fn(async () => {}),
@@ -141,29 +195,14 @@ describe('mongo db tests', () => {
       }),
       instrumentLookup: async () => [],
       downloadTickData: jest.fn(
-        async ({instrument, date, write, merge}: DownloadTickDataArgs) => {
-          await write(TickFileType.Trades, [
-            {
-              symbol: instrument.symbol,
-              dateTime: date,
-              time: date.getTime(),
-              index: 0,
-              type: 'TRADE',
-              value: 100,
-              size: 1,
-            },
-          ]);
-          await write(TickFileType.BidAsk, [
-            {
-              symbol: instrument.symbol,
-              dateTime: date,
-              time: date.getTime(),
-              index: 0,
-              type: 'BID',
-              value: 100,
-              size: 1,
-            },
-          ]);
+        async ({write, merge}: DownloadTickDataArgs) => {
+          // Load/write bid/ask data from remove service
+          await write(TickFileType.BidAsk, bidAskData);
+
+          // Load trade data from remote service
+          await write(TickFileType.Trades, tradeData);
+
+          // Merge the two together
           await merge();
         },
       ),
@@ -181,13 +220,10 @@ describe('mongo db tests', () => {
       dates: [getTestDate()],
     });
 
+    // We didn't have any data available so it should have been downloaded
     expect(mockProvider.downloadTickData).toBeCalledTimes(1);
 
-    // TODO, removing this line causes the test to fail, it looks like the file isn't written
-    // before this is called..
-
-    await new Promise(resolve => setTimeout(resolve, 0));
-
+    // Now we have data
     expect(await hasTickForSymbolAndDate('ZZZZ', getTestDate())).toBeTruthy();
 
     mockProvider.downloadTickData.mockReset();
@@ -200,6 +236,65 @@ describe('mongo db tests', () => {
       dates: [getTestDate()],
     });
 
+    // We already have data so it should not have been called again
     expect(mockProvider.downloadTickData).toBeCalledTimes(0);
+
+    // load the tick data
+    const storedData = await loadTickForSymbolAndDate(
+      symbol,
+      testDate,
+      TickFileType.Merged,
+    );
+
+    // Make sure the data looks good
+    expect(storedData).toMatchInlineSnapshot(`
+      Array [
+        Object {
+          "dateTime": 2022-01-01T05:00:00.000Z,
+          "index": 0,
+          "size": 1,
+          "symbol": "ZZZZ",
+          "time": 1641013200,
+          "type": "BID",
+          "value": 99,
+        },
+        Object {
+          "dateTime": 2022-01-01T05:00:00.000Z,
+          "index": 0,
+          "size": 1,
+          "symbol": "ZZZZ",
+          "time": 1641013200,
+          "type": "TRADE",
+          "value": 100,
+        },
+        Object {
+          "dateTime": 2022-01-01T05:00:30.000Z,
+          "index": 0,
+          "size": 1,
+          "symbol": "ZZZZ",
+          "time": 1641013230,
+          "type": "BID",
+          "value": 100,
+        },
+        Object {
+          "dateTime": 2022-01-01T05:01:00.000Z,
+          "index": 0,
+          "size": 1,
+          "symbol": "ZZZZ",
+          "time": 1641013260,
+          "type": "TRADE",
+          "value": 101,
+        },
+        Object {
+          "dateTime": 2022-01-01T05:01:30.000Z,
+          "index": 0,
+          "size": 1,
+          "symbol": "ZZZZ",
+          "time": 1641013290,
+          "type": "ASK",
+          "value": 101,
+        },
+      ]
+    `);
   });
 });

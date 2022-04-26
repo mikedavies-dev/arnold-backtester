@@ -4,6 +4,7 @@ import {
   hasTickForSymbolAndDate,
 } from '../../utils/tick-storage';
 import {getTestDate} from '../test-utils/tick';
+import {TickFileType} from '../../core';
 
 test('load valid ts data', async () => {
   const data = await loadTickFile('./src/__TESTS__/test-data/tick-data.csv');
@@ -219,7 +220,11 @@ test('return invalid ts file as an empty array', async () => {
 });
 
 test('that we fail to load symbol data', async () => {
-  const data = await loadTickForSymbolAndDate('ZZZZ', getTestDate());
+  const data = await loadTickForSymbolAndDate(
+    'ZZZZ',
+    getTestDate(),
+    TickFileType.Merged,
+  );
   expect(data).toBeNull();
 });
 

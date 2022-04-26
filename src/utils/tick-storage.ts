@@ -10,6 +10,7 @@ import {
   LoggerCallback,
   DataProvider,
   TickFileType,
+  notEmpty,
 } from '../core';
 import {instrumentLookup} from './db';
 
@@ -47,18 +48,12 @@ function formatDataFilename(symbol: string, date: Date, type: TickFileType) {
   );
 }
 
-function formatTemporaryDataFilename(symbol: string, type: string, date: Date) {
-  return path.join(
-    Env.DATA_FOLDER,
-    `${symbol}_${format(date, 'yyyyMMdd')}_${type}.csv`,
-  );
-}
-
 export async function loadTickForSymbolAndDate(
   symbol: string,
   date: Date,
+  type: TickFileType,
 ): Promise<Array<Tick> | null> {
-  const filename = formatDataFilename(symbol, date, TickFileType.Merged);
+  const filename = formatDataFilename(symbol, date, type);
   return loadTickFile(filename);
 }
 
@@ -81,17 +76,43 @@ export async function writeTickData(
     outputFilename,
     data,
     ['time', 'index', 'dateTime', 'symbol', 'type', 'value', 'size'],
-    record => [
-      record.time,
-      record.index,
-      formatDateTime(record.dateTime),
-      record.symbol,
-      record.type,
-      record.value,
-      record.size,
+    tick => [
+      tick.time,
+      tick.index,
+      formatDateTime(tick.dateTime),
+      tick.symbol,
+      tick.type,
+      tick.value,
+      tick.size,
     ],
     true,
   );
+}
+
+export function sortTicksByDate(row1: Tick, row2: Tick) {
+  // Sort on both index and time so we don't loose th original order
+  // if we have multiple values per second
+  const val1 = row1.time * 1000000 + row1.index;
+  const val2 = row2.time * 1000000 + row1.index;
+
+  return val1 - val2;
+}
+
+async function mergeTickData(symbol: string, date: Date) {
+  const mergedData = (
+    await Promise.all(
+      [TickFileType.BidAsk, TickFileType.Trades].map(type =>
+        loadTickForSymbolAndDate(symbol, date, type),
+      ),
+    )
+  )
+    .filter(notEmpty)
+    .flat()
+    .sort(sortTicksByDate);
+
+  if (mergedData.length) {
+    await writeTickData(symbol, date, TickFileType.Merged, mergedData);
+  }
 }
 
 export async function ensureTickDataIsAvailable({
@@ -136,9 +157,7 @@ export async function ensureTickDataIsAvailable({
 
               await writeTickData(instrument.symbol, date, type, ticks);
             },
-            merge: async () => {
-              // merge..
-            },
+            merge: async () => mergeTickData(instrument.symbol, date),
           });
         },
         1,
@@ -152,10 +171,10 @@ export async function ensureTickDataIsAvailable({
 
 export async function getLatestTemporaryTickDate(
   symbol: string,
-  type: string,
+  type: TickFileType,
   date: Date,
 ) {
-  const filename = formatTemporaryDataFilename(symbol, type, date);
+  const filename = formatDataFilename(symbol, date, type);
   const lastLine = await getLastLine(filename);
   const values = lastLine.split(',');
 
@@ -165,5 +184,3 @@ export async function getLatestTemporaryTickDate(
 
   return new Date(Number(values[0]));
 }
-
-// export async function appendTemporaryTickData();
