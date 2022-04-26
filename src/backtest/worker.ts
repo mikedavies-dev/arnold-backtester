@@ -19,6 +19,7 @@ import {
   Tracker,
   OrderSpecification,
   Profile,
+  TickFileType,
 } from '../core';
 import {
   initBroker,
@@ -92,7 +93,10 @@ export async function runBacktest({
 
   // Load the main symbol data
   const symbolData = await Promise.all(
-    symbols.map(async symbol => await loadTickForSymbolAndDate(symbol, date)),
+    symbols.map(
+      async symbol =>
+        await loadTickForSymbolAndDate(symbol, date, TickFileType.Merged),
+    ),
   );
 
   if (symbolData.some(data => !data)) {

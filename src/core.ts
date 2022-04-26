@@ -47,6 +47,20 @@ export type Instrument = {
   data?: any;
 };
 
+export enum TickFileType {
+  Merged = 'merged',
+  Trades = 'trades',
+  BidAsk = 'bidask',
+}
+
+export type DownloadTickDataArgs = {
+  instrument: Instrument;
+  date: Date;
+  latestDataDates: Record<TickFileType, Date | null>;
+  write: (type: TickFileType, ticks: Tick[]) => Promise<void>;
+  merge: () => Promise<void>;
+};
+
 export type DataProvider = {
   name: string;
   init(): Promise<void>;
@@ -57,11 +71,7 @@ export type DataProvider = {
     days: number,
     period: TimeSeriesPeriod,
   ): Promise<Bar[]>;
-  downloadTickData(
-    instrument: Instrument,
-    date: Date,
-    writeData: (ticks: Tick[]) => Promise<void>,
-  ): Promise<void>;
+  downloadTickData(args: DownloadTickDataArgs): Promise<void>;
   instrumentLookup(searchTerm: string): Promise<Instrument[]>;
 };
 
@@ -219,3 +229,19 @@ export type TimeSeriesRequestBlock = {
   end: Date;
   days: number;
 };
+
+/*
+Filter out the null entries and tell the compiler that value is of that type.
+
+Useful for things like:
+
+  const array: (string | null)[] = ['foo', 'bar', null, 'zoo', null];
+  const filteredArray: string[] = array.filter(notEmpty);
+
+*/
+
+export function notEmpty<TValue>(
+  value: TValue | null | undefined,
+): value is TValue {
+  return value !== null && value !== undefined;
+}

@@ -1,52 +1,21 @@
-import LineByLine from 'n-readlines';
 import {format, fromUnixTime} from 'date-fns';
-import * as Fs from 'fs/promises';
 
-import {Tick, RawTick} from '../core';
+import Env from './env';
+import path from 'path';
+import series from 'promise-series2';
 
-export async function fileExists(path: string) {
-  try {
-    await Fs.access(path);
-    return true;
-  } catch {
-    return false;
-  }
-}
+import {
+  Tick,
+  RawTick,
+  LoggerCallback,
+  DataProvider,
+  TickFileType,
+  notEmpty,
+} from '../core';
+import {instrumentLookup} from './db';
 
-function isNumeric(n: any) {
-  return !isNaN(parseFloat(n)) && isFinite(n); // eslint-disable-line
-}
-
-function readCSV<
-  CsvType extends Record<string, string | number>,
-  ReturnType extends Record<string, any>,
->(csvPath: string, transform: (data: CsvType) => ReturnType) {
-  const liner = new LineByLine(csvPath);
-
-  const data: Array<ReturnType> = [];
-  let index = 0;
-  let headers: Array<string> = [];
-  let line: Buffer | boolean = false;
-
-  while ((line = liner.next())) {
-    const parts = line.toString('ascii').split(',');
-
-    index += 1;
-
-    if (index === 1) {
-      headers = parts;
-    } else {
-      const row = parts.reduce((acc, value, ix) => {
-        acc[headers[ix]] = isNumeric(value) ? parseFloat(value) : value;
-        return acc;
-      }, {} as Record<string, string | number>);
-
-      data.push(transform(row as CsvType));
-    }
-  }
-
-  return data;
-}
+import {formatDate, formatDateTime} from './dates';
+import {fileExists, getLastLine, writeCsv, readCSV} from './files';
 
 export async function loadTickFile(
   filename: string,
@@ -72,15 +41,19 @@ export async function loadTickFile(
   return data;
 }
 
-function formatDataFilename(symbol: string, date: Date) {
-  return `./data/${symbol}_${format(date, 'yyyyMMdd')}_merged.csv`;
+function formatDataFilename(symbol: string, date: Date, type: TickFileType) {
+  return path.join(
+    Env.DATA_FOLDER,
+    `${symbol}_${format(date, 'yyyyMMdd')}_${type}.csv`,
+  );
 }
 
 export async function loadTickForSymbolAndDate(
   symbol: string,
   date: Date,
+  type: TickFileType,
 ): Promise<Array<Tick> | null> {
-  const filename = formatDataFilename(symbol, date);
+  const filename = formatDataFilename(symbol, date, type);
   return loadTickFile(filename);
 }
 
@@ -88,6 +61,149 @@ export async function hasTickForSymbolAndDate(
   symbol: string,
   date: Date,
 ): Promise<boolean> {
-  const filename = formatDataFilename(symbol, date);
+  const filename = formatDataFilename(symbol, date, TickFileType.Merged);
   return fileExists(filename);
+}
+
+export async function writeTickData(
+  symbol: string,
+  date: Date,
+  type: TickFileType,
+  data: Tick[],
+) {
+  const outputFilename = formatDataFilename(symbol, date, type);
+  await writeCsv(
+    outputFilename,
+    data,
+    ['time', 'index', 'dateTime', 'symbol', 'type', 'value', 'size'],
+    tick => [
+      tick.time,
+      tick.index,
+      formatDateTime(tick.dateTime),
+      tick.symbol,
+      tick.type,
+      tick.value,
+      tick.size,
+    ],
+    true,
+  );
+}
+
+export function sortTicksByDate(row1: Tick, row2: Tick) {
+  // Sort on both index and time so we don't loose th original order
+  // if we have multiple values per second
+  const val1 = row1.time * 1000000 + row1.index;
+  const val2 = row2.time * 1000000 + row1.index;
+
+  return val1 - val2;
+}
+
+async function mergeTickData(symbol: string, date: Date) {
+  const mergedData = (
+    await Promise.all(
+      [TickFileType.BidAsk, TickFileType.Trades].map(type =>
+        loadTickForSymbolAndDate(symbol, date, type),
+      ),
+    )
+  )
+    .filter(notEmpty)
+    .flat()
+    .sort(sortTicksByDate);
+
+  if (mergedData.length) {
+    await writeTickData(symbol, date, TickFileType.Merged, mergedData);
+  }
+}
+
+export async function getLatestDateInTickData(
+  symbol: string,
+  type: TickFileType,
+  date: Date,
+) {
+  const filename = formatDataFilename(symbol, date, type);
+  const lastLine = await getLastLine(filename);
+
+  if (!lastLine) {
+    return null;
+  }
+
+  const values = lastLine.split(',');
+
+  return new Date(Number(values[0]) * 1000);
+}
+
+async function getLatestDateInTickDataForAllTypes(symbol: string, date: Date) {
+  const [lastBidAskDate, lastTradesDate, lastMergedDate] = await Promise.all(
+    [TickFileType.BidAsk, TickFileType.Trades, TickFileType.Merged].map(type =>
+      getLatestDateInTickData(symbol, type, date),
+    ),
+  );
+
+  const latestDataDates: Record<TickFileType, Date | null> = {
+    [TickFileType.BidAsk]: lastBidAskDate,
+    [TickFileType.Trades]: lastTradesDate,
+    [TickFileType.Merged]: lastMergedDate,
+  };
+
+  return latestDataDates;
+}
+
+export async function ensureTickDataIsAvailable({
+  symbols,
+  dates,
+  dataProvider,
+  log,
+}: {
+  symbols: string[];
+  dates: Date[];
+  dataProvider: DataProvider;
+  log: LoggerCallback;
+}) {
+  const instruments = await instrumentLookup({
+    provider: dataProvider.name,
+    symbols,
+  });
+
+  return series(
+    instrument => {
+      return series(
+        async date => {
+          if (await hasTickForSymbolAndDate(instrument.symbol, date)) {
+            return;
+          }
+
+          log(
+            `Downloading tick data for ${instrument.symbol} @ ${formatDate(
+              date,
+            )}`,
+          );
+
+          const latestDataDates = await getLatestDateInTickDataForAllTypes(
+            instrument.symbol,
+            date,
+          );
+
+          await dataProvider.downloadTickData({
+            instrument,
+            date,
+            latestDataDates,
+            write: async (type, ticks) => {
+              log(
+                `Writing ${ticks.length} ${type} ticks for ${
+                  instrument.symbol
+                } @ ${formatDate(date)}`,
+              );
+
+              await writeTickData(instrument.symbol, date, type, ticks);
+            },
+            merge: async () => mergeTickData(instrument.symbol, date),
+          });
+        },
+        1,
+        dates,
+      );
+    },
+    4,
+    instruments,
+  );
 }
