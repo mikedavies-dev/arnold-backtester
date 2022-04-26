@@ -56,6 +56,7 @@ export enum TickFileType {
 export type DownloadTickDataArgs = {
   instrument: Instrument;
   date: Date;
+  latestDataDates: Record<TickFileType, Date | null>;
   write: (type: TickFileType, ticks: Tick[]) => Promise<void>;
   merge: () => Promise<void>;
 };

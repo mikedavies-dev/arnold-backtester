@@ -115,6 +115,39 @@ async function mergeTickData(symbol: string, date: Date) {
   }
 }
 
+export async function getLatestDateInTickData(
+  symbol: string,
+  type: TickFileType,
+  date: Date,
+) {
+  const filename = formatDataFilename(symbol, date, type);
+  const lastLine = await getLastLine(filename);
+
+  if (!lastLine) {
+    return null;
+  }
+
+  const values = lastLine.split(',');
+
+  return new Date(Number(values[0]) * 1000);
+}
+
+async function getLatestDateInTickDataForAllTypes(symbol: string, date: Date) {
+  const [lastBidAskDate, lastTradesDate, lastMergedDate] = await Promise.all(
+    [TickFileType.BidAsk, TickFileType.Trades, TickFileType.Merged].map(type =>
+      getLatestDateInTickData(symbol, type, date),
+    ),
+  );
+
+  const latestDataDates: Record<TickFileType, Date | null> = {
+    [TickFileType.BidAsk]: lastBidAskDate,
+    [TickFileType.Trades]: lastTradesDate,
+    [TickFileType.Merged]: lastMergedDate,
+  };
+
+  return latestDataDates;
+}
+
 export async function ensureTickDataIsAvailable({
   symbols,
   dates,
@@ -145,9 +178,15 @@ export async function ensureTickDataIsAvailable({
             )}`,
           );
 
+          const latestDataDates = await getLatestDateInTickDataForAllTypes(
+            instrument.symbol,
+            date,
+          );
+
           await dataProvider.downloadTickData({
             instrument,
             date,
+            latestDataDates,
             write: async (type, ticks) => {
               log(
                 `Writing ${ticks.length} ${type} ticks for ${
@@ -167,21 +206,4 @@ export async function ensureTickDataIsAvailable({
     4,
     instruments,
   );
-}
-
-export async function getLatestDateInTickData(
-  symbol: string,
-  type: TickFileType,
-  date: Date,
-) {
-  const filename = formatDataFilename(symbol, date, type);
-  const lastLine = await getLastLine(filename);
-
-  if (!lastLine) {
-    return null;
-  }
-
-  const values = lastLine.split(',');
-
-  return new Date(Number(values[0]) * 1000);
 }

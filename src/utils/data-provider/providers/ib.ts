@@ -186,9 +186,19 @@ export function create(): DataProvider {
     date,
     write,
     merge,
+    latestDataDates,
   }: DownloadTickDataArgs) {
     log(`Downloading tick data for ${instrument.symbol} @ ${formatDate(date)}`);
-    return;
+
+    let weHaveData = false;
+
+    do {
+      // Download a blo
+
+      weHaveData = false;
+    } while (weHaveData);
+
+    await merge();
   }
 
   return {

@@ -44,12 +44,69 @@ describe('mongo db tests', () => {
     await disconnect();
 
     createDataProviderMock.mockReset();
+  });
 
+  afterEach(async () => {
     // Delete test data
     await del(`${Env.DATA_FOLDER}/ZZZZ_*.csv`);
   });
 
-  test('check data storage', async () => {
+  const testDate = getTestDate();
+  const startTime = testDate.getTime() / 1000;
+  const symbol = 'ZZZZ';
+
+  const tradeTickData: Tick[] = [
+    {
+      symbol,
+      dateTime: testDate,
+      time: startTime + 0,
+      index: 0,
+      type: 'TRADE',
+      value: 100,
+      size: 1,
+    },
+    {
+      symbol,
+      dateTime: testDate,
+      time: startTime + 60,
+      index: 0,
+      type: 'TRADE',
+      value: 101,
+      size: 1,
+    },
+  ];
+
+  const bidAskTickData: Tick[] = [
+    {
+      symbol,
+      dateTime: testDate,
+      time: startTime,
+      index: 0,
+      type: 'BID',
+      value: 99,
+      size: 1,
+    },
+    {
+      symbol,
+      dateTime: testDate,
+      time: startTime + 30,
+      index: 0,
+      type: 'BID',
+      value: 100,
+      size: 1,
+    },
+    {
+      symbol,
+      dateTime: testDate,
+      time: startTime + 90,
+      index: 0,
+      type: 'ASK',
+      value: 101,
+      size: 1,
+    },
+  ];
+
+  test('loading bar data for an instrument', async () => {
     const mockProvider = {
       name: 'test',
       init: jest.fn(async () => {}),
@@ -142,61 +199,6 @@ describe('mongo db tests', () => {
   });
 
   test('ensure tick data is available', async () => {
-    const testDate = getTestDate();
-    const startTime = testDate.getTime() / 1000;
-    const symbol = 'ZZZZ';
-
-    const tradeData: Tick[] = [
-      {
-        symbol,
-        dateTime: testDate,
-        time: startTime + 0,
-        index: 0,
-        type: 'TRADE',
-        value: 100,
-        size: 1,
-      },
-      {
-        symbol,
-        dateTime: testDate,
-        time: startTime + 60,
-        index: 0,
-        type: 'TRADE',
-        value: 101,
-        size: 1,
-      },
-    ];
-
-    const bidAskData: Tick[] = [
-      {
-        symbol,
-        dateTime: testDate,
-        time: startTime,
-        index: 0,
-        type: 'BID',
-        value: 99,
-        size: 1,
-      },
-      {
-        symbol,
-        dateTime: testDate,
-        time: startTime + 30,
-        index: 0,
-        type: 'BID',
-        value: 100,
-        size: 1,
-      },
-      {
-        symbol,
-        dateTime: testDate,
-        time: startTime + 90,
-        index: 0,
-        type: 'ASK',
-        value: 101,
-        size: 1,
-      },
-    ];
-
     const mockProvider = {
       name: 'test',
       init: jest.fn(async () => {}),
@@ -208,10 +210,10 @@ describe('mongo db tests', () => {
       downloadTickData: jest.fn(
         async ({write, merge}: DownloadTickDataArgs) => {
           // Load/write bid/ask data from remove service
-          await write(TickFileType.BidAsk, bidAskData);
+          await write(TickFileType.BidAsk, bidAskTickData);
 
           // Load trade data from remote service
-          await write(TickFileType.Trades, tradeData);
+          await write(TickFileType.Trades, tradeTickData);
 
           // Merge the two together
           await merge();
@@ -307,5 +309,54 @@ describe('mongo db tests', () => {
         },
       ]
     `);
+  });
+
+  test('that latest tick data dates are provided', async () => {
+    const mockProvider = {
+      name: 'test',
+      init: jest.fn(async () => {}),
+      shutdown: jest.fn(async () => {}),
+      getTimeSeries: jest.fn(async () => {
+        return [];
+      }),
+      instrumentLookup: async () => [],
+      downloadTickData: jest.fn(async ({write}: DownloadTickDataArgs) => {
+        // Load/write bid/ask data from remove service
+        await write(TickFileType.BidAsk, bidAskTickData);
+
+        // Load trade data from remote service
+        await write(TickFileType.Trades, tradeTickData);
+      }),
+    };
+    createDataProviderMock.mockReturnValue(mockProvider);
+
+    const dataProvider = createDataProvider();
+
+    await ensureTickDataIsAvailable({
+      dataProvider,
+      symbols: ['ZZZZ'],
+      log: () => {},
+      dates: [getTestDate()],
+    });
+
+    mockProvider.downloadTickData = jest.fn(
+      async ({latestDataDates}: DownloadTickDataArgs) => {
+        expect(latestDataDates).toMatchInlineSnapshot(`
+          Object {
+            "bidask": 2022-01-01T05:01:30.000Z,
+            "merged": null,
+            "trades": 2022-01-01T05:01:00.000Z,
+          }
+        `);
+      },
+    );
+
+    // If we make the call again we should not download data
+    await ensureTickDataIsAvailable({
+      dataProvider,
+      symbols: ['ZZZZ'],
+      log: () => {},
+      dates: [getTestDate()],
+    });
   });
 });
