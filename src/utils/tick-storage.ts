@@ -169,7 +169,7 @@ export async function ensureTickDataIsAvailable({
   );
 }
 
-export async function getLatestTemporaryTickDate(
+export async function getLatestDateInTickData(
   symbol: string,
   type: TickFileType,
   date: Date,
