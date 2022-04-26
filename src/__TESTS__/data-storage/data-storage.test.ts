@@ -7,6 +7,7 @@ import {
   hasTickForSymbolAndDate,
   loadTickForSymbolAndDate,
   ensureTickDataIsAvailable,
+  getLatestTemporaryTickDate,
 } from '../../utils/tick-storage';
 
 import {formatDateTime} from '../../utils/dates';
@@ -128,6 +129,24 @@ describe('mongo db tests', () => {
 
     // We should already have the data
     expect(mockProvider.getTimeSeries).toBeCalledTimes(0);
+  });
+
+  test('getting the latest date for a tick file', async () => {
+    expect(
+      await getLatestTemporaryTickDate(
+        'YYYY',
+        TickFileType.Merged,
+        getTestDate(),
+      ),
+    ).toMatchInlineSnapshot(`2021-11-04T08:00:00.000Z`);
+
+    expect(
+      await getLatestTemporaryTickDate(
+        'ZZZZ',
+        TickFileType.Merged,
+        getTestDate(),
+      ),
+    ).toMatchInlineSnapshot(`null`);
   });
 
   test('ensure tick data is available', async () => {

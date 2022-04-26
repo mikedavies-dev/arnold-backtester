@@ -10,7 +10,11 @@ export async function fileExists(path: string) {
   }
 }
 
-export function getLastLine(path: string) {
+export async function getLastLine(path: string) {
+  if (!(await fileExists(path))) {
+    return null;
+  }
+
   const liner = new LineByLine(path);
 
   let line: Buffer | boolean = false;

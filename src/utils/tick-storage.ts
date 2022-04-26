@@ -176,11 +176,12 @@ export async function getLatestTemporaryTickDate(
 ) {
   const filename = formatDataFilename(symbol, date, type);
   const lastLine = await getLastLine(filename);
-  const values = lastLine.split(',');
 
-  if (!values) {
+  if (!lastLine) {
     return null;
   }
 
-  return new Date(Number(values[0]));
+  const values = lastLine.split(',');
+
+  return new Date(Number(values[0]) * 1000);
 }
