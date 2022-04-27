@@ -3,6 +3,7 @@ import {format, fromUnixTime} from 'date-fns';
 import Env from './env';
 import path from 'path';
 import series from 'promise-series2';
+import del from 'del';
 
 import {
   Tick,
@@ -70,6 +71,7 @@ export async function writeTickData(
   date: Date,
   type: TickFileType,
   data: Tick[],
+  overwrite: boolean,
 ) {
   const outputFilename = formatDataFilename(symbol, date, type);
   await writeCsv(
@@ -85,7 +87,7 @@ export async function writeTickData(
       tick.value,
       tick.size,
     ],
-    true,
+    overwrite,
   );
 }
 
@@ -110,9 +112,12 @@ async function mergeTickData(symbol: string, date: Date) {
     .flat()
     .sort(sortTicksByDate);
 
-  if (mergedData.length) {
-    await writeTickData(symbol, date, TickFileType.Merged, mergedData);
-  }
+  await writeTickData(symbol, date, TickFileType.Merged, mergedData, true);
+
+  // Delete temp data after merging
+  // await Promise.all([TickFileType.BidAsk, TickFileType.Trades].map(type =>
+  //   del(formatDataFilename(symbol, date, type))
+  // ))
 }
 
 export async function getLatestDateInTickData(
@@ -188,13 +193,7 @@ export async function ensureTickDataIsAvailable({
             date,
             latestDataDates,
             write: async (type, ticks) => {
-              log(
-                `Writing ${ticks.length} ${type} ticks for ${
-                  instrument.symbol
-                } @ ${formatDate(date)}`,
-              );
-
-              await writeTickData(instrument.symbol, date, type, ticks);
+              await writeTickData(instrument.symbol, date, type, ticks, false);
             },
             merge: async () => mergeTickData(instrument.symbol, date),
           });

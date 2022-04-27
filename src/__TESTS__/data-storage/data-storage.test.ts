@@ -359,4 +359,32 @@ describe('mongo db tests', () => {
       dates: [getTestDate()],
     });
   });
+
+  test('merging empty data should create the merged file', async () => {
+    createDataProviderMock.mockReturnValue({
+      name: 'test',
+      init: jest.fn(async () => {}),
+      shutdown: jest.fn(async () => {}),
+      getTimeSeries: jest.fn(async () => {
+        return [];
+      }),
+      instrumentLookup: async () => [],
+      downloadTickData: jest.fn(async ({merge}: DownloadTickDataArgs) => {
+        // Merge without writing first should create an empty merged file
+        // so that next time we don't try downloading it
+        await merge();
+      }),
+    });
+
+    expect(await hasTickForSymbolAndDate(symbol, getTestDate())).toBeFalsy();
+
+    await ensureTickDataIsAvailable({
+      dataProvider: createDataProvider(),
+      symbols: ['ZZZZ'],
+      log: () => {},
+      dates: [getTestDate()],
+    });
+
+    expect(await hasTickForSymbolAndDate(symbol, getTestDate())).toBeTruthy();
+  });
 });

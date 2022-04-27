@@ -53,11 +53,16 @@ export enum TickFileType {
   BidAsk = 'bidask',
 }
 
+export type WriteTickDataFn = (
+  type: TickFileType,
+  ticks: Tick[],
+) => Promise<void>;
+
 export type DownloadTickDataArgs = {
   instrument: Instrument;
   date: Date;
   latestDataDates: Record<TickFileType, Date | null>;
-  write: (type: TickFileType, ticks: Tick[]) => Promise<void>;
+  write: WriteTickDataFn;
   merge: () => Promise<void>;
 };
 
