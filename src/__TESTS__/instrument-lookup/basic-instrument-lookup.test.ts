@@ -19,16 +19,19 @@ function getAnswers(answers: Record<string, any>): any {
 
 const instruments = [
   {
+    externalId: 'ABCD',
     symbol: 'ABCD',
     name: 'ABCD INC',
     data: {},
   },
   {
+    externalId: 'MSFT',
     symbol: 'MSFT',
     name: 'MICROSOFT INC',
     data: {},
   },
   {
+    externalId: 'AAPL',
     symbol: 'AAPL',
     name: 'APPLE INC',
     data: {},
@@ -71,6 +74,7 @@ test('test symbol lookup', async () => {
   expect(results).toMatchInlineSnapshot(`
     Object {
       "data": Object {},
+      "externalId": "ABCD",
       "name": "ABCD INC",
       "symbol": "ABCD",
     }
@@ -113,6 +117,7 @@ test('enter a new search term', async () => {
   expect(results).toMatchInlineSnapshot(`
     Object {
       "data": Object {},
+      "externalId": "MSFT",
       "name": "MICROSOFT INC",
       "symbol": "MSFT",
     }

@@ -42,6 +42,7 @@ export type BarPeriod = keyof Bars;
 export type TimeSeriesPeriod = 'm1' | 'm5' | 'm60' | 'daily';
 
 export type Instrument = {
+  externalId: string;
   symbol: string;
   name: string;
   data?: any;
@@ -160,6 +161,7 @@ export type Profile = {
   threads: number;
   initialBalance: number;
   commissionPerOrder: number;
+  extraSymbols: string[];
 };
 
 // Models
@@ -185,11 +187,12 @@ export type DbTimeSeriesDataAvailability = {
   _id?: MongoObjectId;
   symbol: string;
   period: TimeSeriesPeriod;
-  dataAvailableTo: Date;
+  dateRequested: Date;
 };
 
 export type DbInstrument = {
   _id?: MongoObjectId;
+  externalId: string;
   provider: string;
   symbol: string;
   name: string;
@@ -210,6 +213,21 @@ export type HandleTickParameters = {
     placeOrder: (spec: OrderSpecification) => number;
     hasOpenOrders: (symbol: string) => boolean;
     getPositionSize: (symbol: string) => number;
+  };
+};
+
+export type IsInPlayParameters = {
+  symbol: string;
+  log: LoggerCallback;
+  date: Date;
+  premarketData: {
+    high: number;
+    low: number;
+    volume: number;
+    last: number;
+    percentChange: number;
+    relativeVolume: number;
+    bars: Bars;
   };
 };
 

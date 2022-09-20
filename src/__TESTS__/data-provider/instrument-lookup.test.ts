@@ -15,12 +15,14 @@ test('instrument lookup', async () => {
     downloadTickData: async () => {},
     instrumentLookup: async () => [
       {
+        externalId: 'ABCD',
         symbol: 'ABCD',
         name: 'ABCD INC',
         exchange: 'NYSE',
         data: null,
       },
       {
+        externalId: 'ABCD2',
         symbol: 'ABCD v2',
         name: 'ABCD v2 INC',
         exchange: 'NYSE',
@@ -38,12 +40,14 @@ test('instrument lookup', async () => {
       Object {
         "data": null,
         "exchange": "NYSE",
+        "externalId": "ABCD",
         "name": "ABCD INC",
         "symbol": "ABCD",
       },
       Object {
         "data": null,
         "exchange": "NYSE",
+        "externalId": "ABCD2",
         "name": "ABCD v2 INC",
         "symbol": "ABCD v2",
       },

@@ -43,6 +43,7 @@ const Backtest = new Schema<DbBacktest>({
       dates: [Date],
     },
     symbols: [String],
+    extraSymbols: [String],
     threads: Number,
     initialBalance: Number,
     commissionPerOrder: Number,
@@ -74,10 +75,11 @@ TimeSeriesBar.index(
 const TimeSeriesDataAvailability = new Schema<DbTimeSeriesDataAvailability>({
   symbol: String,
   period: String,
-  dataAvailableTo: Date,
+  dateRequested: Date,
 });
 
 const Instrument = new Schema<DbInstrument>({
+  externalId: String,
   provider: String,
   symbol: String,
   name: String,

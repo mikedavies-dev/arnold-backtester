@@ -3,7 +3,6 @@ import {format, fromUnixTime} from 'date-fns';
 import Env from './env';
 import path from 'path';
 import series from 'promise-series2';
-import del from 'del';
 
 import {
   Tick,

@@ -1,5 +1,7 @@
 import mongoose from 'mongoose';
 
+import {isBefore, addDays, subDays, isSameDay, isAfter} from 'date-fns';
+
 // Register the models
 import {registerMongooseModels} from '../models/models';
 
@@ -96,46 +98,96 @@ export async function storeSeries(
   );
 }
 
-export async function getDataAvailableTo(
+// export async function getDataAvailableTo(
+//   symbol: string,
+//   period: TimeSeriesPeriod,
+// ): Promise<Date | undefined> {
+//   const TimeSeriesDataAvailability =
+//     mongoose.model<DbTimeSeriesDataAvailability>('TimeSeriesDataAvailability');
+
+//   const record = await TimeSeriesDataAvailability.findOne({
+//     symbol,
+//     period,
+//   });
+
+//   return record?.dataAvailableTo;
+// }
+
+export async function hasRequestedData(
   symbol: string,
   period: TimeSeriesPeriod,
-): Promise<Date | undefined> {
+  date: Date,
+) {
   const TimeSeriesDataAvailability =
     mongoose.model<DbTimeSeriesDataAvailability>('TimeSeriesDataAvailability');
 
-  const record = await TimeSeriesDataAvailability.findOne({
+  const record = await TimeSeriesDataAvailability.countDocuments({
     symbol,
     period,
+    dateRequested: date,
   });
 
-  return record?.dataAvailableTo;
+  return record > 0;
 }
 
-export async function updateDataAvailableTo(
+export async function recordDataHasBeenRequested(
   symbol: string,
   period: TimeSeriesPeriod,
-  dataAvailableTo: Date,
-): Promise<Date | undefined> {
+  dateRequested: Date,
+): Promise<void> {
   const TimeSeriesDataAvailability =
     mongoose.model<DbTimeSeriesDataAvailability>('TimeSeriesDataAvailability');
 
-  const record = await TimeSeriesDataAvailability.findOneAndUpdate(
+  await TimeSeriesDataAvailability.findOneAndUpdate(
     {
       symbol,
       period,
+      dateRequested,
     },
     {
       $set: {
-        dataAvailableTo,
+        dateRequested,
       },
     },
     {
       upsert: true,
     },
   );
-
-  return record?.dataAvailableTo;
 }
+
+export const findFirstNonRequestedDateForPeriod = async (
+  instrument: Instrument,
+  period: TimeSeriesPeriod,
+  from: Date,
+  to: Date,
+) => {
+  for (
+    let day = from;
+    isBefore(day, to) || isSameDay(day, to);
+    day = addDays(day, 1)
+  ) {
+    if (!(await hasRequestedData(instrument.symbol, period, day))) {
+      return day;
+    }
+  }
+
+  return null;
+};
+
+export const findLastNonRequestedDateForPeriod = async (
+  instrument: Instrument,
+  period: TimeSeriesPeriod,
+  from: Date,
+  to: Date,
+) => {
+  for (let day = to; isAfter(day, from); day = subDays(day, 1)) {
+    if (!(await hasRequestedData(instrument.symbol, period, day))) {
+      return day;
+    }
+  }
+
+  return null;
+};
 
 export async function instrumentLookup({
   provider,

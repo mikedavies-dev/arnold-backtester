@@ -30,6 +30,7 @@ type RawProfile = {
   threads: number;
   initialBalance: number;
   commissionPerOrder: number;
+  extraSymbols: string[];
 };
 
 export function getPath(name: string) {

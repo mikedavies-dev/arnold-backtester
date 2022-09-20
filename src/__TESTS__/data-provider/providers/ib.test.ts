@@ -5,7 +5,7 @@ import Env from '../../../utils/env';
 import {Instrument} from '../../../core';
 
 const microsoft = {
-  id: 272093,
+  externalId: '272093',
   symbol: 'MSFT',
   name: 'MICROSOFT CORP',
   data: {

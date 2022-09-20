@@ -23,9 +23,6 @@ if (parentPort) {
         log,
       });
 
-      // Let it log some stuff
-      await new Promise(resolve => setTimeout(resolve, 0));
-
       // Send the results to the parent
       parentPort.postMessage({
         positions,

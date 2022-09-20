@@ -1,4 +1,3 @@
-import {startOfDay, subDays} from 'date-fns';
 import series from 'promise-series2';
 
 import Logger from '../utils/logger';
@@ -9,8 +8,6 @@ import {
   ensureBarDataIsAvailable,
   ensureSymbolsAreAvailable,
 } from '../utils/data-storage';
-
-import {ensureTickDataIsAvailable} from '../utils/tick-storage';
 
 const log = Logger('ensure-data');
 
@@ -50,29 +47,22 @@ async function run() {
 
         const runProfile = await loadProfile(profile);
 
-        const {symbols} = runProfile;
+        const symbolsThatRequireData = Array.from(
+          new Set([...runProfile.symbols, ...runProfile.extraSymbols]),
+        );
 
         // Make sure we have
         await ensureSymbolsAreAvailable({
           dataProvider,
-          symbols,
+          symbols: symbolsThatRequireData,
         });
-
-        // Make sure we have the data available
-        const yesterday = startOfDay(subDays(new Date(), 1));
 
         await ensureBarDataIsAvailable({
           dataProvider,
-          symbols,
+          symbols: symbolsThatRequireData,
           log,
-          until: yesterday,
-        });
-
-        await ensureTickDataIsAvailable({
-          dataProvider,
-          symbols,
-          dates: runProfile.dates.dates,
-          log,
+          from: runProfile.dates.from,
+          to: runProfile.dates.to,
         });
       },
       false,

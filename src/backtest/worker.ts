@@ -84,6 +84,14 @@ export async function runBacktest({
 
   const start = Date.now();
 
+  /*
+  Main loop:
+  1. Iterate minute bars starting at tradeFrom and ending at tradeTo
+  2. If IsInPlay, load tick data for the current N minute window, otherwise continue to the next minute
+  3. Iterate ticks in the window, when we move to next minute in tick data increment the minute bar index
+  4. Each minute call IsInPlay to see if we are still in play. If we are not in play and we don't have any open orders then stop processing ticks
+  */
+
   log(
     `Loading TS data for ${symbols.join(', ')} on ${format(
       date,

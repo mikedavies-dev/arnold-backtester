@@ -83,6 +83,7 @@ describe('test worker module', () => {
           expect(broker.getPositionSize(symbol)).toBe(0);
         }
       },
+      IsInPlay: () => true,
     });
 
     loadTickForSymbolAndDateMock.mockResolvedValue(testMarketData);

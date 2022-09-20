@@ -76,6 +76,7 @@ describe('mongo db tests', () => {
           dates: [getTestDate()],
         },
         symbols: ['MSFT'],
+        extraSymbols: [],
         initialBalance: 1000,
         commissionPerOrder: 1,
       },
@@ -101,6 +102,7 @@ describe('mongo db tests', () => {
 
     const testInstruments: Instrument[] = [
       {
+        externalId: 'AAAA',
         symbol: 'AAAA',
         name: 'AAAA INC',
         data: {
@@ -109,6 +111,7 @@ describe('mongo db tests', () => {
         },
       },
       {
+        externalId: 'BBBB',
         symbol: 'BBBB',
         name: 'BBBB INC',
         data: {
@@ -144,6 +147,7 @@ describe('mongo db tests', () => {
     const provider = 'test';
 
     const instrument: Instrument = {
+      externalId: 'AAAA',
       symbol: 'AAAA',
       name: 'AAAA INC',
       data: {
@@ -172,6 +176,7 @@ describe('mongo db tests', () => {
     const provider = 'test';
 
     const instrument: Instrument = {
+      externalId: 'DUPLICATE',
       symbol: 'DUPLICATE',
       name: 'DUPLICATE INC',
       data: {
