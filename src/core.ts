@@ -40,6 +40,12 @@ export type Bars = {
 export type BarPeriod = keyof Bars;
 
 export type TimeSeriesPeriod = 'm1' | 'm5' | 'm60' | 'daily';
+export const TimeSeriesPeriods: TimeSeriesPeriod[] = [
+  'm1',
+  'm5',
+  'm60',
+  'daily',
+];
 
 export type Instrument = {
   externalId: string;

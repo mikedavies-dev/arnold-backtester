@@ -57,7 +57,6 @@ export async function ensureBarDataIsAvailable({
 
   await series(
     async instrument => {
-      // log(`Ensuring data for ${instrument.symbol}`);
       await series(
         async period => {
           const range = await findNonRequestedRangeForPeriod(
@@ -72,21 +71,26 @@ export async function ensureBarDataIsAvailable({
             return;
           }
 
-          const blocks = splitDatesIntoBlocks(range.from, range.to, period);
+          const blocks = splitDatesIntoBlocks(
+            range.from,
+            addDays(range.to, 1), // Request data until day+1 to include data for day
+            period,
+          );
 
           if (!blocks.length) {
+            log('!! No blocks', range);
             return;
           }
 
           await series(
             async ({end, days}) => {
-              if (period === 'm1') {
-                log(
-                  `Loading ${
-                    instrument.symbol
-                  } / ${days} day(s) of ${period} until ${formatDate(end)}`,
-                );
-              }
+              log(
+                `Loading ${
+                  instrument.symbol
+                } / ${days} day(s) of ${period} until end of ${formatDate(
+                  subDays(end, 1),
+                )}`,
+              );
 
               // // Load the data from the provider
               const bars = await dataProvider.getTimeSeries(

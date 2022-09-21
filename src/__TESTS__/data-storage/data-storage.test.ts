@@ -1,7 +1,13 @@
 import {addDays} from 'date-fns';
 import del from 'del';
 
-import {Instrument, DownloadTickDataArgs, TickFileType, Tick} from '../../core';
+import {
+  Instrument,
+  DownloadTickDataArgs,
+  TickFileType,
+  Tick,
+  TimeSeriesPeriods,
+} from '../../core';
 import {ensureBarDataIsAvailable} from '../../utils/data-storage';
 import {
   hasTickForSymbolAndDate,
@@ -164,7 +170,7 @@ describe('mongo db tests', () => {
 
     expect(mockProvider.getTimeSeries).toBeCalledWith(
       expect.anything(),
-      to,
+      addDays(to, 1),
       expect.anything(),
       'm60',
     );
@@ -176,9 +182,7 @@ describe('mongo db tests', () => {
       'm5',
     );
 
-    mockProvider.getTimeSeries.mockClear();
-
-    expect(mockProvider.getTimeSeries).toBeCalledTimes(0);
+    const calls = mockProvider.getTimeSeries.mock.calls.length;
 
     // Call again
     await ensureBarDataIsAvailable({
@@ -190,7 +194,20 @@ describe('mongo db tests', () => {
     });
 
     // We should already have the data
-    expect(mockProvider.getTimeSeries).toBeCalledTimes(0);
+    expect(mockProvider.getTimeSeries).toBeCalledTimes(calls);
+
+    await ensureBarDataIsAvailable({
+      dataProvider,
+      symbols: ['ZZZZ'],
+      log: () => {},
+      from,
+      to: addDays(to, 1),
+    });
+
+    // Make sure we were called for each period
+    expect(mockProvider.getTimeSeries).toBeCalledTimes(
+      calls + TimeSeriesPeriods.length,
+    );
   });
 
   test('getting the latest date for a tick file', async () => {
