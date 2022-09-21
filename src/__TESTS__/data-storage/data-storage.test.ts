@@ -203,7 +203,7 @@ describe('mongo db tests', () => {
     ).toMatchInlineSnapshot(`null`);
   });
 
-  test.skip('ensure tick data is available', async () => {
+  test('ensure tick data is available', async () => {
     const mockProvider = {
       name: 'test',
       init: jest.fn(async () => {}),
@@ -365,7 +365,7 @@ describe('mongo db tests', () => {
     });
   });
 
-  test.skip('merging empty data should create the merged file', async () => {
+  test('merging empty data should create the merged file', async () => {
     createDataProviderMock.mockReturnValue({
       name: 'test',
       init: jest.fn(async () => {}),
