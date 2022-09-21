@@ -98,21 +98,6 @@ export async function storeSeries(
   );
 }
 
-// export async function getDataAvailableTo(
-//   symbol: string,
-//   period: TimeSeriesPeriod,
-// ): Promise<Date | undefined> {
-//   const TimeSeriesDataAvailability =
-//     mongoose.model<DbTimeSeriesDataAvailability>('TimeSeriesDataAvailability');
-
-//   const record = await TimeSeriesDataAvailability.findOne({
-//     symbol,
-//     period,
-//   });
-
-//   return record?.dataAvailableTo;
-// }
-
 export async function hasRequestedData(
   symbol: string,
   period: TimeSeriesPeriod,
@@ -155,39 +140,53 @@ export async function recordDataHasBeenRequested(
   );
 }
 
-export const findFirstNonRequestedDateForPeriod = async (
-  instrument: Instrument,
+export async function findNonRequestedRangeForPeriod(
+  symbol: string,
   period: TimeSeriesPeriod,
   from: Date,
   to: Date,
-) => {
+) {
+  // Find the first date that we have requested data for
+  let firstDayWithoutRequest: Date | null = null;
+
   for (
     let day = from;
     isBefore(day, to) || isSameDay(day, to);
     day = addDays(day, 1)
   ) {
-    if (!(await hasRequestedData(instrument.symbol, period, day))) {
-      return day;
+    if (!(await hasRequestedData(symbol, period, day))) {
+      firstDayWithoutRequest = day;
+      break;
     }
   }
 
-  return null;
-};
+  if (!firstDayWithoutRequest) {
+    return null;
+  }
 
-export const findLastNonRequestedDateForPeriod = async (
-  instrument: Instrument,
-  period: TimeSeriesPeriod,
-  from: Date,
-  to: Date,
-) => {
-  for (let day = to; isAfter(day, from); day = subDays(day, 1)) {
-    if (!(await hasRequestedData(instrument.symbol, period, day))) {
-      return day;
+  // Find the last date that we have requested data for
+  let lastDayWithoutRequest: Date | null = null;
+
+  for (
+    let day = to;
+    isAfter(day, from) || isSameDay(day, from);
+    day = subDays(day, 1)
+  ) {
+    if (!(await hasRequestedData(symbol, period, day))) {
+      lastDayWithoutRequest = day;
+      break;
     }
   }
 
-  return null;
-};
+  if (!lastDayWithoutRequest) {
+    return null;
+  }
+
+  return {
+    from: firstDayWithoutRequest,
+    to: lastDayWithoutRequest,
+  };
+}
 
 export async function instrumentLookup({
   provider,

@@ -106,7 +106,7 @@ describe('mongo db tests', () => {
     },
   ];
 
-  test.skip('loading bar data for an instrument', async () => {
+  test('loading bar data for an instrument', async () => {
     const mockProvider = {
       name: 'test',
       init: jest.fn(async () => {}),
@@ -164,8 +164,8 @@ describe('mongo db tests', () => {
 
     expect(mockProvider.getTimeSeries).toBeCalledWith(
       expect.anything(),
-      addDays(from, 60),
-      60,
+      to,
+      expect.anything(),
       'm60',
     );
 
@@ -176,8 +176,9 @@ describe('mongo db tests', () => {
       'm5',
     );
 
-    mockProvider.getTimeSeries.mockReset();
-    mockProvider.init.mockReset();
+    mockProvider.getTimeSeries.mockClear();
+
+    expect(mockProvider.getTimeSeries).toBeCalledTimes(0);
 
     // Call again
     await ensureBarDataIsAvailable({

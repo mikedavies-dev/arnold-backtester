@@ -8,7 +8,7 @@ TODO:
 */
 
 import series from 'promise-series2';
-import {subDays} from 'date-fns';
+import {addDays, isBefore, isSameDay, subDays} from 'date-fns';
 
 import {LoggerCallback, TimeSeriesPeriod, Instrument} from '../core';
 import {lookupSymbol} from './instrument-lookup';
@@ -17,8 +17,7 @@ import {
   recordDataHasBeenRequested,
   instrumentLookup,
   storeInstrument,
-  findFirstNonRequestedDateForPeriod,
-  findLastNonRequestedDateForPeriod,
+  findNonRequestedRangeForPeriod,
 } from './db';
 import {DataProvider} from '../core';
 import {splitDatesIntoBlocks} from './timeseries';
@@ -39,9 +38,9 @@ export async function ensureBarDataIsAvailable({
 }) {
   const requiredBarPeriods: Array<TimeSeriesPeriod> = [
     'm1',
-    // 'm5',
-    // 'm60',
-    // 'daily',
+    'm5',
+    'm60',
+    'daily',
   ];
 
   const instruments = await instrumentLookup({
@@ -56,81 +55,62 @@ export async function ensureBarDataIsAvailable({
     daily: 200,
   };
 
-  /*
-  TODO:
-  - Store the loaded days in a single document for each instrument/period
-  - Fix issue with date ranges (from, to)
-  */
-
   await series(
     async instrument => {
       // log(`Ensuring data for ${instrument.symbol}`);
       await series(
         async period => {
-          const periodFrom = await findFirstNonRequestedDateForPeriod(
-            instrument,
+          const range = await findNonRequestedRangeForPeriod(
+            instrument.symbol,
             period,
             subDays(from, periodMinimumDays[period]),
             to,
           );
 
-          const periodTo = await findLastNonRequestedDateForPeriod(
-            instrument,
-            period,
-            subDays(from, periodMinimumDays[period]),
-            to,
-          );
-
-          if (
-            !periodFrom ||
-            !periodTo ||
-            periodFrom.getTime() === periodTo.getTime()
-          ) {
+          if (!range) {
             log(`No data required for ${instrument.symbol} ${period}`);
             return;
           }
 
-          const blocks = splitDatesIntoBlocks(periodFrom, periodTo, period);
+          const blocks = splitDatesIntoBlocks(range.from, range.to, period);
 
           if (!blocks.length) {
-            log(
-              `!!! No blocks for ${instrument.symbol} ${period}`,
-              periodFrom,
-              periodTo,
-            );
+            return;
           }
 
           await series(
             async ({end, days}) => {
-              log(
-                `Loading ${
-                  instrument.symbol
-                } / ${days} day(s) of ${period} until ${formatDate(end)}`,
+              if (period === 'm1') {
+                log(
+                  `Loading ${
+                    instrument.symbol
+                  } / ${days} day(s) of ${period} until ${formatDate(end)}`,
+                );
+              }
+
+              // // Load the data from the provider
+              const bars = await dataProvider.getTimeSeries(
+                instrument,
+                end,
+                days,
+                period,
               );
 
-              // // // Load the data from the provider
-              // const bars = await dataProvider.getTimeSeries(
-              //   instrument,
-              //   end,
-              //   days,
-              //   period,
-              // );
+              // Store the data in the database
+              await storeSeries(instrument.symbol, period, bars);
 
-              // // // Store the data in the database
-              // await storeSeries(instrument.symbol, period, bars);
-
-              // // Store that we have requested this date/period combo so we don't request it again
-              // for (
-              //   let day = subDays(end, days);
-              //   isBefore(day, periodTo);
-              //   day = addDays(day, 1)
-              // ) {
-              //   await recordDataHasBeenRequested(
-              //     instrument.symbol,
-              //     period,
-              //     day,
-              //   );
-              // }
+              // Store that we have requested this date/period combo so we don't request it again
+              for (
+                let day = subDays(end, days);
+                isBefore(day, range.to) || isSameDay(day, range.to);
+                day = addDays(day, 1)
+              ) {
+                await recordDataHasBeenRequested(
+                  instrument.symbol,
+                  period,
+                  day,
+                );
+              }
             },
             0,
             blocks,
