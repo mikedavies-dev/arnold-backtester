@@ -5,6 +5,7 @@ import {
   createTimeAsUnix,
   getTestDate,
 } from '../test-utils/tick';
+import {connect, disconnect} from '../../utils/db';
 
 import {loadTickForSymbolAndDate} from '../../utils/tick-storage';
 
@@ -16,8 +17,17 @@ const loadTickForSymbolAndDateMock =
   >;
 
 describe('test worker module', () => {
+  beforeAll(async () => {
+    await connect();
+  });
+
+  afterAll(async () => {
+    await disconnect();
+  });
+
   beforeEach(() => {
-    jest.resetModules();
+    // Do we need this? it causes issues with Mongoose
+    // jest.resetModules();
   });
 
   test('fail to run with missing data', async () => {

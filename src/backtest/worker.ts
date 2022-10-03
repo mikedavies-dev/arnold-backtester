@@ -28,6 +28,7 @@ import {
   hasOpenOrders,
   getPositionSize,
 } from './broker';
+import {loadSeries} from '../utils/db';
 
 export type BackTestWorkerErrorCode =
   | 'strategy-not-found'
@@ -106,6 +107,12 @@ export async function runBacktest({
         await loadTickForSymbolAndDate(symbol, date, TickFileType.Merged),
     ),
   );
+
+  const minuteData = await Promise.all(
+    symbols.map(async symbol => await loadSeries(symbol, 'm1', date, 10)),
+  );
+
+  // log('XXX', minuteData);
 
   if (symbolData.some(data => !data)) {
     throw new BacktestWorkerError('no-symbol-data');

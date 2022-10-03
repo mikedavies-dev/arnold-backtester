@@ -1,12 +1,3 @@
-/*
-TODO:
-1. Store data in Mongo
-2. Store tick data in Mongo
-3. Make call again to ensureBarDataIsAvailable and ensure that data is not loaded (because we already have it)
-
-4. Load TS data from IB (IBNext?)
-*/
-
 import series from 'promise-series2';
 import {addDays, isBefore, isSameDay, subDays} from 'date-fns';
 

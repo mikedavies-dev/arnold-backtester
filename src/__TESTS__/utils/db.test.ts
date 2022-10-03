@@ -1,5 +1,8 @@
+import {addMinutes} from 'date-fns';
+
 import {BacktestResults} from '../../backtest/controller';
 import {Instrument} from '../../core';
+import {formatDateTime} from '../../utils/dates';
 import {
   connect,
   disconnect,
@@ -10,6 +13,8 @@ import {
   instrumentLookup,
   storeInstrument,
   getInstrument,
+  loadSeries,
+  storeSeries,
 } from '../../utils/db';
 
 import {getTestDate} from '../test-utils/tick';
@@ -204,5 +209,53 @@ describe('mongo db tests', () => {
 
     expect(storedInstrument?.symbol).toBe(instrument.symbol);
     expect(storedInstrument?.name).toBe(instrument.name);
+  });
+
+  test('load bar data for invalid instrument', async () => {
+    const bars = await loadSeries('INVALID', 'm1', getTestDate(), 1);
+    expect(bars).toEqual([]);
+  });
+
+  test('store and load series', async () => {
+    function getBarData(minutes: number) {
+      return {
+        time: formatDateTime(addMinutes(getTestDate(), minutes)),
+        open: minutes,
+        high: minutes,
+        low: minutes,
+        close: minutes,
+        volume: minutes,
+      };
+    }
+
+    await storeSeries('TEST_1', 'm1', [
+      getBarData(-3),
+      getBarData(-2),
+      getBarData(-1),
+      getBarData(0),
+      getBarData(1),
+    ]);
+
+    const bars = await loadSeries('TEST_1', 'm1', getTestDate(), 1);
+
+    expect(bars.length).toEqual(4);
+
+    expect(bars[0]).toEqual(
+      expect.objectContaining({
+        open: -3,
+        high: -3,
+        low: -3,
+        close: -3,
+      }),
+    );
+
+    expect(bars[1]).toEqual(
+      expect.objectContaining({
+        open: -2,
+        high: -2,
+        low: -2,
+        close: -2,
+      }),
+    );
   });
 });

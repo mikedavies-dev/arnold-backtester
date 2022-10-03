@@ -247,3 +247,23 @@ export async function storeInstrument({
     });
   }
 }
+
+export async function loadSeries(
+  symbol: string,
+  period: TimeSeriesPeriod,
+  until: Date,
+  days: number,
+) {
+  const TimeSeriesBar = mongoose.model<DbTimeSeriesBar>('TimeSeriesBar');
+
+  const bars = await TimeSeriesBar.find({
+    symbol,
+    period,
+    time: {
+      $gte: subDays(until, days),
+      $lte: until,
+    },
+  });
+
+  return bars;
+}
