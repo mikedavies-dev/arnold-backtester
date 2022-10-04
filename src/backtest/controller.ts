@@ -139,7 +139,10 @@ export async function runBacktestController({
   log(`Finished in ${numeral(Date.now() - start).format(',')}ms`);
 
   // Shutdown the pool
-  pool.destroy();
+  await pool.destroy();
+
+  // Disconnect from data provider
+  await dataProvider.shutdown();
 
   const positions = results
     .filter(val => !val.error)

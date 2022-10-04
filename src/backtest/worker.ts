@@ -7,6 +7,7 @@ import {loadTickForSymbolAndDate} from '../utils/tick-storage';
 import {loadStrategy} from '../utils/module';
 import {mergeSortedArrays} from '../utils/data-structures';
 import {initTracker, handleTrackerTick} from '../utils/tracker';
+
 import {
   getPreMarketOpen,
   getMarketOpen,
@@ -112,7 +113,7 @@ export async function runBacktest({
     symbols.map(async symbol => await loadSeries(symbol, 'm1', date, 10)),
   );
 
-  // log('XXX', minuteData);
+  log('XXX', minuteData);
 
   if (symbolData.some(data => !data)) {
     throw new BacktestWorkerError('no-symbol-data');
