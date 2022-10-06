@@ -16,7 +16,7 @@ const loadTickForSymbolAndDateMock =
     typeof loadTickForSymbolAndDate
   >;
 
-describe('test worker module', () => {
+describe.skip('test worker module', () => {
   beforeAll(async () => {
     await connect();
   });

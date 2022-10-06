@@ -1,10 +1,4 @@
-import {
-  IBApiNext,
-  LogLevel,
-  ConnectionState,
-  Contract,
-  BarSizeSetting,
-} from '@stoqey/ib';
+import {IBApiNext, ConnectionState, Contract, BarSizeSetting} from '@stoqey/ib';
 import series from 'promise-series2';
 import {format, parse, isSameDay, isSameSecond, addSeconds} from 'date-fns';
 import {lastValueFrom} from 'rxjs';
@@ -33,12 +27,11 @@ import {
   DownloadTickDataArgs,
   notEmpty,
   TickFileType,
+  LoggerCallback,
 } from '../../../core';
-import Logger from '../../../utils/logger';
+
 import Env from '../../../utils/env';
 import {formatDate, formatDateTime} from '../../dates';
-
-const log = Logger('interactive brokers');
 
 export function formatIbRequestDate(date: Date) {
   return format(date, 'yyyyMMdd HH:mm:ss');
@@ -165,7 +158,7 @@ async function downloadTradeTickData(
 
 type DownloadTickDataFn = typeof downloadBidAskTickData;
 
-export function create(): DataProvider {
+export function create({log}: {log?: LoggerCallback} = {}): DataProvider {
   const api = new IBApiNext({
     reconnectInterval: 10000,
     host: Env.IB_HOST,
@@ -173,23 +166,28 @@ export function create(): DataProvider {
   });
 
   api.errorSubject.subscribe(err => {
-    log(`Error: ${err.error.message} (${err.code})`);
+    log?.(`Error: ${err.error.message} (${err.code})`);
   });
 
   async function init() {
     return new Promise<void>((resolve, reject) => {
-      api.logLevel = LogLevel.INFO;
-
       // Set a timeout
       const timeoutTimer = setTimeout(async () => {
+        log?.('Disconnecting because of timeout');
         await api.disconnect();
         reject(new Error('Timeout connecting to IB'));
       }, 10000);
 
       api.connectionState.subscribe(async state => {
+        log?.('State Changed', state, api.isConnected);
         if (state === ConnectionState.Connected) {
+          // Set the logging level
+          // api.logLevel = LogLevel.INFO;
+          log?.('Connected to IB');
           clearTimeout(timeoutTimer);
-          resolve();
+
+          // Wait a while to let IB sort it out
+          setTimeout(resolve, 200);
         }
       });
 
@@ -198,6 +196,7 @@ export function create(): DataProvider {
   }
 
   async function shutdown() {
+    log?.('Shutting down');
     return new Promise<void>(resolve => {
       api.connectionState.subscribe(state => {
         if (state === ConnectionState.Disconnected) {
@@ -250,7 +249,8 @@ export function create(): DataProvider {
         return res[0];
       },
       1,
-      contracts,
+      // IB returns some -1 contracts which we don't want
+      contracts.filter(c => c.contract?.conId && c.contract?.conId !== -1),
     );
 
     return details.map(contract => ({
@@ -270,7 +270,9 @@ export function create(): DataProvider {
     merge,
     latestDataDates,
   }: DownloadTickDataArgs) {
-    log(`Downloading tick data for ${instrument.symbol} @ ${formatDate(date)}`);
+    log?.(
+      `Downloading tick data for ${instrument.symbol} @ ${formatDate(date)}`,
+    );
 
     const downloadAndWriteData = async (
       type: TickFileType,
@@ -283,7 +285,7 @@ export function create(): DataProvider {
         const ticks = await downloadDataFn(api, instrument, currentDate);
 
         if (!ticks.length) {
-          log(
+          log?.(
             `Finished downloading ${type} ticks for ${
               instrument.symbol
             } for ${formatDate(currentDate)}`,
@@ -291,7 +293,7 @@ export function create(): DataProvider {
           break;
         }
 
-        log(
+        log?.(
           `Downloaded ${numeral(ticks.length).format(
             '0,0',
           )} ${type} ticks for ${instrument.symbol} from ${formatDateTime(
@@ -324,7 +326,7 @@ export function create(): DataProvider {
       latestDataDates.trades || date,
     );
 
-    log(`Merging tick data for ${instrument.symbol} for ${formatDate(date)}`);
+    log?.(`Merging tick data for ${instrument.symbol} for ${formatDate(date)}`);
     await merge();
   }
 

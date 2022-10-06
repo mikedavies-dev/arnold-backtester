@@ -72,7 +72,10 @@ describe('test worker module', () => {
     // jest.resetModules();
   });
 
-  test('placing a market order in the backtester', async () => {
+  /*
+  Skip for the moment until we rework the test runner
+  */
+  test.skip('placing a market order in the backtester', async () => {
     const profile = await loadProfile('sample');
 
     loadStrategyMock.mockResolvedValue({

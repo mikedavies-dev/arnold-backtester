@@ -1,6 +1,13 @@
 import mongoose from 'mongoose';
 
-import {isBefore, addDays, subDays, isSameDay, isAfter} from 'date-fns';
+import {
+  isBefore,
+  addDays,
+  subDays,
+  isSameDay,
+  isAfter,
+  getUnixTime,
+} from 'date-fns';
 
 // Register the models
 import {registerMongooseModels} from '../models/models';
@@ -266,4 +273,18 @@ export async function loadSeries(
   });
 
   return bars;
+}
+
+export async function loadSeriesAsMap(
+  symbol: string,
+  period: TimeSeriesPeriod,
+  until: Date,
+  days: number,
+) {
+  const bars = await loadSeries(symbol, period, until, days);
+
+  return bars.reduce((map, bar) => {
+    map[getUnixTime(bar.time)] = bar;
+    return map;
+  }, {} as {[time: number]: DbTimeSeriesBar});
 }

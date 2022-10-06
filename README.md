@@ -162,3 +162,32 @@ Store the data in Mongo (apart from tick)?
 - https://github.com/dcajasn/Riskfolio-Lib/blob/master/riskfolio/RiskFunctions.py
 - https://github.com/lequant40/portfolio_analytics_js
 - https://analyzingalpha.com/profit-factor#:~:text=The%20profit%20factor%20is%20the,above%203.0%20is%20considered%20outstanding.
+
+### Problem..
+
+How do we load/sync minute data for all required symbols?
+
+1. Load all minute data for all required symbols into a date indexed map
+2. Iterate all minutes in day
+3. For each minute look for the minute data for each symbol. If we find data
+   then add it to the current bars, if we don't then find the last valid bar and
+   copy it as (open=lastClose, high=lastClose, low=lastClose, close=lastClose,
+   volume=0) and add to the bars
+
+For daily/hour/5min charts we can calculate the latest value starting from the
+first day.
+
+For daily:
+
+- Load all previous data excluding current day. Load current day's data using
+  the minute date, including pre-market data
+
+For hourly
+
+- Load all previous data excluding current day. Load current day's data using
+  the minute date, including pre-market data
+
+For 5min
+
+- Load all previous data excluding current day. Load current day's data using
+  the minute date, including pre-market data

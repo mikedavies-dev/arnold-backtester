@@ -28,5 +28,5 @@ test('get market close', () => {
     new Date(),
   );
 
-  expect(close).toBe('2021-01-01 16:30:00');
+  expect(close).toBe('2021-01-01 16:00:00');
 });

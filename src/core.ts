@@ -187,7 +187,13 @@ export type DbTimeSeriesBar = {
   _id?: MongoObjectId;
   symbol: string;
   period: TimeSeriesPeriod;
-} & Bar;
+  time: Date;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+};
 
 export type DbTimeSeriesDataAvailability = {
   _id?: MongoObjectId;

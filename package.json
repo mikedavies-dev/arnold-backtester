@@ -152,6 +152,14 @@
       "engines": {
         "node": ">=12.x"
       }
+    },
+    "temp-test-ib": {
+      "source": "./src/bin/temp-test-ib.ts",
+      "distDir": "./dist/bin",
+      "context": "node",
+      "engines": {
+        "node": ">=12.x"
+      }
     }
   }
 }
