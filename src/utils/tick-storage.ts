@@ -3,6 +3,7 @@ import {format, fromUnixTime} from 'date-fns';
 import Env from './env';
 import path from 'path';
 import series from 'promise-series2';
+import fs from 'fs/promises';
 
 import {
   Tick,
@@ -14,8 +15,8 @@ import {
 } from '../core';
 import {instrumentLookup} from './db';
 
-import {formatDate, formatDateTime} from './dates';
-import {fileExists, getLastLine, writeCsv, readCSV} from './files';
+import {formatDateTime} from './dates';
+import {fileExists, writeCsv, readCSV} from './files';
 
 export async function loadTickFile(
   filename: string,
@@ -44,20 +45,20 @@ export async function loadTickFile(
 function formatDataFilename(symbol: string, date: Date, type: TickFileType) {
   return path.join(
     Env.DATA_FOLDER,
-    `${symbol}_${format(date, 'yyyyMMdd')}_${type}.csv`,
+    `${symbol}/${format(date, 'yyyyMMdd')}/${format(date, 'HHmm')}_${type}.csv`,
   );
 }
 
-export async function loadTickForSymbolAndDate(
+export async function loadTickForMinute(
   symbol: string,
-  date: Date,
+  time: Date,
   type: TickFileType,
 ): Promise<Array<Tick> | null> {
-  const filename = formatDataFilename(symbol, date, type);
+  const filename = formatDataFilename(symbol, time, type);
   return loadTickFile(filename);
 }
 
-export async function hasTickForSymbolAndDate(
+export async function hasTickForMinute(
   symbol: string,
   date: Date,
 ): Promise<boolean> {
@@ -67,12 +68,16 @@ export async function hasTickForSymbolAndDate(
 
 export async function writeTickData(
   symbol: string,
-  date: Date,
+  time: Date,
   type: TickFileType,
   data: Tick[],
   overwrite: boolean,
 ) {
-  const outputFilename = formatDataFilename(symbol, date, type);
+  const outputFilename = formatDataFilename(symbol, time, type);
+
+  // Ensure that the path exists
+  await fs.mkdir(path.dirname(outputFilename), {recursive: true});
+
   await writeCsv(
     outputFilename,
     data,
@@ -103,7 +108,7 @@ async function mergeTickData(symbol: string, date: Date) {
   const mergedData = (
     await Promise.all(
       [TickFileType.BidAsk, TickFileType.Trades].map(type =>
-        loadTickForSymbolAndDate(symbol, date, type),
+        loadTickForMinute(symbol, date, type),
       ),
     )
   )
@@ -119,47 +124,14 @@ async function mergeTickData(symbol: string, date: Date) {
   // ))
 }
 
-export async function getLatestDateInTickData(
-  symbol: string,
-  type: TickFileType,
-  date: Date,
-) {
-  const filename = formatDataFilename(symbol, date, type);
-  const lastLine = await getLastLine(filename);
-
-  if (!lastLine) {
-    return null;
-  }
-
-  const values = lastLine.split(',');
-
-  return new Date(Number(values[0]) * 1000);
-}
-
-async function getLatestDateInTickDataForAllTypes(symbol: string, date: Date) {
-  const [lastBidAskDate, lastTradesDate, lastMergedDate] = await Promise.all(
-    [TickFileType.BidAsk, TickFileType.Trades, TickFileType.Merged].map(type =>
-      getLatestDateInTickData(symbol, type, date),
-    ),
-  );
-
-  const latestDataDates: Record<TickFileType, Date | null> = {
-    [TickFileType.BidAsk]: lastBidAskDate,
-    [TickFileType.Trades]: lastTradesDate,
-    [TickFileType.Merged]: lastMergedDate,
-  };
-
-  return latestDataDates;
-}
-
 export async function ensureTickDataIsAvailable({
   symbols,
-  dates,
+  minute,
   dataProvider,
   log,
 }: {
   symbols: string[];
-  dates: Date[];
+  minute: Date;
   dataProvider: DataProvider;
   log: LoggerCallback;
 }) {
@@ -169,37 +141,25 @@ export async function ensureTickDataIsAvailable({
   });
 
   return series(
-    instrument => {
-      return series(
-        async date => {
-          if (await hasTickForSymbolAndDate(instrument.symbol, date)) {
-            return;
-          }
+    async instrument => {
+      if (await hasTickForMinute(instrument.symbol, minute)) {
+        return;
+      }
 
-          log(
-            `Downloading tick data for ${instrument.symbol} @ ${formatDate(
-              date,
-            )}`,
-          );
-
-          const latestDataDates = await getLatestDateInTickDataForAllTypes(
-            instrument.symbol,
-            date,
-          );
-
-          await dataProvider.downloadTickData({
-            instrument,
-            date,
-            latestDataDates,
-            write: async (type, ticks) => {
-              await writeTickData(instrument.symbol, date, type, ticks, false);
-            },
-            merge: async () => mergeTickData(instrument.symbol, date),
-          });
-        },
-        1,
-        dates,
+      log(
+        `Downloading tick data for ${instrument.symbol} @ ${formatDateTime(
+          minute,
+        )}`,
       );
+
+      await dataProvider.downloadTickData({
+        instrument,
+        minute,
+        write: async (type, ticks) => {
+          await writeTickData(instrument.symbol, minute, type, ticks, false);
+        },
+        merge: async () => mergeTickData(instrument.symbol, minute),
+      });
     },
     4,
     instruments,

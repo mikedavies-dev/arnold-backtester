@@ -1,15 +1,8 @@
-import {format, startOfDay, fromUnixTime} from 'date-fns';
-import {Tick, Bars, Tracker, BarPeriod} from '../core';
+import {Tick, Tracker, BarPeriod, Bar, Periods} from '../core';
 
-export const Periods = {
-  m1: 1,
-  m5: 5,
-  daily: 1440,
-};
+import {updateBarFromTick, updateBarFromMinuteBar, formatBarTime} from './bars';
 
 const periods: Array<BarPeriod> = ['m1', 'm5', 'daily'];
-
-export const MaximumBarCount = 250;
 
 export function initTracker(): Tracker {
   return {
@@ -30,73 +23,6 @@ export function initTracker(): Tracker {
     },
   };
 }
-
-export const formatBarTime = (period: number, marketTime: number): string => {
-  const duration = period * 60;
-
-  const date =
-    period === Periods.daily
-      ? startOfDay(fromUnixTime(marketTime))
-      : fromUnixTime(Math.floor(+marketTime / +duration) * +duration);
-
-  return format(date, 'yyyy-MM-dd HH:mm');
-};
-
-export const updateDataBar = ({
-  bars,
-  price,
-  volume,
-  period,
-  time,
-}: {
-  bars: Bars;
-  price: number;
-  volume: number;
-  period: BarPeriod;
-  time: number;
-}) => {
-  const marketTime = formatBarTime(Periods[period], time);
-
-  const barsToUpdate = bars[period];
-
-  if (
-    barsToUpdate.length === 0 ||
-    barsToUpdate[barsToUpdate.length - 1].time !== marketTime
-  ) {
-    barsToUpdate.push({
-      time: marketTime,
-      open: price,
-      high: price,
-      low: price,
-      close: price,
-      volume: 0,
-    });
-  }
-
-  // remove the last items
-  while (barsToUpdate.length > MaximumBarCount) {
-    barsToUpdate.shift();
-  }
-
-  // get the last bar
-  const bar = barsToUpdate[barsToUpdate.length - 1];
-
-  // update volume
-  if (volume) {
-    bar.volume += volume;
-  }
-
-  // update price info
-  if (price) {
-    bar.close = price;
-    if (price > bar.high) {
-      bar.high = price;
-    }
-    if (price < bar.low) {
-      bar.low = price;
-    }
-  }
-};
 
 export function handleTrackerTick({
   data,
@@ -156,7 +82,7 @@ export function handleTrackerTick({
       }
 
       periods.forEach(period =>
-        updateDataBar({
+        updateBarFromTick({
           bars: data.bars,
           price: value,
           volume: size,
@@ -166,4 +92,97 @@ export function handleTrackerTick({
       );
       break;
   }
+}
+
+export function handleTrackerMinuteBar({
+  data,
+  bar,
+  marketOpen,
+  marketClose,
+  marketTime,
+}: {
+  data: Tracker;
+  bar: Bar;
+  marketOpen: number;
+  marketClose: number;
+  marketTime: number;
+}) {
+  const isMarketOpen = marketTime >= marketOpen && marketTime <= marketClose;
+  const isPreMarket = marketTime < marketOpen;
+
+  // Pre-market data
+  if (isPreMarket) {
+    if (!data.preMarketHigh || bar.high > data.preMarketHigh) {
+      data.preMarketHigh = bar.high;
+    }
+
+    if (!data.preMarketLow || bar.low < data.preMarketLow) {
+      data.preMarketLow = bar.low;
+    }
+
+    data.preMarketVolume += bar.volume;
+  }
+
+  // Set open/high/low levels
+  if (isMarketOpen) {
+    if (!data.open) {
+      data.open = bar.open;
+    }
+
+    if (!data.high || bar.high > data.high) {
+      data.high = bar.high;
+    }
+
+    if (!data.low || bar.low < data.low) {
+      data.low = bar.low;
+    }
+  }
+
+  periods.forEach(period =>
+    updateBarFromMinuteBar({
+      bars: data.bars,
+      bar,
+      period,
+      time: marketTime,
+    }),
+  );
+}
+
+export function handleMissingBar({
+  data,
+  marketTime,
+  marketOpen,
+  marketClose,
+}: {
+  data: Tracker;
+  marketTime: number;
+  marketOpen: number;
+  marketClose: number;
+}) {
+  // Make sure we have some minute data
+  if (!data.bars.m1.length) {
+    return;
+  }
+
+  // get the last bar
+  const lastBar = data.bars.m1[data.bars.m1.length - 1];
+
+  // create a new bar based on the last to fill forward the data
+  const bar: Bar = {
+    open: lastBar.close,
+    high: lastBar.close,
+    low: lastBar.close,
+    close: lastBar.close,
+    volume: 0,
+    time: formatBarTime(Periods.m1, marketTime),
+  };
+
+  // apply it to the tracker
+  handleTrackerMinuteBar({
+    data,
+    bar,
+    marketOpen,
+    marketClose,
+    marketTime,
+  });
 }

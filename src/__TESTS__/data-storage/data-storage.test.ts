@@ -10,10 +10,9 @@ import {
 } from '../../core';
 import {ensureBarDataIsAvailable} from '../../utils/data-storage';
 import {
-  hasTickForSymbolAndDate,
-  loadTickForSymbolAndDate,
+  hasTickForMinute,
+  loadTickForMinute,
   ensureTickDataIsAvailable,
-  getLatestDateInTickData,
 } from '../../utils/tick-storage';
 
 import {formatDateTime} from '../../utils/dates';
@@ -54,7 +53,7 @@ describe('mongo db tests', () => {
 
   afterEach(async () => {
     // Delete test data
-    await del(`${Env.DATA_FOLDER}/ZZZZ_*.csv`);
+    await del(`${Env.DATA_FOLDER}/ZZZZ`);
   });
 
   const testDate = getTestDate();
@@ -210,16 +209,6 @@ describe('mongo db tests', () => {
     );
   });
 
-  test('getting the latest date for a tick file', async () => {
-    expect(
-      await getLatestDateInTickData('YYYY', TickFileType.Merged, getTestDate()),
-    ).toMatchInlineSnapshot(`2021-11-04T08:00:00.000Z`);
-
-    expect(
-      await getLatestDateInTickData('ZZZZ', TickFileType.Merged, getTestDate()),
-    ).toMatchInlineSnapshot(`null`);
-  });
-
   test('ensure tick data is available', async () => {
     const mockProvider = {
       name: 'test',
@@ -244,7 +233,7 @@ describe('mongo db tests', () => {
     };
     createDataProviderMock.mockReturnValue(mockProvider);
 
-    expect(await hasTickForSymbolAndDate('ZZZZ', getTestDate())).toBeFalsy();
+    expect(await hasTickForMinute('ZZZZ', getTestDate())).toBeFalsy();
 
     const dataProvider = createDataProvider();
 
@@ -252,14 +241,14 @@ describe('mongo db tests', () => {
       dataProvider,
       symbols: ['ZZZZ'],
       log: () => {},
-      dates: [getTestDate()],
+      minute: getTestDate(),
     });
 
     // We didn't have any data available so it should have been downloaded
     expect(mockProvider.downloadTickData).toBeCalledTimes(1);
 
     // Now we have data
-    expect(await hasTickForSymbolAndDate('ZZZZ', getTestDate())).toBeTruthy();
+    expect(await hasTickForMinute('ZZZZ', getTestDate())).toBeTruthy();
 
     mockProvider.downloadTickData.mockReset();
 
@@ -268,14 +257,14 @@ describe('mongo db tests', () => {
       dataProvider,
       symbols: ['ZZZZ'],
       log: () => {},
-      dates: [getTestDate()],
+      minute: getTestDate(),
     });
 
     // We already have data so it should not have been called again
     expect(mockProvider.downloadTickData).toBeCalledTimes(0);
 
     // load the tick data
-    const storedData = await loadTickForSymbolAndDate(
+    const storedData = await loadTickForMinute(
       symbol,
       testDate,
       TickFileType.Merged,
@@ -358,27 +347,27 @@ describe('mongo db tests', () => {
       dataProvider,
       symbols: ['ZZZZ'],
       log: () => {},
-      dates: [getTestDate()],
+      minute: getTestDate(),
     });
 
-    mockProvider.downloadTickData = jest.fn(
-      async ({latestDataDates}: DownloadTickDataArgs) => {
-        expect(latestDataDates).toMatchInlineSnapshot(`
-          Object {
-            "bidask": 2022-01-01T05:01:30.000Z,
-            "merged": null,
-            "trades": 2022-01-01T05:01:00.000Z,
-          }
-        `);
-      },
-    );
+    // mockProvider.downloadTickData = jest.fn(
+    //   async ({latestDataDates}: DownloadTickDataArgs) => {
+    //     expect(latestDataDates).toMatchInlineSnapshot(`
+    //       Object {
+    //         "bidask": 2022-01-01T05:01:30.000Z,
+    //         "merged": null,
+    //         "trades": 2022-01-01T05:01:00.000Z,
+    //       }
+    //     `);
+    //   },
+    // );
 
     // If we make the call again we should not download data
     await ensureTickDataIsAvailable({
       dataProvider,
       symbols: ['ZZZZ'],
       log: () => {},
-      dates: [getTestDate()],
+      minute: getTestDate(),
     });
   });
 
@@ -398,15 +387,15 @@ describe('mongo db tests', () => {
       }),
     });
 
-    expect(await hasTickForSymbolAndDate(symbol, getTestDate())).toBeFalsy();
+    expect(await hasTickForMinute(symbol, getTestDate())).toBeFalsy();
 
     await ensureTickDataIsAvailable({
       dataProvider: createDataProvider(),
       symbols: ['ZZZZ'],
       log: () => {},
-      dates: [getTestDate()],
+      minute: getTestDate(),
     });
 
-    expect(await hasTickForSymbolAndDate(symbol, getTestDate())).toBeTruthy();
+    expect(await hasTickForMinute(symbol, getTestDate())).toBeTruthy();
   });
 });

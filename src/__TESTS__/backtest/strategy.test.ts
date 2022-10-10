@@ -10,17 +10,16 @@ import {connect, disconnect} from '../../utils/db';
 
 import {loadStrategy} from '../../utils/module';
 
-import {loadTickForSymbolAndDate} from '../../utils/tick-storage';
+import {loadTickForMinute} from '../../utils/tick-storage';
 
 import {Tick} from '../../core';
 
 jest.mock('../../utils/tick-storage');
 jest.mock('../../utils/module');
 
-const loadTickForSymbolAndDateMock =
-  loadTickForSymbolAndDate as jest.MockedFunction<
-    typeof loadTickForSymbolAndDate
-  >;
+const loadTickForSymbolAndDateMock = loadTickForMinute as jest.MockedFunction<
+  typeof loadTickForMinute
+>;
 
 const loadStrategyMock = loadStrategy as jest.MockedFunction<
   typeof loadStrategy
@@ -97,7 +96,7 @@ describe('test worker module', () => {
           expect(broker.getPositionSize(symbol)).toBe(0);
         }
       },
-      IsInPlay: () => true,
+      isSetup: () => true,
     });
 
     loadTickForSymbolAndDateMock.mockResolvedValue(testMarketData);

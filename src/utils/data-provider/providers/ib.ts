@@ -1,6 +1,13 @@
 import {IBApiNext, ConnectionState, Contract, BarSizeSetting} from '@stoqey/ib';
 import series from 'promise-series2';
-import {format, parse, isSameDay, isSameSecond, addSeconds} from 'date-fns';
+import {
+  format,
+  parse,
+  isSameDay,
+  isSameSecond,
+  addSeconds,
+  addMinutes,
+} from 'date-fns';
 import {lastValueFrom} from 'rxjs';
 import numeral from 'numeral';
 
@@ -31,7 +38,9 @@ import {
 } from '../../../core';
 
 import Env from '../../../utils/env';
-import {formatDate, formatDateTime} from '../../dates';
+import {formatDateTime} from '../../dates';
+
+let currentApiClientId = Number(Env.IB_BASE_CLIENT_ID);
 
 export function formatIbRequestDate(date: Date) {
   return format(date, 'yyyyMMdd HH:mm:ss');
@@ -191,7 +200,10 @@ export function create({log}: {log?: LoggerCallback} = {}): DataProvider {
         }
       });
 
-      api.connect(Number(Env.IB_CLIENT_ID_DATA_PROVIDER));
+      api.connect(currentApiClientId);
+
+      // Increment the id
+      currentApiClientId += 1;
     });
   }
 
@@ -265,30 +277,34 @@ export function create({log}: {log?: LoggerCallback} = {}): DataProvider {
 
   async function downloadTickData({
     instrument,
-    date,
+    minute,
     write,
     merge,
-    latestDataDates,
   }: DownloadTickDataArgs) {
     log?.(
-      `Downloading tick data for ${instrument.symbol} @ ${formatDate(date)}`,
+      `Downloading tick data for ${instrument.symbol} @ ${formatDateTime(
+        minute,
+      )}`,
     );
 
     const downloadAndWriteData = async (
       type: TickFileType,
       downloadDataFn: DownloadTickDataFn,
-      from: Date,
     ) => {
-      let currentDate = from;
+      let currentTime = minute;
+      const until = addMinutes(minute, 1);
 
       do {
-        const ticks = await downloadDataFn(api, instrument, currentDate);
+        // get ticks for this minute
+        const ticks = (
+          await downloadDataFn(api, instrument, currentTime)
+        ).filter(tick => tick.dateTime < until);
 
         if (!ticks.length) {
           log?.(
             `Finished downloading ${type} ticks for ${
               instrument.symbol
-            } for ${formatDate(currentDate)}`,
+            } for ${formatDateTime(minute)}`,
           );
           break;
         }
@@ -297,7 +313,7 @@ export function create({log}: {log?: LoggerCallback} = {}): DataProvider {
           `Downloaded ${numeral(ticks.length).format(
             '0,0',
           )} ${type} ticks for ${instrument.symbol} from ${formatDateTime(
-            currentDate,
+            currentTime,
           )}`,
         );
 
@@ -308,25 +324,21 @@ export function create({log}: {log?: LoggerCallback} = {}): DataProvider {
 
         const nextDate = ticks[ticks.length - 1].dateTime;
 
-        currentDate = isSameSecond(currentDate, nextDate)
+        currentTime = isSameSecond(currentTime, nextDate)
           ? addSeconds(nextDate, 1)
           : nextDate;
       } while (true); // eslint-disable-line
     };
 
-    await downloadAndWriteData(
-      TickFileType.BidAsk,
-      downloadBidAskTickData,
-      latestDataDates.bidask || date,
-    );
+    await downloadAndWriteData(TickFileType.BidAsk, downloadBidAskTickData);
 
-    await downloadAndWriteData(
-      TickFileType.Trades,
-      downloadTradeTickData,
-      latestDataDates.trades || date,
-    );
+    await downloadAndWriteData(TickFileType.Trades, downloadTradeTickData);
 
-    log?.(`Merging tick data for ${instrument.symbol} for ${formatDate(date)}`);
+    log?.(
+      `Merging tick data for ${instrument.symbol} for ${formatDateTime(
+        minute,
+      )}`,
+    );
     await merge();
   }
 

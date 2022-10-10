@@ -11,6 +11,7 @@ import {
 
 // Register the models
 import {registerMongooseModels} from '../models/models';
+import {formatBarTime} from './bars';
 
 import {
   Instrument,
@@ -20,6 +21,8 @@ import {
   DbTimeSeriesBar,
   DbTimeSeriesDataAvailability,
   DbInstrument,
+  TimeSeriesPeriodToPeriod,
+  Bars,
 } from '../core';
 
 import Env from './env';
@@ -255,36 +258,69 @@ export async function storeInstrument({
   }
 }
 
-export async function loadSeries(
-  symbol: string,
-  period: TimeSeriesPeriod,
-  until: Date,
-  days: number,
-) {
-  const TimeSeriesBar = mongoose.model<DbTimeSeriesBar>('TimeSeriesBar');
-
-  const bars = await TimeSeriesBar.find({
-    symbol,
-    period,
-    time: {
-      $gte: subDays(until, days),
-      $lte: until,
-    },
+function databaseToBars(bars: DbTimeSeriesBar[]): Bar[] {
+  return bars.map(bar => {
+    return {
+      time: formatBarTime(
+        TimeSeriesPeriodToPeriod[bar.period],
+        getUnixTime(bar.time),
+      ),
+      open: bar.open,
+      high: bar.high,
+      low: bar.low,
+      close: bar.close,
+      volume: bar.volume,
+    };
   });
-
-  return bars;
 }
 
-export async function loadSeriesAsMap(
+export async function loadBars(
   symbol: string,
   period: TimeSeriesPeriod,
   until: Date,
-  days: number,
-) {
-  const bars = await loadSeries(symbol, period, until, days);
+  count: number,
+): Promise<Bar[]> {
+  const TimeSeriesBar = mongoose.model<DbTimeSeriesBar>('TimeSeriesBar');
+
+  return databaseToBars(
+    await TimeSeriesBar.find({
+      symbol,
+      period,
+      time: {$lte: until},
+    })
+      .sort({until: -1})
+      .limit(count),
+  ).reverse();
+}
+
+export async function loadMinuteDataForDate(symbol: string, date: Date) {
+  const TimeSeriesBar = mongoose.model<DbTimeSeriesBar>('TimeSeriesBar');
+
+  const bars = databaseToBars(
+    await TimeSeriesBar.find({
+      symbol,
+      period: 'm1',
+      time: {
+        $gte: subDays(date, 1),
+        $lte: date,
+      },
+    }),
+  );
 
   return bars.reduce((map, bar) => {
-    map[getUnixTime(bar.time)] = bar;
+    map[bar.time] = bar;
     return map;
-  }, {} as {[time: number]: DbTimeSeriesBar});
+  }, {} as {[time: string]: Bar});
+}
+
+export async function loadTrackerBars(
+  symbol: string,
+  until: Date,
+  count: number,
+): Promise<Bars> {
+  return {
+    m1: await loadBars(symbol, 'm1', until, count),
+    m5: await loadBars(symbol, 'm5', until, count),
+    daily: await loadBars(symbol, 'daily', until, count),
+  };
 }

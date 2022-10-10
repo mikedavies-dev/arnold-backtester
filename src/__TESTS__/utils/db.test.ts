@@ -13,8 +13,8 @@ import {
   instrumentLookup,
   storeInstrument,
   getInstrument,
-  loadSeries,
   storeSeries,
+  loadBars,
 } from '../../utils/db';
 
 import {getTestDate} from '../test-utils/tick';
@@ -212,7 +212,7 @@ describe('mongo db tests', () => {
   });
 
   test('load bar data for invalid instrument', async () => {
-    const bars = await loadSeries('INVALID', 'm1', getTestDate(), 1);
+    const bars = await loadBars('INVALID', 'm1', getTestDate(), 1);
     expect(bars).toEqual([]);
   });
 
@@ -236,25 +236,25 @@ describe('mongo db tests', () => {
       getBarData(1),
     ]);
 
-    const bars = await loadSeries('TEST_1', 'm1', getTestDate(), 1);
+    const bars = await loadBars('TEST_1', 'm1', getTestDate(), 10);
 
     expect(bars.length).toEqual(4);
 
     expect(bars[0]).toEqual(
       expect.objectContaining({
-        open: -3,
-        high: -3,
-        low: -3,
-        close: -3,
+        open: 0,
+        high: 0,
+        low: 0,
+        close: 0,
       }),
     );
 
     expect(bars[1]).toEqual(
       expect.objectContaining({
-        open: -2,
-        high: -2,
-        low: -2,
-        close: -2,
+        open: -1,
+        high: -1,
+        low: -1,
+        close: -1,
       }),
     );
   });

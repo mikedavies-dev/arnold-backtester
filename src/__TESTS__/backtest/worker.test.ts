@@ -7,14 +7,13 @@ import {
 } from '../test-utils/tick';
 import {connect, disconnect} from '../../utils/db';
 
-import {loadTickForSymbolAndDate} from '../../utils/tick-storage';
+import {loadTickForMinute} from '../../utils/tick-storage';
 
 jest.mock('../../utils/tick-storage');
 
-const loadTickForSymbolAndDateMock =
-  loadTickForSymbolAndDate as jest.MockedFunction<
-    typeof loadTickForSymbolAndDate
-  >;
+const loadTickForSymbolAndDateMock = loadTickForMinute as jest.MockedFunction<
+  typeof loadTickForMinute
+>;
 
 describe.skip('test worker module', () => {
   beforeAll(async () => {

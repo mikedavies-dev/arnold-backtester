@@ -1,10 +1,10 @@
-import {HandleTickParameters, IsInPlayParameters} from '../core';
+import {HandleTickParameters, IsSetupParameters} from '../core';
 
 type InitStrategy = () => void;
 type ExtraSymbols = Array<string>;
 
 export type HandleTick = (args: HandleTickParameters) => void;
-export type IsInPlay = (args: IsInPlayParameters) => boolean;
+export type IsSetup = (args: IsSetupParameters) => boolean;
 
 export async function loadStrategy(path: string) {
   try {
@@ -12,19 +12,19 @@ export async function loadStrategy(path: string) {
       init,
       extraSymbols,
       handleTick,
-      IsInPlay,
+      isSetup,
     }: {
       init: InitStrategy;
       extraSymbols: ExtraSymbols;
       handleTick: HandleTick;
-      IsInPlay: IsInPlay;
+      isSetup: IsSetup;
     } = await import(path);
 
     return {
       init,
       extraSymbols,
       handleTick,
-      IsInPlay,
+      isSetup,
     };
   } catch (err) {
     return null;

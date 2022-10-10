@@ -67,8 +67,7 @@ export type WriteTickDataFn = (
 
 export type DownloadTickDataArgs = {
   instrument: Instrument;
-  date: Date;
-  latestDataDates: Record<TickFileType, Date | null>;
+  minute: Date;
   write: WriteTickDataFn;
   merge: () => Promise<void>;
 };
@@ -228,19 +227,11 @@ export type HandleTickParameters = {
   };
 };
 
-export type IsInPlayParameters = {
+export type IsSetupParameters = {
   symbol: string;
   log: LoggerCallback;
-  date: Date;
-  premarketData: {
-    high: number;
-    low: number;
-    volume: number;
-    last: number;
-    percentChange: number;
-    relativeVolume: number;
-    bars: Bars;
-  };
+  tracker: Tracker;
+  trackers: Record<string, Tracker>;
 };
 
 export type MetricsByPeriod = {
@@ -280,3 +271,19 @@ export function notEmpty<TValue>(
 ): value is TValue {
   return value !== null && value !== undefined;
 }
+
+export const MaximumBarCount = 250;
+
+export const Periods = {
+  m1: 1,
+  m5: 5,
+  m60: 60,
+  daily: 1440,
+};
+
+export const TimeSeriesPeriodToPeriod: Record<TimeSeriesPeriod, number> = {
+  daily: Periods.daily,
+  m1: Periods.m1,
+  m5: Periods.m5,
+  m60: Periods.m60,
+};
