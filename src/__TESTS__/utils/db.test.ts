@@ -15,11 +15,24 @@ import {
   getInstrument,
   storeSeries,
   loadBars,
+  loadMinuteDataForDate,
+  loadTrackerBars,
 } from '../../utils/db';
 
 import {getTestDate} from '../test-utils/tick';
 
 describe('mongo db tests', () => {
+  function getBarData(minutes: number) {
+    return {
+      time: formatDateTime(addMinutes(getTestDate(), minutes)),
+      open: minutes,
+      high: minutes,
+      low: minutes,
+      close: minutes,
+      volume: minutes,
+    };
+  }
+
   beforeAll(async () => {
     // Reset the test database
     await resetDatabase();
@@ -217,17 +230,6 @@ describe('mongo db tests', () => {
   });
 
   test('store and load series', async () => {
-    function getBarData(minutes: number) {
-      return {
-        time: formatDateTime(addMinutes(getTestDate(), minutes)),
-        open: minutes,
-        high: minutes,
-        low: minutes,
-        close: minutes,
-        volume: minutes,
-      };
-    }
-
     await storeSeries('TEST_1', 'm1', [
       getBarData(-3),
       getBarData(-2),
@@ -238,24 +240,137 @@ describe('mongo db tests', () => {
 
     const bars = await loadBars('TEST_1', 'm1', getTestDate(), 10);
 
-    expect(bars.length).toEqual(4);
+    expect(bars.length).toEqual(3);
 
-    expect(bars[0]).toEqual(
-      expect.objectContaining({
-        open: 0,
-        high: 0,
-        low: 0,
-        close: 0,
-      }),
-    );
+    expect(bars).toMatchInlineSnapshot(`
+      Array [
+        Object {
+          "close": -1,
+          "high": -1,
+          "low": -1,
+          "open": -1,
+          "time": "2021-12-31 23:59",
+          "volume": -1,
+        },
+        Object {
+          "close": -2,
+          "high": -2,
+          "low": -2,
+          "open": -2,
+          "time": "2021-12-31 23:58",
+          "volume": -2,
+        },
+        Object {
+          "close": -3,
+          "high": -3,
+          "low": -3,
+          "open": -3,
+          "time": "2021-12-31 23:57",
+          "volume": -3,
+        },
+      ]
+    `);
+  });
 
-    expect(bars[1]).toEqual(
-      expect.objectContaining({
-        open: -1,
-        high: -1,
-        low: -1,
-        close: -1,
-      }),
-    );
+  test('loading bar data by date from the database', async () => {
+    const emptyBars = await loadMinuteDataForDate('INVALID', getTestDate());
+    expect(Object.keys(emptyBars).length).toBe(0);
+
+    await storeSeries('TEST_2', 'm1', [
+      getBarData(-3),
+      getBarData(-2),
+      getBarData(-1),
+      getBarData(0),
+      getBarData(1),
+    ]);
+
+    const barsByDate = await loadMinuteDataForDate('TEST_2', getTestDate());
+
+    // Make sure we have all the data
+    expect(barsByDate).toMatchInlineSnapshot(`
+      Object {
+        "2021-12-31 23:57": Object {
+          "close": -3,
+          "high": -3,
+          "low": -3,
+          "open": -3,
+          "time": "2021-12-31 23:57",
+          "volume": -3,
+        },
+        "2021-12-31 23:58": Object {
+          "close": -2,
+          "high": -2,
+          "low": -2,
+          "open": -2,
+          "time": "2021-12-31 23:58",
+          "volume": -2,
+        },
+        "2021-12-31 23:59": Object {
+          "close": -1,
+          "high": -1,
+          "low": -1,
+          "open": -1,
+          "time": "2021-12-31 23:59",
+          "volume": -1,
+        },
+      }
+    `);
+  });
+
+  test('load full tracker bars for a symbol', async () => {
+    // No data to start with
+    expect(await loadTrackerBars('TEST_3', getTestDate(), 3))
+      .toMatchInlineSnapshot(`
+      Object {
+        "daily": Array [],
+        "m1": Array [],
+        "m5": Array [],
+      }
+    `);
+
+    await storeSeries('TEST_3', 'm1', [
+      getBarData(-5),
+      getBarData(-6),
+      getBarData(-3),
+      getBarData(-2),
+      getBarData(-1),
+      getBarData(0),
+      getBarData(1),
+    ]);
+
+    // Only load m1 data for last 3 bars
+    expect(await loadTrackerBars('TEST_3', getTestDate(), 3))
+      .toMatchInlineSnapshot(`
+      Object {
+        "daily": Array [],
+        "m1": Array [
+          Object {
+            "close": -3,
+            "high": -3,
+            "low": -3,
+            "open": -3,
+            "time": "2021-12-31 23:57",
+            "volume": -3,
+          },
+          Object {
+            "close": -5,
+            "high": -5,
+            "low": -5,
+            "open": -5,
+            "time": "2021-12-31 23:55",
+            "volume": -5,
+          },
+          Object {
+            "close": -6,
+            "high": -6,
+            "low": -6,
+            "open": -6,
+            "time": "2021-12-31 23:54",
+            "volume": -6,
+          },
+        ],
+        "m5": Array [],
+      }
+    `);
   });
 });

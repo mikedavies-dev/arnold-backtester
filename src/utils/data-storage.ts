@@ -68,11 +68,6 @@ export async function ensureBarDataIsAvailable({
             period,
           );
 
-          if (!blocks.length) {
-            log('!! No blocks', range);
-            return;
-          }
-
           await series(
             async ({end, days}) => {
               log(

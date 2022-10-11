@@ -10,23 +10,6 @@ export async function fileExists(path: string) {
   }
 }
 
-export async function getLastLine(path: string) {
-  if (!(await fileExists(path))) {
-    return null;
-  }
-
-  const liner = new LineByLine(path);
-
-  let line: Buffer | boolean = false;
-  let lastLine = '';
-
-  while ((line = liner.next())) {
-    lastLine = line.toString('ascii');
-  }
-
-  return lastLine;
-}
-
 export async function writeCsv<CsvType extends Record<string, any>>(
   outputFilename: string,
   data: CsvType[],

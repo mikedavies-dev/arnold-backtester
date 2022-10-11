@@ -188,13 +188,13 @@ export async function findNonRequestedRangeForPeriod(
     }
   }
 
-  if (!lastDayWithoutRequest) {
-    return null;
-  }
+  // if (!lastDayWithoutRequest) {
+  //   return null;
+  // }
 
   return {
-    from: firstDayWithoutRequest,
-    to: lastDayWithoutRequest,
+    from: firstDayWithoutRequest as Date,
+    to: lastDayWithoutRequest as Date,
   };
 }
 
@@ -286,9 +286,9 @@ export async function loadBars(
     await TimeSeriesBar.find({
       symbol,
       period,
-      time: {$lte: until},
+      time: {$lt: until},
     })
-      .sort({until: -1})
+      .sort({time: 1})
       .limit(count),
   ).reverse();
 }
@@ -302,8 +302,10 @@ export async function loadMinuteDataForDate(symbol: string, date: Date) {
       period: 'm1',
       time: {
         $gte: subDays(date, 1),
-        $lte: date,
+        $lt: date,
       },
+    }).sort({
+      time: 1,
     }),
   );
 

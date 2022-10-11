@@ -308,5 +308,9 @@ describe('test data availability', () => {
         "to": 2019-02-11T00:00:00.000Z,
       }
     `);
+
+    expect(
+      await findNonRequestedRangeForPeriod(symbol, period, from, from),
+    ).toMatchInlineSnapshot(`null`);
   });
 });

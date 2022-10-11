@@ -1,7 +1,7 @@
 import path from 'path';
 import del from 'del';
 
-import {fileExists, getLastLine, writeCsv, readCSV} from '../../utils/files';
+import {fileExists, writeCsv, readCSV} from '../../utils/files';
 import Env from '../../utils/env';
 
 const lastLineTestFilename = path.join(
@@ -19,10 +19,6 @@ test('file does not exist', async () => {
 
 test('file exists', async () => {
   expect(await fileExists(lastLineTestFilename)).toBe(true);
-});
-
-test('get last line', async () => {
-  expect(await getLastLine(lastLineTestFilename)).toMatch(`line`);
 });
 
 type ReadWriteTestRecord = {
