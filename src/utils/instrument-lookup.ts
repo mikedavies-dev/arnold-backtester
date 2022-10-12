@@ -31,7 +31,7 @@ export async function lookupSymbol({
         choices: [
           ...suggestions.map(r => ({
             name: `${r.name}`,
-            value: r.symbol,
+            value: r.externalId,
           })),
           new inquirer.Separator(),
           {
@@ -43,7 +43,7 @@ export async function lookupSymbol({
     ]);
 
     if (result !== null) {
-      return suggestions.find(s => s.symbol === result) as Instrument;
+      return suggestions.find(s => s.externalId === result) as Instrument;
     }
   }
 }

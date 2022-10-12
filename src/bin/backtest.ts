@@ -26,13 +26,13 @@ async function run() {
     });
 
     await storeBacktestResults(results);
-    await disconnect();
-
-    log('Finished!');
   } catch (err) {
     const errorCode =
       err instanceof BacktestControllerError ? err.code : 'unknown';
     log(`Failed to run backtest: ${errorCode}`, err);
+  } finally {
+    await disconnect();
+    log('Finished!');
   }
 }
 

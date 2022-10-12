@@ -102,6 +102,7 @@ test('get a backtest by id', async () => {
         "from": "2022-01-01T05:00:00.000Z",
         "to": "2022-01-01T05:00:00.000Z",
       },
+      "extraSymbols": Array [],
       "initialBalance": 10000,
       "strategy": Object {
         "name": "test",

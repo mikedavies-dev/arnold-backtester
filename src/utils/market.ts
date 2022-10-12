@@ -2,7 +2,7 @@ import {setHours, setMinutes, getUnixTime} from 'date-fns/fp';
 import {flow} from 'fp-ts/lib/function';
 
 const createMarketOpen = flow(setHours(9), setMinutes(30), getUnixTime);
-const createMarketClose = flow(setHours(16), setMinutes(30), getUnixTime);
+const createMarketClose = flow(setHours(16), setMinutes(0), getUnixTime);
 const createPreMarketOpen = flow(setHours(4), setMinutes(0), getUnixTime);
 
 import {MarketStatus} from '../core';

@@ -1,6 +1,7 @@
 import {parse, getUnixTime} from 'date-fns';
 
-import {formatBarTime, Periods} from '../../utils/tracker';
+import {Periods} from '../../core';
+import {formatBarTime} from '../../utils/bars';
 
 const parseDate = (date: string) =>
   getUnixTime(parse(date, 'yyyy-MM-dd HH:mm:ss', new Date()));

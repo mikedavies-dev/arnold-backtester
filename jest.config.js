@@ -17,6 +17,7 @@ module.exports = {
     '!src/web/**',
     '!./src/ui/hooks/use-dimensions.ts',
     '!./src/utils/data-provider/providers/**',
+    '!./src/backtest/worker.ts',
   ],
   projects: [
     {

@@ -40,8 +40,15 @@ export type Bars = {
 export type BarPeriod = keyof Bars;
 
 export type TimeSeriesPeriod = 'm1' | 'm5' | 'm60' | 'daily';
+export const TimeSeriesPeriods: TimeSeriesPeriod[] = [
+  'm1',
+  'm5',
+  'm60',
+  'daily',
+];
 
 export type Instrument = {
+  externalId: string;
   symbol: string;
   name: string;
   data?: any;
@@ -53,17 +60,21 @@ export enum TickFileType {
   BidAsk = 'bidask',
 }
 
+export type WriteTickDataFn = (
+  type: TickFileType,
+  ticks: Tick[],
+) => Promise<void>;
+
 export type DownloadTickDataArgs = {
   instrument: Instrument;
-  date: Date;
-  latestDataDates: Record<TickFileType, Date | null>;
-  write: (type: TickFileType, ticks: Tick[]) => Promise<void>;
+  minute: Date;
+  write: WriteTickDataFn;
   merge: () => Promise<void>;
 };
 
 export type DataProvider = {
   name: string;
-  init(): Promise<void>;
+  init(args?: {workerIndex: number}): Promise<void>;
   shutdown(): Promise<void>;
   getTimeSeries(
     instrument: Instrument,
@@ -155,6 +166,7 @@ export type Profile = {
   threads: number;
   initialBalance: number;
   commissionPerOrder: number;
+  extraSymbols: string[];
 };
 
 // Models
@@ -174,17 +186,24 @@ export type DbTimeSeriesBar = {
   _id?: MongoObjectId;
   symbol: string;
   period: TimeSeriesPeriod;
-} & Bar;
+  time: Date;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+};
 
 export type DbTimeSeriesDataAvailability = {
   _id?: MongoObjectId;
   symbol: string;
   period: TimeSeriesPeriod;
-  dataAvailableTo: Date;
+  dateRequested: Date;
 };
 
 export type DbInstrument = {
   _id?: MongoObjectId;
+  externalId: string;
   provider: string;
   symbol: string;
   name: string;
@@ -206,6 +225,16 @@ export type HandleTickParameters = {
     hasOpenOrders: (symbol: string) => boolean;
     getPositionSize: (symbol: string) => number;
   };
+};
+
+export type IsSetupParameters = {
+  symbol: string;
+  log: LoggerCallback;
+  tracker: Tracker;
+  trackers: Record<string, Tracker>;
+  marketTime: number;
+  marketOpen: number;
+  marketClose: number;
 };
 
 export type MetricsByPeriod = {
@@ -245,3 +274,19 @@ export function notEmpty<TValue>(
 ): value is TValue {
   return value !== null && value !== undefined;
 }
+
+export const MaximumBarCount = 250;
+
+export const Periods = {
+  m1: 1,
+  m5: 5,
+  m60: 60,
+  daily: 1440,
+};
+
+export const TimeSeriesPeriodToPeriod: Record<TimeSeriesPeriod, number> = {
+  daily: Periods.daily,
+  m1: Periods.m1,
+  m5: Periods.m5,
+  m60: Periods.m60,
+};

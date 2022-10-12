@@ -5,7 +5,7 @@ import Env from '../../../utils/env';
 import {Instrument} from '../../../core';
 
 const microsoft = {
-  id: 272093,
+  externalId: '272093',
   symbol: 'MSFT',
   name: 'MICROSOFT CORP',
   data: {
@@ -40,7 +40,7 @@ function findDuplicates(bars: Bar[]) {
 
 // These tests require IB to be connected
 let nextClientId = 1000;
-const originalClientId = Env.IB_CLIENT_ID_DATA_PROVIDER;
+const originalClientId = Env.IB_BASE_CLIENT_ID;
 
 jest.setTimeout(60000);
 
@@ -54,11 +54,11 @@ if (Env.DISABLE_PROVIDER_TESTS) {
   });
 
   beforeEach(() => {
-    Env.IB_CLIENT_ID_DATA_PROVIDER = `${nextClientId++}`;
+    Env.IB_BASE_CLIENT_ID = `${nextClientId++}`;
   });
 
   afterAll(() => {
-    Env.IB_CLIENT_ID_DATA_PROVIDER = originalClientId;
+    Env.IB_BASE_CLIENT_ID = originalClientId;
   });
 
   test('request daily bar data', async () => {
@@ -175,7 +175,7 @@ if (Env.DISABLE_PROVIDER_TESTS) {
 
   test('instrument lookups', async () => {
     const ib = createIB();
-    Env.IB_CLIENT_ID_DATA_PROVIDER = `${nextClientId++}`;
+    Env.IB_BASE_CLIENT_ID = `${nextClientId++}`;
     await ib.init();
     const results = await ib.instrumentLookup('MSFT');
 

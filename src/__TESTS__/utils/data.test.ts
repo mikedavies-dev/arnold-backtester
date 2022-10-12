@@ -1,7 +1,7 @@
 import {
   loadTickFile,
-  loadTickForSymbolAndDate,
-  hasTickForSymbolAndDate,
+  loadTickForMinute,
+  hasTickForMinute,
 } from '../../utils/tick-storage';
 import {getTestDate} from '../test-utils/tick';
 import {TickFileType} from '../../core';
@@ -220,7 +220,7 @@ test('return invalid ts file as an empty array', async () => {
 });
 
 test('that we fail to load symbol data', async () => {
-  const data = await loadTickForSymbolAndDate(
+  const data = await loadTickForMinute(
     'ZZZZ',
     getTestDate(),
     TickFileType.Merged,
@@ -229,11 +229,11 @@ test('that we fail to load symbol data', async () => {
 });
 
 test('that we dont have tick data', async () => {
-  const hasData = await hasTickForSymbolAndDate('ZZZZ', getTestDate());
+  const hasData = await hasTickForMinute('ZZZZ', getTestDate());
   expect(hasData).toBeFalsy();
 });
 
 test('that we have tick data', async () => {
-  const hasData = await hasTickForSymbolAndDate('YYYY', getTestDate());
+  const hasData = await hasTickForMinute('YYYY', getTestDate());
   expect(hasData).toBeTruthy();
 });

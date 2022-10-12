@@ -1,38 +1,30 @@
-/*
-TODO:
-1. Store data in Mongo
-2. Store tick data in Mongo
-3. Make call again to ensureBarDataIsAvailable and ensure that data is not loaded (because we already have it)
-
-4. Load TS data from IB (IBNext?)
-*/
-
 import series from 'promise-series2';
-import {parse, isBefore} from 'date-fns';
+import {addDays, isBefore, isSameDay, subDays} from 'date-fns';
 
 import {LoggerCallback, TimeSeriesPeriod, Instrument} from '../core';
 import {lookupSymbol} from './instrument-lookup';
 import {
-  getDataAvailableTo,
   storeSeries,
-  updateDataAvailableTo,
+  recordDataHasBeenRequested,
   instrumentLookup,
   storeInstrument,
+  findNonRequestedRangeForPeriod,
 } from './db';
 import {DataProvider} from '../core';
-import Env from './env';
 import {splitDatesIntoBlocks} from './timeseries';
 import {formatDate} from './dates';
 
 export async function ensureBarDataIsAvailable({
   symbols,
   log,
-  until,
+  from,
+  to,
   dataProvider,
 }: {
   symbols: string[];
   log: LoggerCallback;
-  until: Date;
+  from: Date;
+  to: Date;
   dataProvider: DataProvider;
 }) {
   const requiredBarPeriods: Array<TimeSeriesPeriod> = [
@@ -42,58 +34,77 @@ export async function ensureBarDataIsAvailable({
     'daily',
   ];
 
-  const earliestDataDate = parse(Env.EARLIEST_DATA, 'yyyy-MM-dd', new Date());
-
   const instruments = await instrumentLookup({
     provider: dataProvider.name,
     symbols,
   });
 
+  const periodMinimumDays: Record<TimeSeriesPeriod, number> = {
+    m1: 1,
+    m5: 5,
+    m60: 60,
+    daily: 200,
+  };
+
   await series(
     async instrument => {
-      log(`Ensuring data for ${instrument.symbol}`);
       await series(
         async period => {
-          log(`Preloading ${period} for ${instrument.symbol}`);
-
-          const dataAvailableTo = await getDataAvailableTo(
+          const range = await findNonRequestedRangeForPeriod(
             instrument.symbol,
             period,
+            subDays(from, periodMinimumDays[period]),
+            to,
           );
-          const startDate = dataAvailableTo || earliestDataDate;
 
-          // If the latest data we have is before the latest load data then load more
-          if (isBefore(startDate, until)) {
-            const blocks = splitDatesIntoBlocks(startDate, until, period);
-
-            await series(
-              async ({end, days}) => {
-                log(
-                  `Loading ${
-                    instrument.symbol
-                  } / ${days} day(s) of ${period} until ${formatDate(end)}`,
-                );
-
-                // Load the data from the provider
-                const bars = await dataProvider.getTimeSeries(
-                  instrument,
-                  end,
-                  days,
-                  period,
-                );
-
-                // Store the data in the database
-                await storeSeries(instrument.symbol, period, bars);
-
-                // Update the new latest date so we don't load it again
-                await updateDataAvailableTo(instrument.symbol, period, end);
-              },
-              0,
-              blocks,
-            );
-          } else {
-            log(`All data available ${period} for ${instrument.symbol}`);
+          if (!range) {
+            log(`No data required for ${instrument.symbol} ${period}`);
+            return;
           }
+
+          const blocks = splitDatesIntoBlocks(
+            range.from,
+            addDays(range.to, 1), // Request data until day+1 to include data for day
+            period,
+          );
+
+          await series(
+            async ({end, days}) => {
+              log(
+                `Loading ${
+                  instrument.symbol
+                } / ${days} day(s) of ${period} until end of ${formatDate(
+                  subDays(end, 1),
+                )}`,
+              );
+
+              // // Load the data from the provider
+              const bars = await dataProvider.getTimeSeries(
+                instrument,
+                end,
+                days,
+                period,
+              );
+
+              // Store the data in the database
+              await storeSeries(instrument.symbol, period, bars);
+
+              // Store that we have requested this date/period combo so we don't request it again
+              for (
+                let day = subDays(end, days);
+                isBefore(day, range.to) || isSameDay(day, range.to);
+                day = addDays(day, 1)
+              ) {
+                await recordDataHasBeenRequested(
+                  instrument.symbol,
+                  period,
+                  day,
+                );
+              }
+            },
+            0,
+            blocks,
+          );
         },
         null,
         requiredBarPeriods,

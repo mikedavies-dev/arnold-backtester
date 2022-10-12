@@ -5,6 +5,8 @@ import Logger from '../utils/logger';
 import {runBacktest, BacktestWorkerError} from '../backtest/worker';
 import {Profile} from '../core';
 
+import {connect, disconnect} from '../utils/db';
+
 const log = Logger(`Worker#${threadId}`);
 
 if (parentPort) {
@@ -16,24 +18,31 @@ if (parentPort) {
     const {profile}: {profile: Profile} = workerData;
 
     try {
+      log('Connecting to database');
+      await connect();
+
       const positions = await runBacktest({
         profile,
         symbol: param.symbol,
         date: param.date,
         log,
+        workerIndex: threadId,
       });
-
-      // Let it log some stuff
-      await new Promise(resolve => setTimeout(resolve, 0));
 
       // Send the results to the parent
       parentPort.postMessage({
         positions,
       });
     } catch (err) {
-      parentPort.postMessage({
-        error: err instanceof BacktestWorkerError ? err.code : 'unknown',
-      });
+      log('Failed', err);
+      setTimeout(() => {
+        parentPort?.postMessage({
+          error: err instanceof BacktestWorkerError ? err.code : 'unknown',
+        });
+      }, 10);
+    } finally {
+      await disconnect();
+      log('Finished!');
     }
   });
 }

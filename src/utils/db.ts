@@ -1,7 +1,17 @@
 import mongoose from 'mongoose';
 
+import {
+  isBefore,
+  addDays,
+  subDays,
+  isSameDay,
+  isAfter,
+  getUnixTime,
+} from 'date-fns';
+
 // Register the models
 import {registerMongooseModels} from '../models/models';
+import {formatBarTime} from './bars';
 
 import {
   Instrument,
@@ -11,6 +21,8 @@ import {
   DbTimeSeriesBar,
   DbTimeSeriesDataAvailability,
   DbInstrument,
+  TimeSeriesPeriodToPeriod,
+  Bars,
 } from '../core';
 
 import Env from './env';
@@ -96,45 +108,94 @@ export async function storeSeries(
   );
 }
 
-export async function getDataAvailableTo(
+export async function hasRequestedData(
   symbol: string,
   period: TimeSeriesPeriod,
-): Promise<Date | undefined> {
+  date: Date,
+) {
   const TimeSeriesDataAvailability =
     mongoose.model<DbTimeSeriesDataAvailability>('TimeSeriesDataAvailability');
 
-  const record = await TimeSeriesDataAvailability.findOne({
+  const record = await TimeSeriesDataAvailability.countDocuments({
     symbol,
     period,
+    dateRequested: date,
   });
 
-  return record?.dataAvailableTo;
+  return record > 0;
 }
 
-export async function updateDataAvailableTo(
+export async function recordDataHasBeenRequested(
   symbol: string,
   period: TimeSeriesPeriod,
-  dataAvailableTo: Date,
-): Promise<Date | undefined> {
+  dateRequested: Date,
+): Promise<void> {
   const TimeSeriesDataAvailability =
     mongoose.model<DbTimeSeriesDataAvailability>('TimeSeriesDataAvailability');
 
-  const record = await TimeSeriesDataAvailability.findOneAndUpdate(
+  await TimeSeriesDataAvailability.findOneAndUpdate(
     {
       symbol,
       period,
+      dateRequested,
     },
     {
       $set: {
-        dataAvailableTo,
+        dateRequested,
       },
     },
     {
       upsert: true,
     },
   );
+}
 
-  return record?.dataAvailableTo;
+export async function findNonRequestedRangeForPeriod(
+  symbol: string,
+  period: TimeSeriesPeriod,
+  from: Date,
+  to: Date,
+) {
+  // Find the first date that we have requested data for
+  let firstDayWithoutRequest: Date | null = null;
+
+  for (
+    let day = from;
+    isBefore(day, to) || isSameDay(day, to);
+    day = addDays(day, 1)
+  ) {
+    if (!(await hasRequestedData(symbol, period, day))) {
+      firstDayWithoutRequest = day;
+      break;
+    }
+  }
+
+  if (!firstDayWithoutRequest) {
+    return null;
+  }
+
+  // Find the last date that we have requested data for
+  let lastDayWithoutRequest: Date | null = null;
+
+  for (
+    let day = to;
+    isAfter(day, from) || isSameDay(day, from);
+    day = subDays(day, 1)
+  ) {
+    if (!(await hasRequestedData(symbol, period, day))) {
+      lastDayWithoutRequest = day;
+      break;
+    }
+  }
+
+  // if (!lastDayWithoutRequest) {
+  //   return null;
+  // }
+
+  return {
+    from: firstDayWithoutRequest as Date,
+    to: lastDayWithoutRequest as Date,
+  };
 }
 
 export async function instrumentLookup({
@@ -195,4 +256,73 @@ export async function storeInstrument({
       ...instrument,
     });
   }
+}
+
+function databaseToBars(bars: DbTimeSeriesBar[]): Bar[] {
+  return bars.map(bar => {
+    return {
+      time: formatBarTime(
+        TimeSeriesPeriodToPeriod[bar.period],
+        getUnixTime(bar.time),
+      ),
+      open: bar.open,
+      high: bar.high,
+      low: bar.low,
+      close: bar.close,
+      volume: bar.volume,
+    };
+  });
+}
+
+export async function loadBars(
+  symbol: string,
+  period: TimeSeriesPeriod,
+  until: Date,
+  count: number,
+): Promise<Bar[]> {
+  const TimeSeriesBar = mongoose.model<DbTimeSeriesBar>('TimeSeriesBar');
+
+  return databaseToBars(
+    await TimeSeriesBar.find({
+      symbol,
+      period,
+      time: {$lt: until},
+    })
+      .sort({time: 1})
+      .limit(count),
+  ).reverse();
+}
+
+export async function loadMinuteDataForDate(symbol: string, date: Date) {
+  const TimeSeriesBar = mongoose.model<DbTimeSeriesBar>('TimeSeriesBar');
+
+  const bars = databaseToBars(
+    await TimeSeriesBar.find({
+      symbol,
+      period: 'm1',
+      time: {
+        $gte: subDays(date, 1),
+        $lt: date,
+      },
+    }).sort({
+      time: 1,
+    }),
+  );
+
+  return bars.reduce((map, bar) => {
+    map[bar.time] = bar;
+    return map;
+  }, {} as {[time: string]: Bar});
+}
+
+export async function loadTrackerBars(
+  symbol: string,
+  until: Date,
+  count: number,
+): Promise<Bars> {
+  return {
+    m1: await loadBars(symbol, 'm1', until, count),
+    m5: await loadBars(symbol, 'm5', until, count),
+    daily: await loadBars(symbol, 'daily', until, count),
+  };
 }

@@ -13,7 +13,7 @@ test('market open times', () => {
   const marketClose = getMarketClose(getTestDate());
 
   expect(marketOpen).toBe(createTimeAsUnix('09:30'));
-  expect(marketClose).toBe(createTimeAsUnix('16:30'));
+  expect(marketClose).toBe(createTimeAsUnix('16:00'));
 });
 
 test('in-market high', () => {
@@ -280,8 +280,8 @@ describe('market status', () => {
     ['04:01', 'PREMARKET'],
     ['09:29', 'PREMARKET'],
     ['09:30', 'OPEN'],
-    ['16:30', 'OPEN'],
-    ['16:31', 'CLOSED'],
+    ['16:00', 'OPEN'],
+    ['16:01', 'CLOSED'],
   ];
 
   times.forEach(([time, marketStatus]) => {

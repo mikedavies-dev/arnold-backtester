@@ -1,4 +1,4 @@
-import {format, subDays, startOfDay} from 'date-fns';
+import {format} from 'date-fns';
 import {StaticPool} from 'node-worker-threads-pool';
 import numeral from 'numeral';
 import path from 'path';
@@ -79,21 +79,26 @@ export async function runBacktestController({
   // connect
   await dataProvider.init();
 
+  const symbolsThatRequireData = Array.from(
+    new Set([...runProfile.symbols, ...runProfile.extraSymbols]),
+  );
+
   // Make sure we have
   await ensureSymbolsAreAvailable({
     dataProvider,
-    symbols: runProfile.symbols,
+    symbols: symbolsThatRequireData,
   });
-
-  // Make sure we have the data available
-  const yesterday = startOfDay(subDays(new Date(), 1));
 
   await ensureBarDataIsAvailable({
     dataProvider,
-    symbols: runProfile.symbols,
+    symbols: symbolsThatRequireData,
     log,
-    until: yesterday,
+    from: runProfile.dates.from,
+    to: runProfile.dates.to,
   });
+
+  // We don't need the data provider anymore
+  await dataProvider.shutdown();
 
   const start = Date.now();
 
@@ -137,7 +142,10 @@ export async function runBacktestController({
   log(`Finished in ${numeral(Date.now() - start).format(',')}ms`);
 
   // Shutdown the pool
-  pool.destroy();
+  await pool.destroy();
+
+  // Disconnect from data provider
+  await dataProvider.shutdown();
 
   const positions = results
     .filter(val => !val.error)
