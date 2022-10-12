@@ -26,6 +26,7 @@ if (parentPort) {
         symbol: param.symbol,
         date: param.date,
         log,
+        workerIndex: threadId,
       });
 
       // Send the results to the parent
@@ -33,9 +34,12 @@ if (parentPort) {
         positions,
       });
     } catch (err) {
-      parentPort.postMessage({
-        error: err instanceof BacktestWorkerError ? err.code : 'unknown',
-      });
+      log('Failed', err);
+      setTimeout(() => {
+        parentPort?.postMessage({
+          error: err instanceof BacktestWorkerError ? err.code : 'unknown',
+        });
+      }, 10);
     } finally {
       await disconnect();
       log('Finished!');

@@ -180,7 +180,7 @@ export function create({log}: {log?: LoggerCallback} = {}): DataProvider {
     log?.(`Error: ${err.error.message} (${err.code})`);
   });
 
-  async function init() {
+  async function init({workerIndex}: {workerIndex?: number} = {}) {
     return new Promise<void>((resolve, reject) => {
       // Set a timeout
       const timeoutTimer = setTimeout(async () => {
@@ -190,7 +190,7 @@ export function create({log}: {log?: LoggerCallback} = {}): DataProvider {
       }, 10000);
 
       api.connectionState.subscribe(async state => {
-        log?.('State Changed', state, api.isConnected);
+        // log?.('State Changed', state, api.isConnected);
         if (state === ConnectionState.Connected) {
           // Set the logging level
           // api.logLevel = LogLevel.INFO;
@@ -202,7 +202,18 @@ export function create({log}: {log?: LoggerCallback} = {}): DataProvider {
         }
       });
 
-      api.connect(currentApiClientId);
+      /*
+      Related to lock.ts, we're creating a new IB connection for each worker which isn't ideal
+      ideally we should have one connection on the main worker and send download messages there
+      so we don't risk:
+
+      1. Hitting rate limits in IB
+      2. Having multiple connections to IB
+      */
+      const offset = (workerIndex || 0) + 1;
+      const clientId = offset * 10 + currentApiClientId;
+
+      api.connect(clientId);
 
       // Increment the id
       currentApiClientId += 1;
@@ -312,7 +323,7 @@ export function create({log}: {log?: LoggerCallback} = {}): DataProvider {
             await downloadDataFn(api, instrument, currentTime)
           ).filter(tick => tick.dateTime < until);
 
-          if (!ticks.length) {
+          if (!ticks.length || currentTime >= until) {
             log?.(
               `Finished downloading ${type} ticks for ${
                 instrument.symbol

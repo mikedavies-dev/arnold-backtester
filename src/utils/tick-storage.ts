@@ -4,6 +4,7 @@ import Env from './env';
 import path from 'path';
 import series from 'promise-series2';
 import fs from 'fs/promises';
+import del from 'del';
 
 import {
   Tick,
@@ -119,17 +120,19 @@ async function mergeTickData(symbol: string, date: Date) {
   await writeTickData(symbol, date, TickFileType.Merged, mergedData, true);
 
   // Delete temp data after merging
-  // await Promise.all([TickFileType.BidAsk, TickFileType.Trades].map(type =>
-  //   del(formatDataFilename(symbol, date, type))
-  // ))
+  await Promise.all(
+    [TickFileType.BidAsk, TickFileType.Trades].map(type =>
+      del(formatDataFilename(symbol, date, type)),
+    ),
+  );
 }
 
 export async function ensureTickDataIsAvailable({
   symbols,
   minute,
   dataProvider,
-  log,
-}: {
+}: // log,
+{
   symbols: string[];
   minute: Date;
   dataProvider: DataProvider;
@@ -145,12 +148,6 @@ export async function ensureTickDataIsAvailable({
       if (await hasTickForMinute(instrument.symbol, minute)) {
         return;
       }
-
-      log(
-        `Downloading tick data for ${instrument.symbol} @ ${formatDateTime(
-          minute,
-        )}`,
-      );
 
       await dataProvider.downloadTickData({
         instrument,

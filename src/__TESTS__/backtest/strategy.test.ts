@@ -106,6 +106,7 @@ describe('test worker module', () => {
       symbol,
       date: getTestDate(),
       log: () => {},
+      workerIndex: 0,
     });
 
     expect(data).toMatchInlineSnapshot(`

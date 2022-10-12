@@ -41,6 +41,7 @@ describe.skip('test worker module', () => {
           symbol: 'MSFT',
           date: getTestDate(),
           log: () => {},
+          workerIndex: 0,
         }),
     ).rejects.toThrowErrorMatchingInlineSnapshot(`"no-symbol-data"`);
   });
@@ -85,6 +86,7 @@ describe.skip('test worker module', () => {
       symbol: 'MSFT',
       date: getTestDate(),
       log: () => {},
+      workerIndex: 0,
     });
 
     expect(data).toMatchInlineSnapshot(`Array []`);
@@ -133,6 +135,7 @@ describe.skip('test worker module', () => {
           symbol: 'MSFT',
           date: getTestDate(),
           log: () => {},
+          workerIndex: 0,
         }),
     ).rejects.toThrowErrorMatchingInlineSnapshot(`"invalid-symbol-data"`);
   });
@@ -153,6 +156,7 @@ describe.skip('test worker module', () => {
           symbol: 'MSFT',
           date: getTestDate(),
           log: () => {},
+          workerIndex: 0,
         }),
     ).rejects.toThrowErrorMatchingInlineSnapshot(`"strategy-not-found"`);
   });

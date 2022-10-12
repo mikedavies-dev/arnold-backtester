@@ -86,15 +86,22 @@ export async function runBacktest({
   symbol,
   date,
   log,
+  workerIndex = 0,
 }: {
   profile: Profile;
   symbol: string;
   date: Date;
   log: LoggerCallback;
+  workerIndex: number;
 }) {
   // Create the data provider so we can download tick data
-  const dataProvider = createDataProvider();
-  await dataProvider.init();
+  const dataProvider = createDataProvider({
+    log,
+  });
+
+  await dataProvider.init({
+    workerIndex,
+  });
 
   // Make sure the module exists
   const strategy = await loadJsOrTsStrategy(profile.strategy.name);
@@ -169,10 +176,10 @@ export async function runBacktest({
   // Process the bar data
   for (
     let marketTime = getPreMarketOpen(date);
-    marketTime < marketClose;
+    marketTime <= marketClose;
     marketTime += 60
   ) {
-    log(`Checking minute ${format(marketTime * 1000, 'yyyy-MM-dd HH:mm:ss')}`);
+    // log(`Checking minute ${format(marketTime * 1000, 'yyyy-MM-dd HH:mm:ss')}`);
 
     currentMarketTime.current = fromUnixTime(marketTime);
 
@@ -209,9 +216,19 @@ export async function runBacktest({
         tracker: trackers[symbol],
         trackers,
         log,
+        marketTime,
+        marketOpen,
+        marketClose,
       }) ||
       hasOpenOrders(brokerState, symbol)
     ) {
+      log(
+        `In setup or have open trades at minute ${format(
+          marketTime * 1000,
+          'yyyy-MM-dd HH:mm:ss',
+        )}`,
+      );
+
       // Make sure we have data for this minute
       await ensureTickDataIsAvailable({
         symbols,

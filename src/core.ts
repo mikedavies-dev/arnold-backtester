@@ -74,7 +74,7 @@ export type DownloadTickDataArgs = {
 
 export type DataProvider = {
   name: string;
-  init(): Promise<void>;
+  init(args?: {workerIndex: number}): Promise<void>;
   shutdown(): Promise<void>;
   getTimeSeries(
     instrument: Instrument,
@@ -232,6 +232,9 @@ export type IsSetupParameters = {
   log: LoggerCallback;
   tracker: Tracker;
   trackers: Record<string, Tracker>;
+  marketTime: number;
+  marketOpen: number;
+  marketClose: number;
 };
 
 export type MetricsByPeriod = {
