@@ -40,8 +40,8 @@ export async function acquireLock({
     const acquire = async () => {
       try {
         const release = await lock.lock(filename, {
-          onCompromised: () => {
-            // ignore
+          onCompromised: /* istanbul ignore next */ () => {
+            // Ignore
           },
         });
         resolve(async () => {
