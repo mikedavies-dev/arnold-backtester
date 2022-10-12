@@ -38,6 +38,7 @@ const environment: {
   IB_HOST: string;
   IB_PORT: string;
   IB_BASE_CLIENT_ID: string;
+  IB_LOCK_TIMEOUT: string;
 
   EARLIEST_DATA: string;
 
@@ -65,6 +66,8 @@ const environment: {
   IB_HOST: getEnv('IB_HOST', '127.0.0.1'),
   IB_PORT: getEnv('IB_PORT', '4003'),
   IB_BASE_CLIENT_ID: getEnv('IB_BASE_CLIENT_ID', '1'),
+  IB_LOCK_TIMEOUT: getEnv('IB_LOCK_TIMEOUT', '120000'),
+
   EARLIEST_DATA: getEnv('EARLIEST_DATA', '2021-01-01'),
   DISABLE_PROVIDER_TESTS: getEnv('DISABLE_PROVIDER_TESTS', ''),
   DATA_FOLDER: getEnv('DATA_FOLDER', './data'),

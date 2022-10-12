@@ -33,7 +33,6 @@ if (parentPort) {
         positions,
       });
     } catch (err) {
-      console.log('XXX', err);
       parentPort.postMessage({
         error: err instanceof BacktestWorkerError ? err.code : 'unknown',
       });

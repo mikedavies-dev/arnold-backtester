@@ -11,6 +11,8 @@ import {
 import {lastValueFrom} from 'rxjs';
 import numeral from 'numeral';
 
+import {acquireLock} from '../../lock';
+
 const barSizeLookup: Record<TimeSeriesPeriod, BarSizeSetting> = {
   m1: BarSizeSetting.MINUTES_ONE,
   m5: BarSizeSetting.MINUTES_FIVE,
@@ -281,65 +283,81 @@ export function create({log}: {log?: LoggerCallback} = {}): DataProvider {
     write,
     merge,
   }: DownloadTickDataArgs) {
-    log?.(
-      `Downloading tick data for ${instrument.symbol} @ ${formatDateTime(
-        minute,
-      )}`,
-    );
+    // Don't like this, we could have multiple threads all trying to get the lock at the same time
+    // We really need an organized way of handling IB requests from the main worker but this should
+    // work for now
 
-    const downloadAndWriteData = async (
-      type: TickFileType,
-      downloadDataFn: DownloadTickDataFn,
-    ) => {
-      let currentTime = minute;
-      const until = addMinutes(minute, 1);
+    const releaseLock = await acquireLock({
+      name: 'arnold-ib',
+      timeout: Number(Env.IB_LOCK_TIMEOUT),
+    });
 
-      do {
-        // get ticks for this minute
-        const ticks = (
-          await downloadDataFn(api, instrument, currentTime)
-        ).filter(tick => tick.dateTime < until);
+    try {
+      log?.(
+        `Downloading tick data for ${instrument.symbol} @ ${formatDateTime(
+          minute,
+        )}`,
+      );
 
-        if (!ticks.length) {
+      const downloadAndWriteData = async (
+        type: TickFileType,
+        downloadDataFn: DownloadTickDataFn,
+      ) => {
+        let currentTime = minute;
+        const until = addMinutes(minute, 1);
+
+        do {
+          // get ticks for this minute
+          const ticks = (
+            await downloadDataFn(api, instrument, currentTime)
+          ).filter(tick => tick.dateTime < until);
+
+          if (!ticks.length) {
+            log?.(
+              `Finished downloading ${type} ticks for ${
+                instrument.symbol
+              } for ${formatDateTime(minute)}`,
+            );
+            break;
+          }
+
           log?.(
-            `Finished downloading ${type} ticks for ${
-              instrument.symbol
-            } for ${formatDateTime(minute)}`,
+            `Downloaded ${numeral(ticks.length).format(
+              '0,0',
+            )} ${type} ticks for ${instrument.symbol} from ${formatDateTime(
+              currentTime,
+            )}`,
           );
-          break;
-        }
 
-        log?.(
-          `Downloaded ${numeral(ticks.length).format(
-            '0,0',
-          )} ${type} ticks for ${instrument.symbol} from ${formatDateTime(
-            currentTime,
-          )}`,
-        );
+          await write(type, ticks);
 
-        await write(type, ticks);
+          // If the last tick is the same as our previous from, add a second
+          // This could mean that we have more than 1000 ticks in any one second
 
-        // If the last tick is the same as our previous from, add a second
-        // This could mean that we have more than 1000 ticks in any one second
+          const nextDate = ticks[ticks.length - 1].dateTime;
 
-        const nextDate = ticks[ticks.length - 1].dateTime;
+          currentTime = isSameSecond(currentTime, nextDate)
+            ? addSeconds(nextDate, 1)
+            : nextDate;
+        } while (true); // eslint-disable-line
+      };
 
-        currentTime = isSameSecond(currentTime, nextDate)
-          ? addSeconds(nextDate, 1)
-          : nextDate;
-      } while (true); // eslint-disable-line
-    };
+      // Download bid/ask data
+      await downloadAndWriteData(TickFileType.BidAsk, downloadBidAskTickData);
 
-    await downloadAndWriteData(TickFileType.BidAsk, downloadBidAskTickData);
+      // Download trade data
+      await downloadAndWriteData(TickFileType.Trades, downloadTradeTickData);
 
-    await downloadAndWriteData(TickFileType.Trades, downloadTradeTickData);
-
-    log?.(
-      `Merging tick data for ${instrument.symbol} for ${formatDateTime(
-        minute,
-      )}`,
-    );
-    await merge();
+      log?.(
+        `Merging tick data for ${instrument.symbol} for ${formatDateTime(
+          minute,
+        )}`,
+      );
+      await merge();
+    } finally {
+      // Release the lock to allow other processes to download data
+      await releaseLock();
+    }
   }
 
   return {
