@@ -67,3 +67,26 @@ export function deDuplicateObjectArray<ObjectType>(
     return true;
   });
 }
+
+export function mergeAndDistributeArrays<T>(array1: T[], array2: T[]) {
+  // Find the long/short arrays based on length
+  const [long, short] =
+    array1.length >= array2.length ? [array1, array2] : [array2, array1];
+
+  // Calculate the interval
+  const interval = long.length / (short.length + 1);
+
+  // Copy the long array so we don't mutate the input arrays
+  const merged = [...long];
+
+  // Iterate the short array and insert the values into the long array
+  short.forEach((value, index) => {
+    // Calculate the insert index based on the interval and the current index
+    const insertAt = Math.ceil(interval * (index + 1));
+
+    // Insert the value
+    merged.splice(insertAt + index, 0, value);
+  });
+
+  return merged;
+}

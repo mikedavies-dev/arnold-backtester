@@ -12,12 +12,12 @@ import {
   LoggerCallback,
   DataProvider,
   TickFileType,
-  notEmpty,
 } from '../core';
 import {instrumentLookup} from './db';
 
 import {formatDateTime} from './dates';
 import {fileExists, writeCsv, readCSV} from './files';
+import {mergeAndDistributeArrays} from './data-structures';
 
 export async function loadTickFile(
   filename: string,
@@ -100,24 +100,46 @@ export function sortTicksByDate(row1: Tick, row2: Tick) {
   // Sort on both index and time so we don't loose th original order
   // if we have multiple values per second
   const val1 = row1.time * 1000000 + row1.index;
-  const val2 = row2.time * 1000000 + row1.index;
+  const val2 = row2.time * 1000000 + row2.index;
 
   return val1 - val2;
 }
 
 async function mergeTickData(symbol: string, date: Date) {
-  const mergedData = (
-    await Promise.all(
-      [TickFileType.BidAsk, TickFileType.Trades].map(type =>
-        loadTickForMinute(symbol, date, type),
-      ),
-    )
-  )
-    .filter(notEmpty)
-    .flat()
-    .sort(sortTicksByDate);
+  const [bidAsk, trades] = await Promise.all(
+    [TickFileType.BidAsk, TickFileType.Trades].map(type =>
+      loadTickForMinute(symbol, date, type),
+    ),
+  );
 
-  await writeTickData(symbol, date, TickFileType.Merged, mergedData, true);
+  // Merge each second separately so we get an even distribution of trades/quotes
+  const merged: Tick[] = [];
+
+  /*
+  IB don't give us millisecond data on bid/ask/trade data and because we get a lot more
+  bid/ask data than trades if we try to merge them simply based on time then we will
+  have a lot more bid/ask data at the end of each second.
+
+  To avoid this we merge the data by second and then distribute the data evenly across the
+  entire second. This isn't ideal but it's as close as we can get without having millisecond
+  data.
+  */
+
+  for (let second = 0; second < 60; second += 1) {
+    const array1 =
+      bidAsk?.filter(t => t.dateTime.getSeconds() === second) || [];
+
+    const array2 =
+      trades?.filter(t => t.dateTime.getSeconds() === second) || [];
+
+    merged.splice(
+      merged.length,
+      0,
+      ...mergeAndDistributeArrays(array1, array2),
+    );
+  }
+
+  await writeTickData(symbol, date, TickFileType.Merged, merged, true);
 
   // Delete temp data after merging
   await Promise.all(
@@ -148,6 +170,13 @@ export async function ensureTickDataIsAvailable({
       if (await hasTickForMinute(instrument.symbol, minute)) {
         return;
       }
+
+      // delete existing data
+      await del([
+        formatDataFilename(instrument.symbol, minute, TickFileType.BidAsk),
+        formatDataFilename(instrument.symbol, minute, TickFileType.Trades),
+        formatDataFilename(instrument.symbol, minute, TickFileType.Merged),
+      ]);
 
       await dataProvider.downloadTickData({
         instrument,
