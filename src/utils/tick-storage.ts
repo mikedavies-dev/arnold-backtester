@@ -44,9 +44,11 @@ export async function loadTickFile(
 }
 
 function formatDataFilename(symbol: string, date: Date, type: TickFileType) {
-  return path.join(
-    Env.DATA_FOLDER,
-    `${symbol}/${format(date, 'yyyyMMdd')}/${format(date, 'HHmm')}_${type}.csv`,
+  return Env.getUserPath(
+    `data/${symbol}/${format(date, 'yyyyMMdd')}/${format(
+      date,
+      'HHmm',
+    )}_${type}.csv`,
   );
 }
 

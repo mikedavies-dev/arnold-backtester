@@ -44,10 +44,11 @@ const environment: {
 
   DISABLE_PROVIDER_TESTS: string;
   NODE_ENV: string;
-  DATA_FOLDER: string;
+  USER_FOLDER: string;
 
   // Other..
   getEnv: (name: string, def: string) => string;
+  getUserPath: (path: string) => string;
 } = {
   env: process.env,
   // Current env
@@ -70,9 +71,11 @@ const environment: {
 
   EARLIEST_DATA: getEnv('EARLIEST_DATA', '2021-01-01'),
   DISABLE_PROVIDER_TESTS: getEnv('DISABLE_PROVIDER_TESTS', ''),
-  DATA_FOLDER: getEnv('DATA_FOLDER', './user/data'),
+  USER_FOLDER: getEnv('USER_FOLDER', './user'),
   NODE_ENV: getEnv('NODE_ENV', 'development'),
   getEnv,
+  getUserPath: (filename: string) =>
+    path.join(process.cwd(), environment.USER_FOLDER, filename),
 };
 
 export default environment;

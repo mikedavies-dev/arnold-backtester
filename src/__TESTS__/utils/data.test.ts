@@ -5,9 +5,10 @@ import {
 } from '../../utils/tick-storage';
 import {getTestDate} from '../test-utils/tick';
 import {TickFileType} from '../../core';
+import Env from '../../utils/env';
 
 test('load valid ts data', async () => {
-  const data = await loadTickFile('./src/__TESTS__/test-data/tick-data.csv');
+  const data = await loadTickFile(Env.getUserPath('tick-data.csv'));
 
   expect(data).toMatchInlineSnapshot(`
     Array [
@@ -228,7 +229,7 @@ test('that we fail to load symbol data', async () => {
   expect(data).toBeNull();
 });
 
-test('that we dont have tick data', async () => {
+test(`that we don't have tick data`, async () => {
   const hasData = await hasTickForMinute('ZZZZ', getTestDate());
   expect(hasData).toBeFalsy();
 });
