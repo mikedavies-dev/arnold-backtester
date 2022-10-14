@@ -96,14 +96,14 @@ export async function writeTickData(
   );
 }
 
-export function sortTicksByDate(row1: Tick, row2: Tick) {
-  // Sort on both index and time so we don't loose th original order
-  // if we have multiple values per second
-  const val1 = row1.time * 1000000 + row1.index;
-  const val2 = row2.time * 1000000 + row2.index;
+// export function sortTicksByDate(row1: Tick, row2: Tick) {
+//   // Sort on both index and time so we don't loose th original order
+//   // if we have multiple values per second
+//   const val1 = row1.time * 1000000 + row1.index;
+//   const val2 = row2.time * 1000000 + row2.index;
 
-  return val1 - val2;
-}
+//   return val1 - val2;
+// }
 
 async function mergeTickData(symbol: string, date: Date) {
   const [bidAsk, trades] = await Promise.all(

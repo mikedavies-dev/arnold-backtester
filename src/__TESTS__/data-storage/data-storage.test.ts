@@ -73,7 +73,7 @@ describe('mongo db tests', () => {
     {
       symbol,
       dateTime: testDate,
-      time: startTime + 60,
+      time: startTime + 2,
       index: 0,
       type: 'TRADE',
       value: 101,
@@ -94,7 +94,7 @@ describe('mongo db tests', () => {
     {
       symbol,
       dateTime: testDate,
-      time: startTime + 30,
+      time: startTime + 1,
       index: 0,
       type: 'BID',
       value: 100,
@@ -103,7 +103,7 @@ describe('mongo db tests', () => {
     {
       symbol,
       dateTime: testDate,
-      time: startTime + 90,
+      time: startTime + 3,
       index: 0,
       type: 'ASK',
       value: 101,
@@ -270,7 +270,6 @@ describe('mongo db tests', () => {
       TickFileType.Merged,
     );
 
-    // Make sure the data looks good
     expect(storedData).toMatchInlineSnapshot(`
       Array [
         Object {
@@ -292,29 +291,29 @@ describe('mongo db tests', () => {
           "value": 100,
         },
         Object {
-          "dateTime": 2022-01-01T05:00:30.000Z,
+          "dateTime": 2022-01-01T05:00:01.000Z,
           "index": 0,
           "size": 1,
           "symbol": "ZZZZ",
-          "time": 1641013230,
+          "time": 1641013201,
           "type": "BID",
           "value": 100,
         },
         Object {
-          "dateTime": 2022-01-01T05:01:00.000Z,
+          "dateTime": 2022-01-01T05:00:02.000Z,
           "index": 0,
           "size": 1,
           "symbol": "ZZZZ",
-          "time": 1641013260,
+          "time": 1641013202,
           "type": "TRADE",
           "value": 101,
         },
         Object {
-          "dateTime": 2022-01-01T05:01:30.000Z,
+          "dateTime": 2022-01-01T05:00:03.000Z,
           "index": 0,
           "size": 1,
           "symbol": "ZZZZ",
-          "time": 1641013290,
+          "time": 1641013203,
           "type": "ASK",
           "value": 101,
         },
@@ -349,18 +348,6 @@ describe('mongo db tests', () => {
       log: () => {},
       minute: getTestDate(),
     });
-
-    // mockProvider.downloadTickData = jest.fn(
-    //   async ({latestDataDates}: DownloadTickDataArgs) => {
-    //     expect(latestDataDates).toMatchInlineSnapshot(`
-    //       Object {
-    //         "bidask": 2022-01-01T05:01:30.000Z,
-    //         "merged": null,
-    //         "trades": 2022-01-01T05:01:00.000Z,
-    //       }
-    //     `);
-    //   },
-    // );
 
     // If we make the call again we should not download data
     await ensureTickDataIsAvailable({
