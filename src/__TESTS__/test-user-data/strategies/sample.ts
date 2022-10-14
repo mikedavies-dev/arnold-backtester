@@ -1,4 +1,4 @@
-import {HandleTickParameters} from '../core';
+import {HandleTickParameters} from '../../../core';
 
 export const extraSymbols = ['SPY'];
 

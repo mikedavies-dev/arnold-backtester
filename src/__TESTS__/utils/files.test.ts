@@ -1,16 +1,12 @@
-import path from 'path';
 import del from 'del';
 
 import {fileExists, writeCsv, readCSV} from '../../utils/files';
 import Env from '../../utils/env';
 
-const lastLineTestFilename = path.join(
-  Env.DATA_FOLDER,
-  '../last-line-test.txt',
-);
+const lastLineTestFilename = Env.getUserPath('last-line-test.txt');
 
 afterAll(async () => {
-  await del(path.join(Env.DATA_FOLDER, './TEMP*'));
+  await del(Env.getUserPath('TEMP*'));
 });
 
 test('file does not exist', async () => {
@@ -28,7 +24,7 @@ type ReadWriteTestRecord = {
 };
 
 test('writing a new csv', async () => {
-  const newFilename = path.join(Env.DATA_FOLDER, './TEMP_new_file.csv');
+  const newFilename = Env.getUserPath('./TEMP_new_file.csv');
 
   const data = [
     {

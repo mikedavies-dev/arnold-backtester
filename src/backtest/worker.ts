@@ -1,7 +1,6 @@
 // Access the workerData by requiring it.
 import {format, fromUnixTime} from 'date-fns';
 import numeral from 'numeral';
-import path from 'path';
 
 import {
   loadTickForMinute,
@@ -45,6 +44,8 @@ import {
   getPositionSize,
 } from './broker';
 
+import Env from '../utils/env';
+
 import {loadMinuteDataForDate, loadTrackerBars} from '../utils/db';
 import {formatBarTime} from '../utils/bars';
 
@@ -72,12 +73,8 @@ function marketSortFn(row1: Tick, row2: Tick) {
 
 async function loadJsOrTsStrategy(strategy: string) {
   return (
-    (await loadStrategy(
-      path.join(process.cwd(), `./strategies/${strategy}.js`),
-    )) ||
-    (await loadStrategy(
-      path.join(process.cwd(), `./src/strategies/${strategy}.ts`),
-    ))
+    (await loadStrategy(Env.getUserPath(`./strategies/${strategy}.js`))) ||
+    (await loadStrategy(Env.getUserPath(`./strategies/${strategy}.ts`)))
   );
 }
 

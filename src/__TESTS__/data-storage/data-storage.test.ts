@@ -53,7 +53,7 @@ describe('mongo db tests', () => {
 
   afterEach(async () => {
     // Delete test data
-    await del(`${Env.DATA_FOLDER}/ZZZZ`);
+    await del(Env.getUserPath('data/ZZZZ'));
   });
 
   const testDate = getTestDate();

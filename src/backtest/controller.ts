@@ -13,7 +13,7 @@ import {
 import {createDataProvider} from '../utils/data-provider';
 
 const baseFolder = path.parse(__filename).dir;
-const filePath = path.join(baseFolder, './worker.js');
+const filePath = path.join(baseFolder, '../bin/worker.js');
 
 export type WorkerResult = {
   error?: BackTestWorkerErrorCode;

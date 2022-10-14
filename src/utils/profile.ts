@@ -1,8 +1,8 @@
 import fs from 'fs/promises';
 import {parse, differenceInDays, startOfDay, add} from 'date-fns';
-import path from 'path';
 
 import {Profile} from '../core';
+import Env from '../utils/env';
 
 async function loadStrategySource(path: string) {
   try {
@@ -14,8 +14,10 @@ async function loadStrategySource(path: string) {
 
 async function loadJsOrTsStrategySource(strategy: string) {
   return (
-    (await loadStrategySource(`./src/strategies/${strategy}.js`)) ||
-    (await loadStrategySource(`./src/strategies/${strategy}.ts`))
+    (await loadStrategySource(
+      Env.getUserPath(`./strategies/${strategy}.js`),
+    )) ||
+    (await loadStrategySource(Env.getUserPath(`./strategies/${strategy}.ts`)))
   );
 }
 
@@ -34,7 +36,7 @@ type RawProfile = {
 };
 
 export function getPath(name: string) {
-  return path.join(process.cwd(), `./profiles/${name}.json`);
+  return Env.getUserPath(`./profiles/${name}.json`);
 }
 
 export async function profileExists(name: string) {

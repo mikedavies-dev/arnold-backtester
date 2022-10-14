@@ -13,17 +13,10 @@ codecov.yml
 #Node modules
 node_modules/
 
-# Compiled parcel files
-dist/
-
-# User defined strategies
-strategies/*
-src/strategies/*
-!strategies/sample.js
-!src/strategies/sample.ts
-
 # User data
-data/*
+user/*
+!user/strategies/sample.ts
+!user/profiles/sample.json
 
-# User profiles
-profiles/*
+# Parcel output folder
+dist/
