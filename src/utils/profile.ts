@@ -14,8 +14,8 @@ async function loadStrategySource(path: string) {
 
 async function loadJsOrTsStrategySource(strategy: string) {
   return (
-    (await loadStrategySource(`./strategies/${strategy}.js`)) ||
-    (await loadStrategySource(`./strategies/${strategy}.ts`))
+    (await loadStrategySource(`./user/strategies/${strategy}.js`)) ||
+    (await loadStrategySource(`./user/strategies/${strategy}.ts`))
   );
 }
 
@@ -34,7 +34,7 @@ type RawProfile = {
 };
 
 export function getPath(name: string) {
-  return path.join(process.cwd(), `./profiles/${name}.json`);
+  return path.join(process.cwd(), `./user/profiles/${name}.json`);
 }
 
 export async function profileExists(name: string) {

@@ -70,7 +70,7 @@ const environment: {
 
   EARLIEST_DATA: getEnv('EARLIEST_DATA', '2021-01-01'),
   DISABLE_PROVIDER_TESTS: getEnv('DISABLE_PROVIDER_TESTS', ''),
-  DATA_FOLDER: getEnv('DATA_FOLDER', './data'),
+  DATA_FOLDER: getEnv('DATA_FOLDER', './user/data'),
   NODE_ENV: getEnv('NODE_ENV', 'development'),
   getEnv,
 };
