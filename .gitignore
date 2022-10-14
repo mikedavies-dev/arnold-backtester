@@ -22,8 +22,6 @@ src/strategies/*
 !strategies/sample.js
 !src/strategies/sample.ts
 
-!directory/sample.json
-
 # User data
 data/*
 
