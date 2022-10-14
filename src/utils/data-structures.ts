@@ -68,23 +68,28 @@ export function deDuplicateObjectArray<ObjectType>(
   });
 }
 
+/*
+Take two arrays and merge them together by evenly distributing the values
+from the shorter array into the larger array, i.e.
+
+Merge: [a, b, c] and [1, 2, 3, 4, 5, 6] into [1, 2, a, 3, 4, b, 5, 6, c]
+
+1. Find the longest and shortest arrays
+1. Calculate the interval that the values should be distributed at
+3. Create a duplicate of the long array so we don't mutate input data
+4. Iterate the short array and insert the values into the long array based on the interval
+*/
+
 export function mergeAndDistributeArrays<T>(array1: T[], array2: T[]) {
-  // Find the long/short arrays based on length
   const [long, short] =
     array1.length >= array2.length ? [array1, array2] : [array2, array1];
 
-  // Calculate the interval
   const interval = long.length / (short.length + 1);
 
-  // Copy the long array so we don't mutate the input arrays
   const merged = [...long];
 
-  // Iterate the short array and insert the values into the long array
   short.forEach((value, index) => {
-    // Calculate the insert index based on the interval and the current index
     const insertAt = Math.ceil(interval * (index + 1));
-
-    // Insert the value
     merged.splice(insertAt + index, 0, value);
   });
 
