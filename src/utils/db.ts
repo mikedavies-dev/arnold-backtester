@@ -288,7 +288,7 @@ export async function loadBars(
       period,
       time: {$lt: until},
     })
-      .sort({time: 1})
+      .sort({time: -1})
       .limit(count),
   ).reverse();
 }
@@ -301,8 +301,8 @@ export async function loadMinuteDataForDate(symbol: string, date: Date) {
       symbol,
       period: 'm1',
       time: {
-        $gte: subDays(date, 1),
-        $lt: date,
+        $gte: date,
+        $lt: addDays(date, 1),
       },
     }).sort({
       time: 1,

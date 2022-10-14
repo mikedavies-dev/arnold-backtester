@@ -89,6 +89,7 @@ async function downloadBidAskTickData(
       ) {
         return [];
       }
+
       return [
         {
           time: tick.time,
@@ -96,8 +97,8 @@ async function downloadBidAskTickData(
           dateTime: new Date(tick.time * 1000),
           symbol: instrument.symbol,
           type: 'BID',
-          size: tick.priceBid,
-          value: tick.sizeBid,
+          value: tick.priceBid,
+          size: tick.sizeBid * 100, // IB returns size in 100s
         },
         {
           time: tick.time,
@@ -105,8 +106,8 @@ async function downloadBidAskTickData(
           dateTime: new Date(tick.time * 1000),
           symbol: instrument.symbol,
           type: 'ASK',
-          size: tick.priceAsk,
-          value: tick.sizeAsk,
+          value: tick.priceAsk,
+          size: tick.sizeAsk * 100, // IB returns size in 100s,
         },
       ];
     })
@@ -149,13 +150,14 @@ async function downloadTradeTickData(
       if (!tick.time || !tick.price || !tick.size) {
         return null;
       }
+
       return {
         time: tick.time,
         index: 0,
         dateTime: new Date(tick.time * 1000),
         symbol: instrument.symbol,
         type: 'TRADE',
-        size: tick.size,
+        size: tick.size * 100, // IB returns size in 100s
         value: tick.price,
       };
     })
@@ -260,7 +262,7 @@ export function create({log}: {log?: LoggerCallback} = {}): DataProvider {
         high: bar.high || 0,
         low: bar.low || 0,
         close: bar.close || 0,
-        volume: bar.volume || 0,
+        volume: (bar.volume || 0) * 100, // IB returns volume in 100s
       };
     });
   }

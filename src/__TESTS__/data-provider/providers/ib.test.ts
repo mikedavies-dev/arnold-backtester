@@ -81,7 +81,7 @@ if (Env.DISABLE_PROVIDER_TESTS) {
         "low": 317.25,
         "open": 323.89,
         "time": "2021-12-17 00:00:00",
-        "volume": 365910,
+        "volume": 36591000,
       }
     `);
 
@@ -109,7 +109,7 @@ if (Env.DISABLE_PROVIDER_TESTS) {
         "low": 321.85,
         "open": 323.89,
         "time": "2021-12-17 04:00:00",
-        "volume": 100,
+        "volume": 10000,
       }
     `);
 
@@ -136,7 +136,7 @@ if (Env.DISABLE_PROVIDER_TESTS) {
         "low": 323.2,
         "open": 323.89,
         "time": "2021-12-17 04:00:00",
-        "volume": 41,
+        "volume": 4100,
       }
     `);
     expect(findDuplicates(bars)).toStrictEqual([]);
@@ -164,7 +164,7 @@ if (Env.DISABLE_PROVIDER_TESTS) {
         "low": 341.94,
         "open": 342.02,
         "time": "2021-12-30 04:19:00",
-        "volume": 18,
+        "volume": 1800,
       }
     `);
     expect(findDuplicates(m1)).toStrictEqual([]);

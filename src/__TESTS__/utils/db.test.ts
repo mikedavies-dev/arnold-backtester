@@ -245,12 +245,12 @@ describe('mongo db tests', () => {
     expect(bars).toMatchInlineSnapshot(`
       Array [
         Object {
-          "close": -1,
-          "high": -1,
-          "low": -1,
-          "open": -1,
-          "time": "2021-12-31 23:59",
-          "volume": -1,
+          "close": -3,
+          "high": -3,
+          "low": -3,
+          "open": -3,
+          "time": "2021-12-31 23:57",
+          "volume": -3,
         },
         Object {
           "close": -2,
@@ -261,12 +261,12 @@ describe('mongo db tests', () => {
           "volume": -2,
         },
         Object {
-          "close": -3,
-          "high": -3,
-          "low": -3,
-          "open": -3,
-          "time": "2021-12-31 23:57",
-          "volume": -3,
+          "close": -1,
+          "high": -1,
+          "low": -1,
+          "open": -1,
+          "time": "2021-12-31 23:59",
+          "volume": -1,
         },
       ]
     `);
@@ -289,29 +289,21 @@ describe('mongo db tests', () => {
     // Make sure we have all the data
     expect(barsByDate).toMatchInlineSnapshot(`
       Object {
-        "2021-12-31 23:57": Object {
-          "close": -3,
-          "high": -3,
-          "low": -3,
-          "open": -3,
-          "time": "2021-12-31 23:57",
-          "volume": -3,
+        "2022-01-01 00:00": Object {
+          "close": 0,
+          "high": 0,
+          "low": 0,
+          "open": 0,
+          "time": "2022-01-01 00:00",
+          "volume": 0,
         },
-        "2021-12-31 23:58": Object {
-          "close": -2,
-          "high": -2,
-          "low": -2,
-          "open": -2,
-          "time": "2021-12-31 23:58",
-          "volume": -2,
-        },
-        "2021-12-31 23:59": Object {
-          "close": -1,
-          "high": -1,
-          "low": -1,
-          "open": -1,
-          "time": "2021-12-31 23:59",
-          "volume": -1,
+        "2022-01-01 00:01": Object {
+          "close": 1,
+          "high": 1,
+          "low": 1,
+          "open": 1,
+          "time": "2022-01-01 00:01",
+          "volume": 1,
         },
       }
     `);
@@ -353,20 +345,20 @@ describe('mongo db tests', () => {
             "volume": -3,
           },
           Object {
-            "close": -5,
-            "high": -5,
-            "low": -5,
-            "open": -5,
-            "time": "2021-12-31 23:55",
-            "volume": -5,
+            "close": -2,
+            "high": -2,
+            "low": -2,
+            "open": -2,
+            "time": "2021-12-31 23:58",
+            "volume": -2,
           },
           Object {
-            "close": -6,
-            "high": -6,
-            "low": -6,
-            "open": -6,
-            "time": "2021-12-31 23:54",
-            "volume": -6,
+            "close": -1,
+            "high": -1,
+            "low": -1,
+            "open": -1,
+            "time": "2021-12-31 23:59",
+            "volume": -1,
           },
         ],
         "m5": Array [],

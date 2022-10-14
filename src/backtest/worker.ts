@@ -1,5 +1,5 @@
 // Access the workerData by requiring it.
-import {format, fromUnixTime, subDays} from 'date-fns';
+import {format, fromUnixTime} from 'date-fns';
 import numeral from 'numeral';
 import path from 'path';
 
@@ -153,7 +153,7 @@ export async function runBacktest({
     symbols.map(async symbol => {
       trackers[symbol].bars = await loadTrackerBars(
         symbol,
-        subDays(date, 1),
+        date,
         MaximumBarCount,
       );
     }),
@@ -179,8 +179,6 @@ export async function runBacktest({
     marketTime <= marketClose;
     marketTime += 60
   ) {
-    // log(`Checking minute ${format(marketTime * 1000, 'yyyy-MM-dd HH:mm:ss')}`);
-
     currentMarketTime.current = fromUnixTime(marketTime);
 
     const time = formatBarTime(Periods.m1, marketTime);
