@@ -14,8 +14,8 @@ async function loadStrategySource(path: string) {
 
 async function loadJsOrTsStrategySource(strategy: string) {
   return (
-    (await loadStrategySource(`./src/strategies/${strategy}.js`)) ||
-    (await loadStrategySource(`./src/strategies/${strategy}.ts`))
+    (await loadStrategySource(`./strategies/${strategy}.js`)) ||
+    (await loadStrategySource(`./strategies/${strategy}.ts`))
   );
 }
 
