@@ -17,3 +17,6 @@ node_modules/
 user/*
 !user/strategies/sample.ts
 !user/profiles/sample.json
+
+# Parcel output folder
+dist/

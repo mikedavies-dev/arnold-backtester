@@ -12,8 +12,7 @@ const log = Logger('Express');
 export async function startServer() {
   const app = express();
 
-  // Parcel generated files
-  app.use(express.static(path.join(__dirname, '../public')));
+  app.use(express.static(path.join(__dirname, '../../dist/public')));
 
   Home.init(app);
   Api.init(app);
