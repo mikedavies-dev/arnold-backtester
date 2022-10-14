@@ -18,6 +18,7 @@ module.exports = {
     '!./src/ui/hooks/use-dimensions.ts',
     '!./src/utils/data-provider/providers/**',
     '!./src/backtest/worker.ts',
+    '!./src/__TESTS__/test-user-data/strategies/sample.ts',
   ],
   projects: [
     {
