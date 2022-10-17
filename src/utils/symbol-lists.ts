@@ -2,11 +2,6 @@ import {stat} from 'fs/promises';
 
 import Env from '../utils/env';
 
-type UserList = {
-  name: string;
-  symbols: string[];
-};
-
 async function getUserLists(): Promise<Record<string, string[]>> {
   const listPath = Env.getUserPath('./lists.json');
   const exists = await stat(listPath)
@@ -17,7 +12,10 @@ async function getUserLists(): Promise<Record<string, string[]>> {
     return {};
   }
 
-  const lists = require(listPath) as UserList[];
+  const lists = require(listPath) as {
+    name: string;
+    symbols: string[];
+  }[];
 
   return lists.reduce((acc, list) => {
     acc[list.name] = list.symbols;
