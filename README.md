@@ -1,4 +1,4 @@
-# Arnold 💪 - Stock/Crypto Backtesting Platform
+# Arnold 💪 - Stock Backtesting and Trading Platform
 
 [![codecov](https://codecov.io/gh/ant-fx/arnold-backtester/branch/main/graph/badge.svg?token=1CF7QD9N5O)](https://codecov.io/gh/ant-fx/arnold-backtester)
 
