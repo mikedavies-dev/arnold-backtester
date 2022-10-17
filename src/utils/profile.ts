@@ -3,6 +3,7 @@ import {parse, differenceInDays, startOfDay, add} from 'date-fns';
 
 import {Profile} from '../core';
 import Env from '../utils/env';
+import {loadSymbolLists} from '../utils/symbol-lists';
 
 async function loadStrategySource(path: string) {
   try {
@@ -71,6 +72,7 @@ export async function loadProfile(name: string): Promise<Profile> {
 
   return {
     ...profile,
+    symbols: await loadSymbolLists(profile.symbols),
     strategy: {
       name: profile.strategy,
       source: await loadJsOrTsStrategySource(profile.strategy),
