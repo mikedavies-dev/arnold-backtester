@@ -14,7 +14,7 @@ codecov.yml
 node_modules/
 
 # User data
-user/*
+user/
 !user/strategies/sample.ts
 !user/profiles/sample.json
 
