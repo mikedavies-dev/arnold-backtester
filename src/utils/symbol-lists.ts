@@ -28,7 +28,7 @@ export async function loadSymbolLists(symbols: string[]): Promise<string[]> {
 
   // Load the values into a set to deduplicate them
   const parsed = new Set(
-    await (
+    (
       await Promise.all(
         symbols.map(async symbol => {
           if (symbol.startsWith('@')) {
