@@ -3,7 +3,7 @@ import {fileExists} from './files';
 
 import {LiveTradingConfig} from '../core';
 import {loadSymbolLists} from '../utils/symbol-lists';
-import {loadJsOrTsStrategySource} from './strategy';
+import {loadLiveStrategySource} from './strategy';
 
 export async function getLiveConfig(): Promise<LiveTradingConfig> {
   const configPath = Env.getUserPath('./live.json');
@@ -28,7 +28,7 @@ export async function getLiveConfig(): Promise<LiveTradingConfig> {
         ...profile,
         strategy: {
           name: profile.strategy,
-          source: await loadJsOrTsStrategySource(profile.strategy),
+          source: await loadLiveStrategySource(profile.strategy),
         },
         symbols: await loadSymbolLists(profile.symbols),
       };

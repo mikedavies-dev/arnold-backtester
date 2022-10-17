@@ -1,3 +1,7 @@
+/*
+Sample Live Strategy
+*/
+
 import {HandleTickParameters} from '../../../core';
 
 export const extraSymbols = ['SPY'];

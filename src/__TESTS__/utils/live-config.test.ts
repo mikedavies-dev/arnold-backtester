@@ -13,7 +13,11 @@ describe('live config tests', () => {
             "name": "Sample Strategy",
             "strategy": Object {
               "name": "sample",
-              "source": "import {HandleTickParameters} from '../../../core';
+              "source": "/*
+      Sample Live Strategy
+      */
+
+      import {HandleTickParameters} from '../../../core';
 
       export const extraSymbols = ['SPY'];
 

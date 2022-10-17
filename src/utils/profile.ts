@@ -5,7 +5,7 @@ import {Profile} from '../core';
 import Env from '../utils/env';
 import {loadSymbolLists} from '../utils/symbol-lists';
 
-import {loadJsOrTsStrategySource} from './strategy';
+import {loadBacktestStrategySource} from './strategy';
 
 // Format stored on disk
 type RawProfile = {
@@ -60,7 +60,7 @@ export async function loadProfile(name: string): Promise<Profile> {
     symbols: await loadSymbolLists(profile.symbols),
     strategy: {
       name: profile.strategy,
-      source: await loadJsOrTsStrategySource(profile.strategy),
+      source: await loadBacktestStrategySource(profile.strategy),
     },
     dates: {
       from,
