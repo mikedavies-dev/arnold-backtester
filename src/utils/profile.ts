@@ -22,7 +22,7 @@ type RawProfile = {
 };
 
 export function getPath(name: string) {
-  return Env.getUserPath(`./profiles/${name}.json`);
+  return Env.getUserPath(`./test-profiles/${name}.json`);
 }
 
 export async function profileExists(name: string) {
