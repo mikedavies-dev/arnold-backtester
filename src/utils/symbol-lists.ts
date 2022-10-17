@@ -1,14 +1,10 @@
-import {stat} from 'fs/promises';
-
 import Env from '../utils/env';
+import {fileExists} from '../utils/files';
 
 async function getUserLists(): Promise<Record<string, string[]>> {
   const listPath = Env.getUserPath('./lists.json');
-  const exists = await stat(listPath)
-    .then(() => true)
-    .catch(() => false);
 
-  if (!exists) {
+  if (!(await fileExists(listPath))) {
     return {};
   }
 

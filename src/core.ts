@@ -151,12 +151,14 @@ export type BrokerState = {
   commissionPerOrder: number;
 };
 
+export type StrategyDefinition = {
+  name: string;
+  source: string | null;
+};
+
 // Parsed format
 export type Profile = {
-  strategy: {
-    name: string;
-    source: string | null;
-  };
+  strategy: StrategyDefinition;
   dates: {
     from: Date;
     to: Date;
@@ -289,4 +291,16 @@ export const TimeSeriesPeriodToPeriod: Record<TimeSeriesPeriod, number> = {
   m1: Periods.m1,
   m5: Periods.m5,
   m60: Periods.m60,
+};
+
+export type LiveTradingProfile = {
+  name: string;
+  strategy: StrategyDefinition;
+  accountSize: number;
+  symbols: string[];
+  enabled: boolean;
+};
+
+export type LiveTradingConfig = {
+  profiles: LiveTradingProfile[];
 };

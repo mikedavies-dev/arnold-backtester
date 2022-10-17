@@ -1,0 +1,11 @@
+{
+  "profiles": [
+    {
+      "name": "Sample Strategy",
+      "strategy": "sample",
+      "accountSize": 1000,
+      "symbols": ["@main"],
+      "enabled": true
+    }
+  ]
+}

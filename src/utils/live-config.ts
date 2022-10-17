@@ -1,0 +1,41 @@
+import Env from './env';
+import {fileExists} from './files';
+
+import {LiveTradingConfig} from '../core';
+import {loadSymbolLists} from '../utils/symbol-lists';
+import {loadJsOrTsStrategySource} from './strategy';
+
+export async function getLiveConfig(): Promise<LiveTradingConfig> {
+  const configPath = Env.getUserPath('./live.json');
+
+  if (!(await fileExists(configPath))) {
+    throw new Error('Live config does not exist');
+  }
+
+  const config = require(configPath) as {
+    profiles: {
+      name: string;
+      strategy: string;
+      accountSize: number;
+      symbols: string[];
+      enabled: boolean;
+    }[];
+  };
+
+  const profiles = await Promise.all(
+    config.profiles.map(async profile => {
+      return {
+        ...profile,
+        strategy: {
+          name: profile.strategy,
+          source: await loadJsOrTsStrategySource(profile.strategy),
+        },
+        symbols: await loadSymbolLists(profile.symbols),
+      };
+    }),
+  );
+
+  return {
+    profiles,
+  };
+}

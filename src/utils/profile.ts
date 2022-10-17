@@ -5,22 +5,7 @@ import {Profile} from '../core';
 import Env from '../utils/env';
 import {loadSymbolLists} from '../utils/symbol-lists';
 
-async function loadStrategySource(path: string) {
-  try {
-    return await fs.readFile(path, 'utf-8');
-  } catch {
-    return null;
-  }
-}
-
-async function loadJsOrTsStrategySource(strategy: string) {
-  return (
-    (await loadStrategySource(
-      Env.getUserPath(`./strategies/${strategy}.js`),
-    )) ||
-    (await loadStrategySource(Env.getUserPath(`./strategies/${strategy}.ts`)))
-  );
-}
+import {loadJsOrTsStrategySource} from './strategy';
 
 // Format stored on disk
 type RawProfile = {
