@@ -3,7 +3,7 @@ import series from 'promise-series2';
 import Logger from '../utils/logger';
 import {connect, disconnect} from '../utils/db';
 import {createDataProvider} from '../utils/data-provider';
-import {profileExists, loadProfile} from '../utils/profile';
+import {profileExists, loadBacktestProfile} from '../utils/profile';
 import {
   ensureBarDataIsAvailable,
   ensureSymbolsAreAvailable,
@@ -45,7 +45,7 @@ async function run() {
           return;
         }
 
-        const runProfile = await loadProfile(profile);
+        const runProfile = await loadBacktestProfile(profile);
 
         const symbolsThatRequireData = Array.from(
           new Set([...runProfile.symbols, ...runProfile.extraSymbols]),

@@ -1,5 +1,5 @@
 import {runBacktest} from '../../backtest/worker';
-import {loadProfile} from '../../utils/profile';
+import {loadBacktestProfile} from '../../utils/profile';
 import {
   createTimeAsDate,
   createTimeAsUnix,
@@ -30,7 +30,7 @@ describe.skip('test worker module', () => {
   });
 
   test('fail to run with missing data', async () => {
-    const profile = await loadProfile('sample');
+    const profile = await loadBacktestProfile('sample');
 
     await expect(
       async () =>
@@ -47,7 +47,7 @@ describe.skip('test worker module', () => {
   });
 
   test('worker with valid profile and strategy', async () => {
-    const profile = await loadProfile('sample');
+    const profile = await loadBacktestProfile('sample');
 
     loadTickForSymbolAndDateMock.mockResolvedValue([
       {
@@ -94,7 +94,7 @@ describe.skip('test worker module', () => {
   });
 
   test('worker with valid profile and strategy but invalid data', async () => {
-    const profile = await loadProfile('sample');
+    const profile = await loadBacktestProfile('sample');
 
     loadTickForSymbolAndDateMock.mockResolvedValue([
       {
@@ -141,7 +141,7 @@ describe.skip('test worker module', () => {
   });
 
   test('fail to run with an invalid strategy', async () => {
-    const profile = await loadProfile('sample');
+    const profile = await loadBacktestProfile('sample');
 
     await expect(
       async () =>

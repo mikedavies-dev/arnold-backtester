@@ -298,6 +298,7 @@ export type LiveTradingProfile = {
   strategy: StrategyDefinition;
   accountSize: number;
   symbols: string[];
+  extraSymbols: string[];
   enabled: boolean;
 };
 

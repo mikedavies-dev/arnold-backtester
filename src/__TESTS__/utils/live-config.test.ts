@@ -10,6 +10,9 @@ describe('live config tests', () => {
           Object {
             "accountSize": 1000,
             "enabled": true,
+            "extraSymbols": Array [
+              "SPY",
+            ],
             "name": "Sample Strategy",
             "strategy": Object {
               "name": "sample",

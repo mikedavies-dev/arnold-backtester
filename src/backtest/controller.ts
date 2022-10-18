@@ -4,7 +4,7 @@ import numeral from 'numeral';
 import path from 'path';
 
 import {LoggerCallback, Position, Profile} from '../core';
-import {profileExists, loadProfile} from '../utils/profile';
+import {profileExists, loadBacktestProfile} from '../utils/profile';
 import {BackTestWorkerErrorCode} from '../backtest/worker';
 import {
   ensureBarDataIsAvailable,
@@ -52,7 +52,7 @@ export async function runBacktestController({
     throw new BacktestControllerError('invalid-profile');
   }
 
-  const runProfile = await loadProfile(profile);
+  const runProfile = await loadBacktestProfile(profile);
 
   // Run the profile
   log(

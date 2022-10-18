@@ -1,5 +1,5 @@
 import {runBacktest} from '../../backtest/worker';
-import {loadProfile} from '../../utils/profile';
+import {loadBacktestProfile} from '../../utils/profile';
 import {
   createTimeAsDate,
   createTimeAsUnix,
@@ -75,7 +75,7 @@ describe('test worker module', () => {
   Skip for the moment until we rework the test runner
   */
   test.skip('placing a market order in the backtester', async () => {
-    const profile = await loadProfile('sample');
+    const profile = await loadBacktestProfile('sample');
 
     loadStrategyMock.mockResolvedValue({
       init: () => {},

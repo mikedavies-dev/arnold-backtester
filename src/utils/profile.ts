@@ -4,8 +4,7 @@ import {parse, differenceInDays, startOfDay, add} from 'date-fns';
 import {Profile} from '../core';
 import Env from '../utils/env';
 import {loadSymbolLists} from '../utils/symbol-lists';
-
-import {loadBacktestStrategySource} from './strategy';
+import {loadBacktestStrategy} from './strategy';
 
 // Format stored on disk
 type RawProfile = {
@@ -18,7 +17,6 @@ type RawProfile = {
   threads: number;
   initialBalance: number;
   commissionPerOrder: number;
-  extraSymbols: string[];
 };
 
 export function getPath(name: string) {
@@ -34,7 +32,7 @@ export async function profileExists(name: string) {
   }
 }
 
-export async function loadProfile(name: string): Promise<Profile> {
+export async function loadBacktestProfile(name: string): Promise<Profile> {
   if (!(await profileExists(name))) {
     throw new Error('This profile does not exist');
   }
@@ -55,12 +53,15 @@ export async function loadProfile(name: string): Promise<Profile> {
       }),
     );
 
+  const strategy = await loadBacktestStrategy(profile.strategy);
+
   return {
     ...profile,
     symbols: await loadSymbolLists(profile.symbols),
+    extraSymbols: strategy.extraSymbols,
     strategy: {
       name: profile.strategy,
-      source: await loadBacktestStrategySource(profile.strategy),
+      source: strategy.source,
     },
     dates: {
       from,

@@ -78,6 +78,7 @@
   "scripts": {
     "backtest": "TZ=America/New_York ts-node -T src/bin/backtest.ts",
     "ensure-data": "TZ=America/New_York ts-node -T src/bin/ensure-data.ts",
+    "trader": "TZ=America/New_York ts-node -T src/bin/trader.ts",
     "test": "is-ci-cli test:coverage test:watch",
     "test:coverage": "TZ=America/New_York NODE_ENV=test_ci jest --coverage",
     "test:watch": "TZ=America/New_York jest --watch",

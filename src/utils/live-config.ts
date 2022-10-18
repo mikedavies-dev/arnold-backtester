@@ -3,7 +3,7 @@ import {fileExists} from './files';
 
 import {LiveTradingConfig} from '../core';
 import {loadSymbolLists} from '../utils/symbol-lists';
-import {loadLiveStrategySource} from './strategy';
+import {loadLiveStrategy} from './strategy';
 
 export async function getLiveConfig(): Promise<LiveTradingConfig> {
   const configPath = Env.getUserPath('./live.json');
@@ -24,13 +24,16 @@ export async function getLiveConfig(): Promise<LiveTradingConfig> {
 
   const profiles = await Promise.all(
     config.profiles.map(async profile => {
+      const strategy = await loadLiveStrategy(profile.strategy);
+
       return {
         ...profile,
         strategy: {
           name: profile.strategy,
-          source: await loadLiveStrategySource(profile.strategy),
+          source: strategy.source,
         },
         symbols: await loadSymbolLists(profile.symbols),
+        extraSymbols: strategy.extraSymbols,
       };
     }),
   );

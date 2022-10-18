@@ -1,25 +1,40 @@
 import fs from 'fs/promises';
 
 import Env from './env';
+import {loadStrategy} from './module';
 
-async function readFile(path: string) {
-  try {
-    return await fs.readFile(path, 'utf-8');
-  } catch {
-    return null;
+export async function loadBacktestStrategy(name: string) {
+  const strategy = await loadStrategy(
+    Env.getUserPath(`./test-strategies/${name}.ts`),
+  );
+
+  if (!strategy) {
+    throw new Error(`Test strategy not found ${name}`);
   }
+
+  return {
+    ...strategy,
+    source: await fs.readFile(
+      Env.getUserPath(`./test-strategies/${name}.ts`),
+      'utf-8',
+    ),
+  };
 }
 
-export async function loadBacktestStrategySource(strategy: string) {
-  return (
-    (await readFile(Env.getUserPath(`./test-strategies/${strategy}.js`))) ||
-    (await readFile(Env.getUserPath(`./test-strategies/${strategy}.ts`)))
+export async function loadLiveStrategy(name: string) {
+  const strategy = await loadStrategy(
+    Env.getUserPath(`./live-strategies/${name}.ts`),
   );
-}
 
-export async function loadLiveStrategySource(strategy: string) {
-  return (
-    (await readFile(Env.getUserPath(`./live-strategies/${strategy}.js`))) ||
-    (await readFile(Env.getUserPath(`./live-strategies/${strategy}.ts`)))
-  );
+  if (!strategy) {
+    throw new Error(`Live strategy not found ${name}`);
+  }
+
+  return {
+    ...strategy,
+    source: await fs.readFile(
+      Env.getUserPath(`./live-strategies/${name}.ts`),
+      'utf-8',
+    ),
+  };
 }
