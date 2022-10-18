@@ -13,11 +13,11 @@ import {loadTrackerBars} from '../utils/db';
 import {initTracker} from '../utils/tracker';
 
 /*
-- Connect to data provider (ok)
+* Connect to data provider
 - Connect to broker provider
-- Load live config (ok)
-- Ensure we have historic data available (ok)
-- Load tracker data with data until today (ok)
+* Load live config
+* Ensure we have historic data available (ok)
+* Load tracker data with data until today (ok)
 - Request minute data from provider including live updates
 - Run today's bar data through all trackers
 - For each new bar (or update?) run isSetup on each strategy
