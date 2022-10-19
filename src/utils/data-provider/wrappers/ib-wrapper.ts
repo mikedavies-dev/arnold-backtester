@@ -59,13 +59,15 @@ export function init({
 
   const requests: Record<number, Partial<IbEventHandler>> = {};
 
+  // IB Message handlers
+
   api.on(EventName.nextValidId, orderId => {
     nextValidOrderId = orderId;
   });
 
   api.on(
     EventName.historicalData,
-    (reqId, time, open, high, low, close, volume, count, WAP) => {
+    (reqId, time, open, high, low, close, volume, count, WAP) =>
       requests[reqId]?.[EventName.historicalData]?.({
         time,
         open,
@@ -75,13 +77,12 @@ export function init({
         volume,
         count,
         WAP,
-      });
-    },
+      }),
   );
 
   api.on(
     EventName.historicalDataUpdate,
-    (reqId, time, open, high, low, close, volume, count, WAP) => {
+    (reqId, time, open, high, low, close, volume, count, WAP) =>
       requests[reqId]?.[EventName.historicalDataUpdate]?.({
         time,
         open,
@@ -91,29 +92,28 @@ export function init({
         volume,
         count,
         WAP,
-      });
-    },
+      }),
   );
 
-  api.on(EventName.historicalTicksLast, (reqId, ticks, done) => {
-    requests[reqId]?.[EventName.historicalTicksLast]?.(ticks, done);
-  });
+  api.on(EventName.historicalTicksLast, (reqId, ticks, done) =>
+    requests[reqId]?.[EventName.historicalTicksLast]?.(ticks, done),
+  );
 
-  api.on(EventName.historicalTicksBidAsk, (reqId, ticks, done) => {
-    requests[reqId]?.[EventName.historicalTicksBidAsk]?.(ticks, done);
-  });
+  api.on(EventName.historicalTicksBidAsk, (reqId, ticks, done) =>
+    requests[reqId]?.[EventName.historicalTicksBidAsk]?.(ticks, done),
+  );
 
-  api.on(EventName.symbolSamples, (reqId, contractDescriptions) => {
-    requests[reqId]?.[EventName.symbolSamples]?.(contractDescriptions);
-  });
+  api.on(EventName.symbolSamples, (reqId, contractDescriptions) =>
+    requests[reqId]?.[EventName.symbolSamples]?.(contractDescriptions),
+  );
 
-  api.on(EventName.contractDetails, (reqId, contractDetails) => {
-    requests[reqId]?.[EventName.contractDetails]?.(contractDetails);
-  });
+  api.on(EventName.contractDetails, (reqId, contractDetails) =>
+    requests[reqId]?.[EventName.contractDetails]?.(contractDetails),
+  );
 
-  api.on(EventName.contractDetailsEnd, reqId => {
-    requests[reqId]?.[EventName.contractDetailsEnd]?.();
-  });
+  api.on(EventName.contractDetailsEnd, reqId =>
+    requests[reqId]?.[EventName.contractDetailsEnd]?.(),
+  );
 
   function addRequestHandler(reqId: number, handlers: Partial<IbEventHandler>) {
     requests[reqId] = handlers;
