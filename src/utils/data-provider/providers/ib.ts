@@ -1,4 +1,4 @@
-import {IBApiNext, ConnectionState, Contract, BarSizeSetting} from '@stoqey/ib';
+import {Contract, BarSizeSetting} from '@stoqey/ib';
 import series from 'promise-series2';
 import {
   format,
@@ -8,10 +8,10 @@ import {
   addSeconds,
   addMinutes,
 } from 'date-fns';
-import {lastValueFrom} from 'rxjs';
 import numeral from 'numeral';
 
 import {acquireLock} from '../../lock';
+import {init as initIb, IbWrapper} from '../wrappers/ib-wrapper';
 
 const barSizeLookup: Record<TimeSeriesPeriod, BarSizeSetting> = {
   m1: BarSizeSetting.MINUTES_ONE,
@@ -49,7 +49,7 @@ export function formatIbRequestDate(date: Date) {
 }
 
 async function downloadBidAskTickData(
-  api: IBApiNext,
+  api: IbWrapper,
   instrument: Instrument,
   lastDataDate: Date,
 ): Promise<Tick[]> {
@@ -66,15 +66,13 @@ async function downloadBidAskTickData(
   }
   */
 
-  const ibTicks = await lastValueFrom(
-    api.getHistoricalTicksBidAsk(
-      contract,
-      formatIbRequestDate(lastDataDate),
-      '',
-      1000,
-      1,
-      false,
-    ),
+  const ibTicks = await api.getHistoricalTicksBidAsk(
+    contract,
+    formatIbRequestDate(lastDataDate),
+    '',
+    1000,
+    1,
+    false,
   );
 
   const ticks: Tick[] = ibTicks
@@ -118,7 +116,7 @@ async function downloadBidAskTickData(
 }
 
 async function downloadTradeTickData(
-  api: IBApiNext,
+  api: IbWrapper,
   instrument: Instrument,
   lastDataDate: Date,
 ): Promise<Tick[]> {
@@ -135,14 +133,12 @@ async function downloadTradeTickData(
   }
   */
 
-  const ibTicks = await lastValueFrom(
-    api.getHistoricalTicksLast(
-      contract,
-      formatIbRequestDate(lastDataDate),
-      '',
-      1000,
-      1,
-    ),
+  const ibTicks = await api.getHistoricalTicksLast(
+    contract,
+    formatIbRequestDate(lastDataDate),
+    '',
+    1000,
+    1,
   );
 
   const ticks: Tick[] = ibTicks
@@ -172,67 +168,33 @@ async function downloadTradeTickData(
 type DownloadTickDataFn = typeof downloadBidAskTickData;
 
 export function create({log}: {log?: LoggerCallback} = {}): DataProvider {
-  const api = new IBApiNext({
-    reconnectInterval: 10000,
+  const api = initIb({
     host: Env.IB_HOST,
     port: Number(Env.IB_PORT),
   });
 
-  api.errorSubject.subscribe(err => {
-    log?.(`Error: ${err.error.message} (${err.code})`);
-  });
-
   async function init({workerIndex}: {workerIndex?: number} = {}) {
-    return new Promise<void>((resolve, reject) => {
-      // Set a timeout
-      const timeoutTimer = setTimeout(async () => {
-        log?.('Disconnecting because of timeout');
-        await api.disconnect();
-        reject(new Error('Timeout connecting to IB'));
-      }, 10000);
+    /*
+    Related to lock.ts, we're creating a new IB connection for each worker which isn't ideal
+    ideally we should have one connection on the main worker and send download messages there
+    so we don't risk:
 
-      api.connectionState.subscribe(async state => {
-        // log?.('State Changed', state, api.isConnected);
-        if (state === ConnectionState.Connected) {
-          // Set the logging level
-          // api.logLevel = LogLevel.INFO;
-          log?.('Connected to IB');
-          clearTimeout(timeoutTimer);
+    1. Hitting rate limits in IB
+    2. Having multiple connections to IB
+    */
 
-          // Wait a while to let IB sort it out
-          setTimeout(resolve, 200);
-        }
-      });
+    const offset = (workerIndex || 0) + 1;
+    const clientId = offset * 10 + currentApiClientId;
 
-      /*
-      Related to lock.ts, we're creating a new IB connection for each worker which isn't ideal
-      ideally we should have one connection on the main worker and send download messages there
-      so we don't risk:
+    // Increment the id
+    currentApiClientId += 1;
 
-      1. Hitting rate limits in IB
-      2. Having multiple connections to IB
-      */
-      const offset = (workerIndex || 0) + 1;
-      const clientId = offset * 10 + currentApiClientId;
-
-      api.connect(clientId);
-
-      // Increment the id
-      currentApiClientId += 1;
-    });
+    return api.connect(clientId);
   }
 
   async function shutdown() {
     log?.('Shutting down');
-    return new Promise<void>(resolve => {
-      api.connectionState.subscribe(state => {
-        if (state === ConnectionState.Disconnected) {
-          resolve();
-        }
-      });
-
-      api.disconnect();
-    });
+    return api.disconnect();
   }
 
   async function getTimeSeries(

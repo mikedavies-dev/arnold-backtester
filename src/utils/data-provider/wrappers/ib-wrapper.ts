@@ -227,7 +227,7 @@ export function init({
     whatToShow: string,
     useRTH: number,
     formatDate: number,
-    onUpdateBar: ((bar: Bar) => void) | null,
+    onUpdateBar?: ((bar: Bar) => void) | null,
   ) {
     return new Promise<Bar[]>(resolve => {
       const reqId = getNextRequestId();
@@ -308,3 +308,5 @@ export function init({
     getNextOrderId,
   };
 }
+
+export type IbWrapper = ReturnType<typeof init>;
