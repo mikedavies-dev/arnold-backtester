@@ -107,6 +107,20 @@ export function handleTrackerMinuteBar({
   marketClose: number;
   marketTime: number;
 }) {
+  // If we have already created a minute bar for this minute we should update the volume
+  // to the diff of the the new bar - the last bar otherwise we'll add extra volume
+
+  const {m1} = data.bars;
+
+  const time = formatBarTime(Periods.m1, marketTime);
+
+  if (m1.length) {
+    const currentBar = m1[m1.length - 1];
+    if (currentBar.time === time) {
+      bar.volume = Math.max(0, bar.volume - currentBar.volume);
+    }
+  }
+
   const isMarketOpen = marketTime >= marketOpen && marketTime <= marketClose;
   const isPreMarket = marketTime < marketOpen;
 
@@ -137,6 +151,8 @@ export function handleTrackerMinuteBar({
       data.low = bar.low;
     }
   }
+
+  data.volume += bar.volume;
 
   periods.forEach(period =>
     updateBarFromMinuteBar({

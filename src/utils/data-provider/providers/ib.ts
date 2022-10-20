@@ -1,4 +1,4 @@
-import {Contract, BarSizeSetting} from '@stoqey/ib';
+import {Contract, BarSizeSetting, Bar as IbBar} from '@stoqey/ib';
 import series from 'promise-series2';
 import {
   format,
@@ -37,6 +37,7 @@ import {
   notEmpty,
   TickFileType,
   LoggerCallback,
+  SubscribeMinuteUpdateArgs,
 } from '../../../core';
 
 import Env from '../../../utils/env';
@@ -197,6 +198,19 @@ export function create({log}: {log?: LoggerCallback} = {}): DataProvider {
     return api.disconnect();
   }
 
+  function parseIbBar(bar: IbBar, period: TimeSeriesPeriod) {
+    const parseFormat = barSizeParseLookup[period];
+    const time = parse(bar.time || '', parseFormat, new Date());
+    return {
+      time: format(time, 'yyyy-MM-dd HH:mm:ss'),
+      open: bar.open || 0,
+      high: bar.high || 0,
+      low: bar.low || 0,
+      close: bar.close || 0,
+      volume: (bar.volume || 0) * 100, // IB returns volume in 100s
+    };
+  }
+
   async function getTimeSeries(
     instrument: Instrument,
     end: Date,
@@ -215,18 +229,7 @@ export function create({log}: {log?: LoggerCallback} = {}): DataProvider {
       1,
     );
 
-    return bars.map(bar => {
-      const parseFormat = barSizeParseLookup[period];
-      const time = parse(bar.time || '', parseFormat, new Date());
-      return {
-        time: format(time, 'yyyy-MM-dd HH:mm:ss'),
-        open: bar.open || 0,
-        high: bar.high || 0,
-        low: bar.low || 0,
-        close: bar.close || 0,
-        volume: (bar.volume || 0) * 100, // IB returns volume in 100s
-      };
-    });
+    return bars.map(bar => parseIbBar(bar, period));
   }
 
   async function instrumentLookup(searchTerm: string): Promise<Instrument[]> {
@@ -335,6 +338,25 @@ export function create({log}: {log?: LoggerCallback} = {}): DataProvider {
     }
   }
 
+  // TODO How do we cancel this?
+  async function subscribeMinuteBarUpdates({
+    instrument,
+    onUpdate,
+  }: SubscribeMinuteUpdateArgs) {
+    const contract: Contract = instrument.data as Contract;
+
+    await api.getHistoricalData(
+      contract,
+      '',
+      `1 D`,
+      barSizeLookup['m1'],
+      'TRADES',
+      0,
+      1,
+      bar => onUpdate(parseIbBar(bar, 'm1')),
+    );
+  }
+
   return {
     name: 'ib',
     init,
@@ -342,5 +364,6 @@ export function create({log}: {log?: LoggerCallback} = {}): DataProvider {
     getTimeSeries,
     instrumentLookup,
     downloadTickData,
+    subscribeMinuteBarUpdates,
   };
 }

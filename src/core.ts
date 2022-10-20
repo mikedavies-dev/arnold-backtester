@@ -72,6 +72,11 @@ export type DownloadTickDataArgs = {
   merge: () => Promise<void>;
 };
 
+export type SubscribeMinuteUpdateArgs = {
+  instrument: Instrument;
+  onUpdate: (latestBar: Bar) => void;
+};
+
 export type DataProvider = {
   name: string;
   init(args?: {workerIndex: number}): Promise<void>;
@@ -84,6 +89,7 @@ export type DataProvider = {
   ): Promise<Bar[]>;
   downloadTickData(args: DownloadTickDataArgs): Promise<void>;
   instrumentLookup(searchTerm: string): Promise<Instrument[]>;
+  subscribeMinuteBarUpdates(args: SubscribeMinuteUpdateArgs): Promise<void>;
 };
 
 export type Tracker = {

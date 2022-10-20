@@ -1,16 +1,18 @@
 import series from 'promise-series2';
-import {startOfDay} from 'date-fns';
+import {getUnixTime, parse, startOfDay} from 'date-fns';
 
 import {LoggerCallback, MaximumBarCount, Tracker} from '../core';
 import {createDataProvider} from '../utils/data-provider';
 import {getLiveConfig} from '../utils/live-config';
+
 import {
   ensureBarDataIsAvailable,
   ensureSymbolsAreAvailable,
 } from '../utils/data-storage';
-import {loadTrackerBars} from '../utils/db';
 
-import {initTracker} from '../utils/tracker';
+import {loadTrackerBars, instrumentLookup} from '../utils/db';
+import {initTracker, handleTrackerMinuteBar} from '../utils/tracker';
+import {getMarketOpen, getMarketClose} from '../utils/market';
 
 /*
 * Connect to data provider
@@ -18,8 +20,8 @@ import {initTracker} from '../utils/tracker';
 * Load live config
 * Ensure we have historic data available (ok)
 * Load tracker data with data until today (ok)
-- Request minute data from provider including live updates
-- Run today's bar data through all trackers
+* Request minute data from provider including live updates
+* Run today's bar data through all trackers
 - For each new bar (or update?) run isSetup on each strategy
 - If inSetup start requesting tick/time and sales updates
 - Handle each tick until isSetup=False and no open trades
@@ -36,6 +38,9 @@ export async function runLiveController({log}: {log: LoggerCallback}) {
   log(`Loaded ${liveConfig.profiles.length} live profiles:`);
 
   const today = startOfDay(new Date());
+
+  const marketOpen = getMarketOpen(today);
+  const marketClose = getMarketClose(today);
 
   // Make sure we have data for all these symbols
   await series(
@@ -91,10 +96,57 @@ export async function runLiveController({log}: {log: LoggerCallback}) {
     }),
   );
 
-  log('Trackers', trackers);
+  // Request all minute data until today
+
+  const instruments = await instrumentLookup({
+    provider: dataProvider.name,
+    symbols,
+  });
+
+  // Load all minute data until now
+  await Promise.all(
+    instruments.map(async instrument => {
+      const bars = (
+        await dataProvider.getTimeSeries(instrument, new Date(), 1, 'm1')
+      ).filter(bar => parse(bar.time, 'yyyy-MM-dd HH:mm:ss', new Date()));
+
+      // Iterate bars and apply them to the trackers
+      bars.forEach(bar => {
+        handleTrackerMinuteBar({
+          data: trackers[instrument.symbol],
+          bar,
+          marketOpen,
+          marketClose,
+          marketTime: getUnixTime(
+            parse(bar.time, 'yyyy-MM-dd HH:mm:ss', new Date()),
+          ),
+        });
+      });
+
+      await dataProvider.subscribeMinuteBarUpdates({
+        instrument,
+        onUpdate: bar => {
+          if (bar.volume < 0) {
+            // new bar, ignore
+            return;
+          }
+
+          handleTrackerMinuteBar({
+            data: trackers[instrument.symbol],
+            bar,
+            marketOpen,
+            marketClose,
+            marketTime: getUnixTime(
+              parse(bar.time, 'yyyy-MM-dd HH:mm:ss', new Date()),
+            ),
+          });
+        },
+      });
+    }),
+  );
 
   // Disconnect
   log('Disconnecting from data provider');
 
-  await dataProvider.shutdown();
+  // await dataProvider.shutdown();
 }

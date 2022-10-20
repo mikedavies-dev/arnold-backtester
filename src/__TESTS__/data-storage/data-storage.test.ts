@@ -130,6 +130,7 @@ describe('mongo db tests', () => {
       }),
       instrumentLookup: async () => [],
       downloadTickData: async () => {},
+      subscribeMinuteBarUpdates: async () => {},
     };
     createDataProviderMock.mockReturnValue(mockProvider);
 
@@ -218,6 +219,7 @@ describe('mongo db tests', () => {
         return [];
       }),
       instrumentLookup: async () => [],
+      subscribeMinuteBarUpdates: async () => {},
       downloadTickData: jest.fn(
         async ({write, merge}: DownloadTickDataArgs) => {
           // Load/write bid/ask data from remove service
@@ -330,6 +332,7 @@ describe('mongo db tests', () => {
         return [];
       }),
       instrumentLookup: async () => [],
+      subscribeMinuteBarUpdates: async () => {},
       downloadTickData: jest.fn(async ({write}: DownloadTickDataArgs) => {
         // Load/write bid/ask data from remove service
         await write(TickFileType.BidAsk, bidAskTickData);
@@ -367,6 +370,7 @@ describe('mongo db tests', () => {
         return [];
       }),
       instrumentLookup: async () => [],
+      subscribeMinuteBarUpdates: async () => {},
       downloadTickData: jest.fn(async ({merge}: DownloadTickDataArgs) => {
         // Merge without writing first should create an empty merged file
         // so that next time we don't try downloading it
