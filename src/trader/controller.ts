@@ -11,7 +11,11 @@ import {
 } from '../utils/data-storage';
 
 import {loadTrackerBars, instrumentLookup} from '../utils/db';
-import {initTracker, handleTrackerMinuteBar} from '../utils/tracker';
+import {
+  initTracker,
+  handleTrackerMinuteBar,
+  handleTrackerTick,
+} from '../utils/tracker';
 import {getMarketOpen, getMarketClose} from '../utils/market';
 
 /*
@@ -123,23 +127,32 @@ export async function runLiveController({log}: {log: LoggerCallback}) {
         });
       });
 
-      await dataProvider.subscribeMinuteBarUpdates({
+      await dataProvider.subscribePriceUpdates({
         instrument,
-        onUpdate: bar => {
-          if (bar.volume < 0) {
-            // new bar, ignore
-            return;
-          }
-
-          handleTrackerMinuteBar({
+        onUpdate: ({price, volume}) => {
+          handleTrackerTick({
             data: trackers[instrument.symbol],
-            bar,
+            tick: {
+              type: 'TRADE',
+              size: volume,
+              value: price,
+              time: getUnixTime(new Date()),
+            },
             marketOpen,
             marketClose,
-            marketTime: getUnixTime(
-              parse(bar.time, 'yyyy-MM-dd HH:mm:ss', new Date()),
-            ),
           });
+
+          if (instrument.symbol === 'AAPL') {
+            const tracker = trackers[instrument.symbol];
+            console.log(
+              'XXX',
+              instrument.symbol,
+              price,
+              volume,
+              tracker.bars.m1[tracker.bars.m1.length - 1],
+              tracker.bars.m5[tracker.bars.m5.length - 1],
+            );
+          }
         },
       });
     }),

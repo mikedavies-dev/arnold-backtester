@@ -31,7 +31,12 @@ export function handleTrackerTick({
   marketClose,
 }: {
   data: Tracker;
-  tick: Tick;
+  tick: {
+    time: number;
+    type: 'ASK' | 'BID' | 'TRADE';
+    value: number;
+    size: number;
+  };
   marketOpen: number;
   marketClose: number;
 }): void {

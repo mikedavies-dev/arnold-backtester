@@ -77,6 +77,11 @@ export type SubscribeMinuteUpdateArgs = {
   onUpdate: (latestBar: Bar) => void;
 };
 
+export type SubscribePriceUpdateArgs = {
+  instrument: Instrument;
+  onUpdate: ({price, volume}: {price: number; volume: number}) => void;
+};
+
 export type DataProvider = {
   name: string;
   init(args?: {workerIndex: number}): Promise<void>;
@@ -89,7 +94,8 @@ export type DataProvider = {
   ): Promise<Bar[]>;
   downloadTickData(args: DownloadTickDataArgs): Promise<void>;
   instrumentLookup(searchTerm: string): Promise<Instrument[]>;
-  subscribeMinuteBarUpdates(args: SubscribeMinuteUpdateArgs): Promise<void>;
+  subscribePriceUpdates(args: SubscribePriceUpdateArgs): number;
+  cancelPriceUpdates: (requestId: number) => void;
 };
 
 export type Tracker = {

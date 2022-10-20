@@ -227,7 +227,6 @@ export function init({
     whatToShow: string,
     useRTH: number,
     formatDate: number,
-    onUpdateBar?: ((bar: Bar) => void) | null,
   ) {
     return new Promise<Bar[]>(resolve => {
       const reqId = getNextRequestId();
@@ -236,16 +235,11 @@ export function init({
       addRequestHandler(reqId, {
         [EventName.historicalData]: bar => {
           if (bar.open === -1) {
-            if (!onUpdateBar) {
-              removeRequestHandler(reqId);
-            }
+            removeRequestHandler(reqId);
             resolve(bars);
           } else {
             bars.push(bar);
           }
-        },
-        [EventName.historicalDataUpdate]: bar => {
-          onUpdateBar?.(bar);
         },
       });
 
@@ -258,9 +252,45 @@ export function init({
         whatToShow,
         useRTH,
         formatDate,
-        Boolean(onUpdateBar),
+        false,
       );
     });
+  }
+
+  function requestBarUpdates(
+    contract: Contract,
+    barSizeSetting: BarSizeSetting,
+    whatToShow: string,
+    useRTH: number,
+    formatDate: number,
+    onUpdateBar?: ((bar: Bar) => void) | null,
+  ) {
+    const reqId = getNextRequestId();
+
+    addRequestHandler(reqId, {
+      [EventName.historicalData]: () => {},
+      [EventName.historicalDataUpdate]: bar => {
+        onUpdateBar?.(bar);
+      },
+    });
+
+    api.reqHistoricalData(
+      reqId,
+      contract,
+      '',
+      '1 D',
+      barSizeSetting,
+      whatToShow,
+      useRTH,
+      formatDate,
+      Boolean(onUpdateBar),
+    );
+
+    return reqId;
+  }
+
+  async function cancelBarUpdates(reqId: number) {
+    api.cancelHistoricalData(reqId);
   }
 
   async function searchContracts(pattern: string) {
@@ -306,6 +336,8 @@ export function init({
     getHistoricalTicksLast,
     getHistoricalData,
     getNextOrderId,
+    requestBarUpdates,
+    cancelBarUpdates,
   };
 }
 

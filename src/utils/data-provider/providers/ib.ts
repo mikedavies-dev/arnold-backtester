@@ -37,7 +37,7 @@ import {
   notEmpty,
   TickFileType,
   LoggerCallback,
-  SubscribeMinuteUpdateArgs,
+  SubscribePriceUpdateArgs,
 } from '../../../core';
 
 import Env from '../../../utils/env';
@@ -339,22 +339,69 @@ export function create({log}: {log?: LoggerCallback} = {}): DataProvider {
   }
 
   // TODO How do we cancel this?
-  async function subscribeMinuteBarUpdates({
+  // async function subscribeMinuteBarUpdates({
+  //   instrument,
+  //   onUpdate,
+  // }: SubscribeMinuteUpdateArgs) {
+  //   const contract: Contract = instrument.data as Contract;
+
+  //   await api.getHistoricalData(
+  //     contract,
+  //     '',
+  //     `1 D`,
+  //     barSizeLookup['m1'],
+  //     'TRADES',
+  //     0,
+  //     1,
+  //     bar => onUpdate(parseIbBar(bar, 'm1')),
+  //   );
+  // }
+
+  function subscribePriceUpdates({
     instrument,
     onUpdate,
-  }: SubscribeMinuteUpdateArgs) {
+  }: SubscribePriceUpdateArgs) {
     const contract: Contract = instrument.data as Contract;
 
-    await api.getHistoricalData(
+    let lastBar: Bar | null = null;
+
+    const requestId = api.requestBarUpdates(
       contract,
-      '',
-      `1 D`,
       barSizeLookup['m1'],
       'TRADES',
       0,
       1,
-      bar => onUpdate(parseIbBar(bar, 'm1')),
+      bar => {
+        const newBar = parseIbBar(bar, 'm1');
+
+        if (newBar.volume < 0) {
+          // new bar, ignore
+          return;
+        }
+
+        if (!lastBar || newBar.time !== lastBar.time) {
+          onUpdate({
+            price: newBar.close,
+            volume: newBar.volume,
+          });
+          lastBar = newBar;
+          return;
+        }
+
+        const volumeDelta = Math.max(0, newBar.volume - lastBar.volume);
+
+        onUpdate({
+          price: newBar.close,
+          volume: volumeDelta,
+        });
+      },
     );
+
+    return requestId;
+  }
+
+  function cancelPriceUpdates(requestId: number) {
+    api.cancelBarUpdates(requestId);
   }
 
   return {
@@ -364,6 +411,7 @@ export function create({log}: {log?: LoggerCallback} = {}): DataProvider {
     getTimeSeries,
     instrumentLookup,
     downloadTickData,
-    subscribeMinuteBarUpdates,
+    subscribePriceUpdates,
+    cancelPriceUpdates,
   };
 }
