@@ -71,13 +71,6 @@ function marketSortFn(row1: Tick, row2: Tick) {
   return val1 - val2;
 }
 
-async function loadJsOrTsStrategy(strategy: string) {
-  return (
-    (await loadStrategy(Env.getUserPath(`./strategies/${strategy}.js`))) ||
-    (await loadStrategy(Env.getUserPath(`./strategies/${strategy}.ts`)))
-  );
-}
-
 export async function runBacktest({
   profile,
   symbol,
@@ -101,7 +94,9 @@ export async function runBacktest({
   });
 
   // Make sure the module exists
-  const strategy = await loadJsOrTsStrategy(profile.strategy.name);
+  const strategy = await loadStrategy(
+    Env.getUserPath(`./test-strategies/${profile.strategy.name}.ts`),
+  );
 
   if (!strategy) {
     throw new BacktestWorkerError('strategy-not-found');

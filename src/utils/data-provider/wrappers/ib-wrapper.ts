@@ -13,6 +13,8 @@ import {
   HistoricalTickBidAsk,
   ContractDescription,
   ContractDetails,
+  TickType,
+  IBApiTickType,
 } from '@stoqey/ib';
 
 export function init({
@@ -55,6 +57,9 @@ export function init({
     ) => void;
     [EventName.contractDetails]: (contractDetails: ContractDetails) => void;
     [EventName.contractDetailsEnd]: () => void;
+    [EventName.tickPrice]: (field: string, value: number) => void;
+    [EventName.tickSize]: (field: string, value: number) => void;
+    [EventName.tickString]: (field: string, value: string) => void;
   };
 
   const requests: Record<number, Partial<IbEventHandler>> = {};
@@ -113,6 +118,21 @@ export function init({
 
   api.on(EventName.contractDetailsEnd, reqId =>
     requests[reqId]?.[EventName.contractDetailsEnd]?.(),
+  );
+
+  api.on(EventName.tickPrice, (reqId, type, value /*, attributes*/) =>
+    requests[reqId]?.[EventName.tickPrice]?.(IBApiTickType[type], value),
+  );
+
+  api.on(EventName.tickSize, (reqId, type, value) => {
+    if (!type || !value) {
+      return;
+    }
+    requests[reqId]?.[EventName.tickSize]?.(IBApiTickType[type], value);
+  });
+
+  api.on(EventName.tickString, (reqId, type, value) =>
+    requests[reqId]?.[EventName.tickString]?.(IBApiTickType[type], value),
   );
 
   function addRequestHandler(reqId: number, handlers: Partial<IbEventHandler>) {
@@ -289,8 +309,36 @@ export function init({
     return reqId;
   }
 
-  async function cancelBarUpdates(reqId: number) {
+  function cancelBarUpdates(reqId: number) {
     api.cancelHistoricalData(reqId);
+  }
+
+  function subscribeMarketData(
+    contract: Contract,
+    onUpdate: ({type, value}: {type: string; value: number}) => void,
+  ) {
+    const reqId = getNextRequestId();
+
+    addRequestHandler(reqId, {
+      [EventName.tickPrice]: (type, value) => {
+        onUpdate?.({type, value});
+      },
+      [EventName.tickSize]: (type, value) => {
+        onUpdate?.({type, value});
+      },
+      /*
+      [EventName.tickString]: (type, value) => {
+        // onUpdate?.({type, value});
+      },
+      */
+    });
+
+    api.reqMktData(reqId, contract, '', false, false);
+    return reqId;
+  }
+
+  async function cancelMarketData(reqId: number) {
+    api.cancelMktData(reqId);
   }
 
   async function searchContracts(pattern: string) {
@@ -338,6 +386,8 @@ export function init({
     getNextOrderId,
     requestBarUpdates,
     cancelBarUpdates,
+    subscribeMarketData,
+    cancelMarketData,
   };
 }
 

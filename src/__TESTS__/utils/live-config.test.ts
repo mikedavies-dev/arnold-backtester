@@ -13,6 +13,7 @@ describe('live config tests', () => {
             "extraSymbols": Array [
               "SPY",
             ],
+            "id": "d2f0d37d-569b-451e-9fe0-52bd4a1f29bf",
             "name": "Sample Strategy",
             "strategy": Object {
               "name": "sample",

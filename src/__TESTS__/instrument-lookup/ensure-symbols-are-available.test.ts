@@ -40,10 +40,8 @@ const dataProvider: DataProvider = {
   getTimeSeries: async () => [],
   instrumentLookup: async () => [],
   downloadTickData: async () => {},
-  subscribePriceUpdates: () => {
-    return 0;
-  },
-  cancelPriceUpdates: () => {},
+  subscribeMarketUpdates: () => 0,
+  cancelMarketUpdates: () => {},
 };
 
 describe('mongo db tests', () => {

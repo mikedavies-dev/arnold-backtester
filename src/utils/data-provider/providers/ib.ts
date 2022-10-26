@@ -38,6 +38,8 @@ import {
   TickFileType,
   LoggerCallback,
   SubscribePriceUpdateArgs,
+  SubscribeMarketUpdateArgs,
+  isTickType,
 } from '../../../core';
 
 import Env from '../../../utils/env';
@@ -338,25 +340,7 @@ export function create({log}: {log?: LoggerCallback} = {}): DataProvider {
     }
   }
 
-  // TODO How do we cancel this?
-  // async function subscribeMinuteBarUpdates({
-  //   instrument,
-  //   onUpdate,
-  // }: SubscribeMinuteUpdateArgs) {
-  //   const contract: Contract = instrument.data as Contract;
-
-  //   await api.getHistoricalData(
-  //     contract,
-  //     '',
-  //     `1 D`,
-  //     barSizeLookup['m1'],
-  //     'TRADES',
-  //     0,
-  //     1,
-  //     bar => onUpdate(parseIbBar(bar, 'm1')),
-  //   );
-  // }
-
+  /*
   function subscribePriceUpdates({
     instrument,
     onUpdate,
@@ -374,7 +358,7 @@ export function create({log}: {log?: LoggerCallback} = {}): DataProvider {
       bar => {
         const newBar = parseIbBar(bar, 'm1');
 
-        if (newBar.volume < 0) {
+        if (newBar.close < 0) {
           // new bar, ignore
           return;
         }
@@ -403,6 +387,65 @@ export function create({log}: {log?: LoggerCallback} = {}): DataProvider {
   function cancelPriceUpdates(requestId: number) {
     api.cancelBarUpdates(requestId);
   }
+  */
+
+  function subscribeMarketUpdates({
+    instrument,
+    onUpdate,
+  }: SubscribeMarketUpdateArgs) {
+    const contract: Contract = instrument.data as Contract;
+
+    let lastVolume: number | null = null;
+
+    const requestId = api.subscribeMarketData(contract, ({type, value}) => {
+      /*
+      IB returns different historic data to live data.. very frustrating! So we have
+      to calculate the delta using the first value we receive otherwise we get a large
+      spike in data.
+
+      This is still not 100% correct because it means our historic data is lower
+      than real-time updates.. the only solution at the moment is to consider using
+      something like Polygon.io and hope they are better.
+
+      "Note: IB's historical data feed is filtered for some types of trades which generally
+      occur away from the NBBO such as combos, block trades, and derivatives.
+      For that reason the historical data volume will be lower than an unfiltered
+      historical data feed."
+
+      https://interactivebrokers.github.io/tws-api/historical_bars.html
+      */
+
+      if (type === 'VOLUME') {
+        if (lastVolume === null) {
+          lastVolume = value;
+        } else {
+          onUpdate({
+            type: 'VOLUME_DELTA',
+            value: value - lastVolume,
+          });
+        }
+
+        return;
+      }
+
+      const tick = isTickType(type)
+        ? {
+            type,
+            value,
+          }
+        : null;
+
+      if (tick) {
+        onUpdate(tick);
+      }
+    });
+
+    return requestId;
+  }
+
+  function cancelMarketUpdates(requestId: number) {
+    api.cancelMarketData(requestId);
+  }
 
   return {
     name: 'ib',
@@ -411,7 +454,9 @@ export function create({log}: {log?: LoggerCallback} = {}): DataProvider {
     getTimeSeries,
     instrumentLookup,
     downloadTickData,
-    subscribePriceUpdates,
-    cancelPriceUpdates,
+    // subscribePriceUpdates,
+    // cancelPriceUpdates,
+    subscribeMarketUpdates,
+    cancelMarketUpdates,
   };
 }

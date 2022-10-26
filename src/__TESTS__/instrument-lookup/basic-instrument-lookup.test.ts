@@ -44,10 +44,8 @@ const dataProvider: DataProvider = {
   shutdown: async () => {},
   getTimeSeries: async () => [],
   downloadTickData: async () => {},
-  subscribePriceUpdates: () => {
-    return 0;
-  },
-  cancelPriceUpdates: () => {},
+  subscribeMarketUpdates: () => 0,
+  cancelMarketUpdates: () => {},
   instrumentLookup: async searchTerm => {
     return instruments.filter(
       i =>

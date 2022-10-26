@@ -13,10 +13,8 @@ test('instrument lookup', async () => {
     shutdown: jest.fn(async () => {}),
     getTimeSeries: async () => [],
     downloadTickData: async () => {},
-    subscribePriceUpdates: () => {
-      return 0;
-    },
-    cancelPriceUpdates: () => {},
+    subscribeMarketUpdates: () => 0,
+    cancelMarketUpdates: () => {},
     instrumentLookup: async () => [
       {
         externalId: 'ABCD',

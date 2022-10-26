@@ -1,4 +1,4 @@
-import {Tick, Tracker, BarPeriod, Bar, Periods} from '../core';
+import {Tracker, BarPeriod, Bar, Periods, TickType} from '../core';
 
 import {updateBarFromTick, updateBarFromMinuteBar, formatBarTime} from './bars';
 
@@ -33,7 +33,7 @@ export function handleTrackerTick({
   data: Tracker;
   tick: {
     time: number;
-    type: 'ASK' | 'BID' | 'TRADE';
+    type: TickType;
     value: number;
     size: number;
   };
@@ -95,6 +95,27 @@ export function handleTrackerTick({
           time,
         }),
       );
+      break;
+
+    case 'VOLUME_DELTA':
+      periods.forEach(period =>
+        updateBarFromTick({
+          bars: data.bars,
+          price: data.last,
+          volume: value,
+          period,
+          time,
+        }),
+      );
+      data.volume += value;
+      break;
+
+    case 'HIGH':
+      data.high = value;
+      break;
+
+    case 'LOW':
+      data.low = value;
       break;
   }
 }

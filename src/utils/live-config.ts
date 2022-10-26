@@ -14,6 +14,7 @@ export async function getLiveConfig(): Promise<LiveTradingConfig> {
 
   const config = require(configPath) as {
     profiles: {
+      id: string;
       name: string;
       strategy: string;
       accountSize: number;

@@ -10,7 +10,23 @@ export type RawTick = {
   value: number;
 };
 
-export type TickType = 'TRADE' | 'BID' | 'ASK';
+export const TickTypes = [
+  'TRADE',
+  'BID',
+  'ASK',
+  'VOLUME_DELTA',
+  'HIGH',
+  'LOW',
+] as const;
+
+export type TickType = typeof TickTypes[number];
+
+export function isTickType(maybeTickType: unknown): maybeTickType is TickType {
+  return (
+    typeof maybeTickType === 'string' &&
+    TickTypes.includes(maybeTickType as any)
+  );
+}
 
 export type Tick = {
   time: number;
@@ -82,6 +98,37 @@ export type SubscribePriceUpdateArgs = {
   onUpdate: ({price, volume}: {price: number; volume: number}) => void;
 };
 
+/*
+const MarketUpdateTickTypes = [
+  'BID',
+  'BID_SIZE',
+  'ASK',
+  'ASK_SIZE',
+  'VOLUME',
+  'LAST',
+  'LAST_SIZE',
+] as const;
+
+export type MarketUpdateTickType = typeof MarketUpdateTickTypes[number];
+
+// Make sure that the market tick type is a type we want
+// https://stackoverflow.com/questions/36836011/checking-validity-of-string-literal-union-type-at-runtime
+
+export function isMarketUpdateTickType(
+  maybeMarketUpdateTickType: unknown,
+): maybeMarketUpdateTickType is MarketUpdateTickType {
+  return (
+    typeof maybeMarketUpdateTickType === 'string' &&
+    MarketUpdateTickTypes.includes(maybeMarketUpdateTickType as any)
+  );
+}
+*/
+
+export type SubscribeMarketUpdateArgs = {
+  instrument: Instrument;
+  onUpdate: ({type, value}: {type: TickType; value: number}) => void;
+};
+
 export type DataProvider = {
   name: string;
   init(args?: {workerIndex: number}): Promise<void>;
@@ -94,8 +141,8 @@ export type DataProvider = {
   ): Promise<Bar[]>;
   downloadTickData(args: DownloadTickDataArgs): Promise<void>;
   instrumentLookup(searchTerm: string): Promise<Instrument[]>;
-  subscribePriceUpdates(args: SubscribePriceUpdateArgs): number;
-  cancelPriceUpdates: (requestId: number) => void;
+  subscribeMarketUpdates(args: SubscribeMarketUpdateArgs): number;
+  cancelMarketUpdates: (requestId: number) => void;
 };
 
 export type Tracker = {
@@ -306,6 +353,7 @@ export const TimeSeriesPeriodToPeriod: Record<TimeSeriesPeriod, number> = {
 };
 
 export type LiveTradingProfile = {
+  id: string;
   name: string;
   strategy: StrategyDefinition;
   accountSize: number;
