@@ -421,10 +421,9 @@ export function create({log}: {log?: LoggerCallback} = {}): DataProvider {
         } else {
           onUpdate({
             type: 'VOLUME_DELTA',
-            value: value - lastVolume,
+            value: (value - lastVolume) * 100,
           });
         }
-
         return;
       }
 

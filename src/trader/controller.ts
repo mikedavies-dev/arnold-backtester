@@ -197,6 +197,8 @@ export async function runLiveController({log}: {log: LoggerCallback}) {
               marketOpen,
               marketClose,
             });
+
+            // TODO, handle broker tick or is that handled totally by IB?
           },
         });
       }),
