@@ -7,7 +7,7 @@ import fs from 'fs/promises';
 import del from 'del';
 
 import {
-  Tick,
+  StoredTick,
   RawTick,
   LoggerCallback,
   DataProvider,
@@ -21,14 +21,14 @@ import {mergeAndDistributeArrays} from './data-structures';
 
 export async function loadTickFile(
   filename: string,
-): Promise<Array<Tick> | null> {
+): Promise<Array<StoredTick> | null> {
   // check if the file exists
   if (!(await fileExists(filename))) {
     return null;
   }
 
   // read the csv data
-  const data = readCSV<RawTick, Tick>(filename, data => {
+  const data = readCSV<RawTick, StoredTick>(filename, data => {
     return {
       time: data.time,
       index: data.index,
@@ -56,7 +56,7 @@ export async function loadTickForMinute(
   symbol: string,
   time: Date,
   type: TickFileType,
-): Promise<Array<Tick> | null> {
+): Promise<Array<StoredTick> | null> {
   const filename = formatDataFilename(symbol, time, type);
   return loadTickFile(filename);
 }
@@ -73,7 +73,7 @@ export async function writeTickData(
   symbol: string,
   time: Date,
   type: TickFileType,
-  data: Tick[],
+  data: StoredTick[],
   overwrite: boolean,
 ) {
   const outputFilename = formatDataFilename(symbol, time, type);
@@ -115,7 +115,7 @@ async function mergeTickData(symbol: string, date: Date) {
   );
 
   // Merge each second separately so we get an even distribution of trades/quotes
-  const merged: Tick[] = [];
+  const merged: StoredTick[] = [];
 
   /*
   IB don't give us millisecond data on bid/ask/trade data and because we get a lot more

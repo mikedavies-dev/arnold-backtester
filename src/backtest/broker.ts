@@ -12,16 +12,17 @@ import {differenceInMilliseconds} from 'date-fns';
 import {Tracker, Order, BrokerState, OrderSpecification} from '../core';
 import {getPositionPL, getPositionCommission} from '../utils/results-metrics';
 
+/*
+orderExecutionDelayMs?: number;
+  commissionPerOrder: number;
+*/
+
 export function initBroker({
   getMarketTime,
-  orderExecutionDelayMs,
   initialBalance,
-  commissionPerOrder,
 }: {
   getMarketTime: () => Date;
-  orderExecutionDelayMs?: number;
   initialBalance: number;
-  commissionPerOrder: number;
 }): BrokerState {
   return {
     getMarketTime,
@@ -30,9 +31,7 @@ export function initBroker({
     openOrders: {},
     positions: [],
     openPositions: {},
-    orderExecutionDelayMs: orderExecutionDelayMs || 1000,
     balance: initialBalance,
-    commissionPerOrder,
   };
 }
 
@@ -78,12 +77,18 @@ export function placeOrder(
   return orderId;
 }
 
+type BrokerOptions = {
+  orderExecutionDelayMs: number;
+  commissionPerOrder: number;
+};
+
 export function handleBrokerTick(
   state: BrokerState,
   symbol: string,
   tracker: Tracker,
+  options: BrokerOptions,
 ) {
-  const {openOrders, openPositions, orderExecutionDelayMs} = state;
+  const {openOrders, openPositions} = state;
 
   const {last, bid, ask} = tracker;
 
@@ -98,7 +103,7 @@ export function handleBrokerTick(
       // Make sure enough time has passed
       if (
         differenceInMilliseconds(state.getMarketTime(), order.openedAt) <
-        orderExecutionDelayMs
+        options.orderExecutionDelayMs
       ) {
         return false;
       }
@@ -174,7 +179,7 @@ export function handleBrokerTick(
         // Update account balance
         state.balance +=
           getPositionPL(position) -
-          getPositionCommission(position, state.commissionPerOrder);
+          getPositionCommission(position, options.commissionPerOrder);
 
         delete openPositions[symbol];
       }

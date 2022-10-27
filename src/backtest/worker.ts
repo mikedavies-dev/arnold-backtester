@@ -25,7 +25,7 @@ import {
 } from '../utils/market';
 
 import {
-  Tick,
+  StoredTick,
   LoggerCallback,
   Tracker,
   OrderSpecification,
@@ -62,7 +62,7 @@ export class BacktestWorkerError extends Error {
   }
 }
 
-function marketSortFn(row1: Tick, row2: Tick) {
+function marketSortFn(row1: StoredTick, row2: StoredTick) {
   // Sort on both index and time so we don't loose th original order
   // if we have multiple values per second
   const val1 = row1.time * 1000000 + row1.index;
@@ -128,7 +128,6 @@ export async function runBacktest({
       return currentMarketTime.current;
     },
     initialBalance: profile.initialBalance,
-    commissionPerOrder: profile.commissionPerOrder,
   });
 
   // Load trackers for all symbols using data from the db
@@ -240,8 +239,8 @@ export async function runBacktest({
       );
 
       // Merge all the data
-      const marketData = mergeSortedArrays<Tick>(
-        symbolData as Array<Tick[]>,
+      const marketData = mergeSortedArrays<StoredTick>(
+        symbolData as Array<StoredTick[]>,
         marketSortFn,
       );
 
@@ -291,7 +290,10 @@ export async function runBacktest({
         });
 
         // Update broker, open orders, etc
-        handleBrokerTick(brokerState, tick.symbol, tracker);
+        handleBrokerTick(brokerState, tick.symbol, tracker, {
+          commissionPerOrder: profile.commissionPerOrder,
+          orderExecutionDelayMs: 1000,
+        });
       });
 
       // Increment the market time 60 seconds (next minute bar)

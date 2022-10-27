@@ -107,7 +107,6 @@ export function handleTrackerTick({
           time,
         }),
       );
-      console.log('New Volume', data.volume, value);
       data.volume += value;
       break;
 

@@ -2,14 +2,25 @@ import series from 'promise-series2';
 import {
   addHours,
   fromUnixTime,
+  getMinutes,
   getUnixTime,
   isAfter,
   parse,
   startOfDay,
 } from 'date-fns';
 
-import {LoggerCallback, MaximumBarCount, Tracker, BrokerState} from '../core';
-import {createDataProvider} from '../utils/data-provider';
+import {
+  LoggerCallback,
+  MaximumBarCount,
+  Tracker,
+  OrderSpecification,
+  Tick,
+  DataProvider,
+  LiveTradingConfig,
+  BrokerProvider,
+} from '../core';
+
+import {createDataProvider, createBroker} from '../utils/data-provider';
 import {getLiveConfig} from '../utils/live-config';
 import Env from '../utils/env';
 
@@ -19,50 +30,94 @@ import {
 } from '../utils/data-storage';
 
 import {loadTrackerBars, instrumentLookup} from '../utils/db';
+
 import {
   initTracker,
   handleTrackerMinuteBar,
   handleTrackerTick,
 } from '../utils/tracker';
-import {getMarketOpen, getMarketClose} from '../utils/market';
+
+import {
+  getMarketOpen,
+  getMarketClose,
+  getPreMarketOpen,
+  getMarketState,
+} from '../utils/market';
+
 import {loadStrategy} from '../utils/module';
 import {formatDateTime} from '../utils/dates';
 
 const sleep = (time: number) =>
   new Promise(resolve => setTimeout(resolve, time));
 
-function initBrokerState({balance}: {balance: number}) {
-  return {
-    getMarketTime: () => new Date(),
-    nextOrderId: 1,
-    orders: [],
-    openOrders: {},
-    positions: [],
-    openPositions: {},
-    orderExecutionDelayMs: 0,
-    balance,
-    commissionPerOrder: 0,
-  };
-}
+async function initProfiles(
+  dataProvider: DataProvider,
+  broker: BrokerProvider,
+  log: LoggerCallback,
+  today: Date,
+  liveConfig: LiveTradingConfig,
+) {
+  return await series(
+    async ({
+      id,
+      name,
+      symbols,
+      extraSymbols,
+      strategy: strategyDef,
+      accountSize,
+    }) => {
+      const symbolsThatRequireData = Array.from(
+        new Set([...symbols, ...extraSymbols]),
+      );
 
-/*
-* Connect to data provider
-- Connect to broker provider
-* Load live config
-* Ensure we have historic data available (ok)
-* Load tracker data with data until today (ok)
-* Request minute data from provider including live updates
-* Run today's bar data through all trackers
-- For each new bar (or update?) run isSetup on each strategy
-- If inSetup start requesting tick/time and sales updates
-- Handle each tick until isSetup=False and no open trades
-*/
+      // Make sure we have symbols in our db
+      await ensureSymbolsAreAvailable({
+        dataProvider,
+        symbols: symbolsThatRequireData,
+      });
+
+      // make sure we have data available
+      await ensureBarDataIsAvailable({
+        dataProvider,
+        symbols: symbolsThatRequireData,
+        log,
+        from: today,
+        to: today,
+      });
+
+      const strategy = await loadStrategy(
+        Env.getUserPath(`./live-strategies/${strategyDef.name}.ts`),
+      );
+
+      if (!strategy) {
+        throw new Error('strategy-not-found');
+      }
+
+      log(`> Loaded ${name}`);
+
+      return {
+        id,
+        name: name,
+        symbols,
+        strategy,
+        brokerState: await broker.loadState(id, accountSize),
+      };
+    },
+    false,
+    liveConfig.profiles,
+  );
+}
 
 export async function runLiveController({log}: {log: LoggerCallback}) {
   // connect to the data provider
   log('Connecting to data provider');
   const dataProvider = await createDataProvider({log});
   await dataProvider.init();
+
+  // connect to the data provider
+  log('Connecting to broker');
+  const broker = await createBroker({log});
+  await broker.init();
 
   // Load the live config
   const liveConfig = await getLiveConfig();
@@ -72,51 +127,16 @@ export async function runLiveController({log}: {log: LoggerCallback}) {
 
   const marketOpen = getMarketOpen(today);
   const marketClose = getMarketClose(today);
+  const preMarketOpen = getPreMarketOpen(today);
 
   try {
     // Make sure we have data for all these symbols
-    const activeProfiles = await series(
-      async profile => {
-        const symbolsThatRequireData = Array.from(
-          new Set([...profile.symbols, ...profile.extraSymbols]),
-        );
-
-        // Make sure we have symbols in our db
-        await ensureSymbolsAreAvailable({
-          dataProvider,
-          symbols: symbolsThatRequireData,
-        });
-
-        // make sure we have data available
-        await ensureBarDataIsAvailable({
-          dataProvider,
-          symbols: symbolsThatRequireData,
-          log,
-          from: today,
-          to: today,
-        });
-
-        const strategy = await loadStrategy(
-          Env.getUserPath(`./live-strategies/${profile.strategy.name}.ts`),
-        );
-
-        if (!strategy) {
-          throw new Error('strategy-not-found');
-        }
-
-        log(`> Loaded ${profile.name}`);
-
-        return {
-          name: profile.name,
-          strategy,
-          symbols: profile.symbols,
-          symbolLookup: new Set(profile.symbols),
-          // TODO, this should load state from the DB if needed?
-          brokerState: initBrokerState({balance: profile.accountSize}),
-        };
-      },
-      false,
-      liveConfig.profiles,
+    const activeProfiles = await initProfiles(
+      dataProvider,
+      broker,
+      log,
+      today,
+      liveConfig,
     );
 
     const symbols = Array.from(
@@ -157,15 +177,15 @@ export async function runLiveController({log}: {log: LoggerCallback}) {
       return {
         instrument,
         symbol: instrument.symbol,
-        profiles: activeProfiles.filter(p =>
-          p.symbolLookup.has(instrument.symbol),
-        ),
+        profiles: activeProfiles
+          .filter(p => p.symbols.find(s => s === instrument.symbol))
+          .map(p => ({...p, currentlyInSetup: false})),
       };
     });
 
     // Load all minute data until now
     await Promise.all(
-      instruments.map(async ({instrument, symbol}) => {
+      instruments.map(async ({instrument, symbol, profiles}) => {
         const bars = (
           await dataProvider.getTimeSeries(instrument, new Date(), 1, 'm1')
         ).filter(bar => parse(bar.time, 'yyyy-MM-dd HH:mm:ss', new Date()));
@@ -186,19 +206,51 @@ export async function runLiveController({log}: {log: LoggerCallback}) {
         await dataProvider.subscribeMarketUpdates({
           instrument,
           onUpdate: ({type, value}) => {
+            const marketTime = getUnixTime(new Date());
+
+            const marketState = getMarketState(
+              marketTime,
+              preMarketOpen,
+              marketOpen,
+              marketClose,
+            );
+
+            const tick: Tick = {
+              type,
+              size: 0, // TODO, We don't worry about size updates because we don't store BID_SIZE or ASK_SIZE
+              value: value,
+              time: marketTime,
+            };
+
+            // Update the tracker
             handleTrackerTick({
               data: trackers[symbol],
-              tick: {
-                type,
-                size: 0, // We don't worry about size updates because we don't store BID_SIZE or ASK_SIZE
-                value: value,
-                time: getUnixTime(new Date()),
-              },
+              tick,
               marketOpen,
               marketClose,
             });
 
-            // TODO, handle broker tick or is that handled totally by IB?
+            profiles
+              .filter(p => p.currentlyInSetup)
+              .forEach(({id: profileId, brokerState, strategy}) => {
+                strategy.handleTick({
+                  log,
+                  marketState,
+                  tick,
+                  symbol,
+                  tracker: trackers[symbol],
+                  trackers,
+                  broker: {
+                    state: brokerState,
+                    placeOrder: (spec: OrderSpecification) =>
+                      broker.placeOrder(profileId, spec),
+                    hasOpenOrders: (symbol: string) =>
+                      broker.hasOpenOrders(profileId, symbol),
+                    getPositionSize: (symbol: string) =>
+                      broker.getPositionSize(profileId, symbol),
+                  },
+                });
+              });
           },
         });
       }),
@@ -209,6 +261,8 @@ export async function runLiveController({log}: {log: LoggerCallback}) {
     // Wait until the market closes
     log(`Worker will shut down at ${formatDateTime(shutdownAt)}`);
 
+    let currentMinute = -1;
+
     while (!isAfter(new Date(), shutdownAt)) {
       /*
       The question is: Do we need time and sales data when a stock is in a setup or can
@@ -218,8 +272,43 @@ export async function runLiveController({log}: {log: LoggerCallback}) {
       if we need it. That means that backtesting has a lot higher resolution data than
       live trading in terms of tick and bid/ask updates but hopefully that won't cause issues
 
-      If we need time and sales data we can add it fairly easily later
+      If we need time and sales data we can add it fairly easily later by requesting it when
+      any profile for a symbol is in a setup and stopping when not and no open orders
       */
+
+      const nextMinute = getMinutes(new Date());
+
+      if (nextMinute !== currentMinute) {
+        instruments.forEach(({symbol, profiles}) => {
+          profiles.forEach(profile => {
+            const inSetup = profile.strategy.isSetup({
+              symbol,
+              tracker: trackers[symbol],
+              trackers,
+              log,
+              marketTime: getUnixTime(new Date()),
+              marketOpen,
+              marketClose,
+            });
+
+            // Update the UI
+            if (profile.currentlyInSetup !== inSetup) {
+              log(
+                inSetup
+                  ? `${profile.name} for ${symbol} is in a setup`
+                  : `${profile.name} for ${symbol} no longer in a setup`,
+              );
+            }
+
+            profile.currentlyInSetup = inSetup;
+          });
+        });
+
+        currentMinute = nextMinute;
+
+        // TODO, update the main UI process via IPC
+      }
+
       await sleep(1000);
     }
   } catch (err) {
@@ -229,4 +318,7 @@ export async function runLiveController({log}: {log: LoggerCallback}) {
   // Disconnect
   log('Disconnecting from data provider');
   await dataProvider.shutdown();
+
+  log('Disconnecting from broker');
+  await broker.shutdown();
 }

@@ -1,5 +1,5 @@
 import {fromUnixTime, parse, getUnixTime, format, addSeconds} from 'date-fns';
-import {Tick, TickType, Tracker, BrokerState} from '../../core';
+import {TickType, Tracker, BrokerState, StoredTick} from '../../core';
 import {flow} from 'fp-ts/lib/function';
 
 import {handleTrackerTick, initTracker} from '../../utils/tracker';
@@ -16,7 +16,7 @@ export function createTick({
   time: number;
   value: number;
   size: number;
-}): Tick {
+}): StoredTick {
   return {
     type,
     time,
@@ -124,7 +124,10 @@ export function updateMarketDataAndBroker(
   market.time = updateTestTracker(market.tracker, market.broker, ticks);
 
   // Update the broker
-  handleBrokerTick(market.broker, market.symbol, market.tracker);
+  handleBrokerTick(market.broker, market.symbol, market.tracker, {
+    orderExecutionDelayMs: 1000,
+    commissionPerOrder: 1,
+  });
 }
 
 export function createMarket(ticks: Array<TestTickData>) {
@@ -137,7 +140,6 @@ export function createMarket(ticks: Array<TestTickData>) {
   const data: Market = {
     broker: initBroker({
       initialBalance: 1000,
-      commissionPerOrder: 1,
       getMarketTime: () => data.time,
     }),
     time: createTimeAsDate(last[0]),

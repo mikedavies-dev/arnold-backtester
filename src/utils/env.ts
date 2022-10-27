@@ -33,6 +33,7 @@ const environment: {
 
   // Data provider
   DATA_PROVIDER: string;
+  BROKER_PROVIDER: string;
 
   // IB
   IB_HOST: string;
@@ -61,8 +62,11 @@ const environment: {
     'mongodb://localhost:27017/arnold',
   ),
   SERVER_PORT: getEnv('SERVER_PORT', '4010'),
+
   // Data
   DATA_PROVIDER: getEnv('DATA_PROVIDER', 'ib'),
+  BROKER_PROVIDER: getEnv('BROKER_PROVIDER', 'ib'),
+
   // IB
   IB_HOST: getEnv('IB_HOST', '127.0.0.1'),
   IB_PORT: getEnv('IB_PORT', '4003'),

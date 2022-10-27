@@ -32,12 +32,11 @@ import {
   DataProvider,
   Instrument,
   Bar,
-  Tick,
+  StoredTick,
   DownloadTickDataArgs,
   notEmpty,
   TickFileType,
   LoggerCallback,
-  SubscribePriceUpdateArgs,
   SubscribeMarketUpdateArgs,
   isTickType,
 } from '../../../core';
@@ -55,7 +54,7 @@ async function downloadBidAskTickData(
   api: IbWrapper,
   instrument: Instrument,
   lastDataDate: Date,
-): Promise<Tick[]> {
+): Promise<StoredTick[]> {
   const contract: Contract = instrument.data as Contract;
 
   /*
@@ -78,8 +77,8 @@ async function downloadBidAskTickData(
     false,
   );
 
-  const ticks: Tick[] = ibTicks
-    .map<Tick[]>(tick => {
+  const ticks: StoredTick[] = ibTicks
+    .map<StoredTick[]>(tick => {
       if (
         !tick.time ||
         !tick.priceAsk ||
@@ -122,7 +121,7 @@ async function downloadTradeTickData(
   api: IbWrapper,
   instrument: Instrument,
   lastDataDate: Date,
-): Promise<Tick[]> {
+): Promise<StoredTick[]> {
   const contract: Contract = instrument.data as Contract;
 
   /*
@@ -144,8 +143,8 @@ async function downloadTradeTickData(
     1,
   );
 
-  const ticks: Tick[] = ibTicks
-    .map<Tick | null>(tick => {
+  const ticks: StoredTick[] = ibTicks
+    .map<StoredTick | null>(tick => {
       if (!tick.time || !tick.price || !tick.size) {
         return null;
       }

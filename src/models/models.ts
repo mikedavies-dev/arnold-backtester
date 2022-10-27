@@ -4,6 +4,8 @@ import {
   DbTimeSeriesBar,
   DbTimeSeriesDataAvailability,
   DbInstrument,
+  DbOrder,
+  DbPosition,
 } from '../core';
 
 const Backtest = new Schema<DbBacktest>({
@@ -96,6 +98,21 @@ Instrument.index(
   },
 );
 
+const Position = new Schema<DbPosition>({
+  profileId: String,
+  _instrument: {
+    type: Schema.Types.ObjectId,
+    ref: 'Instrument',
+  },
+});
+
+const Order = new Schema<DbOrder>({
+  _position: {
+    type: Schema.Types.ObjectId,
+    ref: 'Position',
+  },
+});
+
 export async function registerMongooseModels() {
   await model('Backtest', Backtest, 'backtests');
   await model('TimeSeriesBar', TimeSeriesBar, 'timeseries_bars');
@@ -105,4 +122,6 @@ export async function registerMongooseModels() {
     'timeseries_data_availability',
   );
   await model('Instrument', Instrument, 'instruments');
+  await model('Position', Position, 'positions');
+  await model('Order', Order, 'orders');
 }

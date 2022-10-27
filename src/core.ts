@@ -30,12 +30,15 @@ export function isTickType(maybeTickType: unknown): maybeTickType is TickType {
 
 export type Tick = {
   time: number;
-  index: number;
-  dateTime: Date;
-  symbol: string;
   type: TickType;
   size: number;
   value: number;
+};
+
+export type StoredTick = Tick & {
+  index: number;
+  dateTime: Date;
+  symbol: string;
 };
 
 export type Bar = {
@@ -78,7 +81,7 @@ export enum TickFileType {
 
 export type WriteTickDataFn = (
   type: TickFileType,
-  ticks: Tick[],
+  ticks: StoredTick[],
 ) => Promise<void>;
 
 export type DownloadTickDataArgs = {
@@ -145,6 +148,25 @@ export type DataProvider = {
   cancelMarketUpdates: (requestId: number) => void;
 };
 
+export type BrokerProvider = {
+  name: string;
+  init(args?: {workerIndex: number}): Promise<void>;
+  shutdown(): Promise<void>;
+
+  // Load the current broker state for a particular system, this should check the
+  // db.. maybe this should just be a standard DB function?
+  loadState(profileId: string, balance: number): Promise<BrokerState>;
+
+  // Place an order for a profile
+  placeOrder: (profileId: string, spec: OrderSpecification) => number;
+
+  // See if a symbol/profile combo has any open orders
+  hasOpenOrders: (profileId: string, symbol: string) => boolean;
+
+  // Get the current position size for an symbol/profile combo
+  getPositionSize: (profileId: string, symbol: string) => number;
+};
+
 export type Tracker = {
   open: number;
   high: number;
@@ -205,9 +227,7 @@ export type BrokerState = {
   openOrders: Record<number, Order>;
   positions: Array<Position>;
   openPositions: Record<string, Position>;
-  orderExecutionDelayMs: number;
   balance: number;
-  commissionPerOrder: number;
 };
 
 export type StrategyDefinition = {
@@ -271,6 +291,17 @@ export type DbInstrument = {
   data?: any;
 };
 
+export type DbPosition = {
+  _id?: MongoObjectId;
+  profileId: string;
+  _instrument: MongoObjectId;
+};
+
+export type DbOrder = {
+  _id?: MongoObjectId;
+  _position: MongoObjectId;
+};
+
 export type MarketStatus = 'CLOSED' | 'PREMARKET' | 'OPEN';
 
 export type HandleTickParameters = {
@@ -327,7 +358,6 @@ Useful for things like:
 
   const array: (string | null)[] = ['foo', 'bar', null, 'zoo', null];
   const filteredArray: string[] = array.filter(notEmpty);
-
 */
 
 export function notEmpty<TValue>(

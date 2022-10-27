@@ -12,7 +12,7 @@ import {loadStrategy} from '../../utils/module';
 
 import {loadTickForMinute} from '../../utils/tick-storage';
 
-import {Tick} from '../../core';
+import {StoredTick} from '../../core';
 
 jest.mock('../../utils/tick-storage');
 jest.mock('../../utils/module');
@@ -55,7 +55,7 @@ const testMarketData = [
     time: createTimeAsUnix('09:31'),
     dateTime: createTimeAsDate('09:31'),
   },
-] as Array<Tick>;
+] as Array<StoredTick>;
 
 describe('test worker module', () => {
   beforeAll(async () => {

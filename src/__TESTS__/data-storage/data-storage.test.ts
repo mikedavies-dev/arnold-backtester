@@ -7,6 +7,7 @@ import {
   TickFileType,
   Tick,
   TimeSeriesPeriods,
+  StoredTick,
 } from '../../core';
 import {ensureBarDataIsAvailable} from '../../utils/data-storage';
 import {
@@ -60,7 +61,7 @@ describe('mongo db tests', () => {
   const startTime = testDate.getTime() / 1000;
   const symbol = 'ZZZZ';
 
-  const tradeTickData: Tick[] = [
+  const tradeTickData: StoredTick[] = [
     {
       symbol,
       dateTime: testDate,
@@ -81,7 +82,7 @@ describe('mongo db tests', () => {
     },
   ];
 
-  const bidAskTickData: Tick[] = [
+  const bidAskTickData: StoredTick[] = [
     {
       symbol,
       dateTime: testDate,
