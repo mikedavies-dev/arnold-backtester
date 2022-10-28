@@ -271,8 +271,8 @@ export async function runBacktest({
             trackers,
             broker: {
               state: brokerState,
-              placeOrder: (spec: OrderSpecification) =>
-                placeOrder(brokerState, spec),
+              placeOrder: (symbol: string, spec: OrderSpecification) =>
+                placeOrder(brokerState, symbol, spec),
               hasOpenOrders: (symbol: string) =>
                 hasOpenOrders(brokerState, symbol),
               getPositionSize: (symbol: string) =>

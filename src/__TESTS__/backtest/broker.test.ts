@@ -39,8 +39,7 @@ test('placing a market order and confirm it is pending', () => {
     initialBalance: 1000,
     getMarketTime: () => createTimeAsDate('09:30'),
   });
-  const orderId = placeOrder(state, {
-    symbol: 'ZZZZ',
+  const orderId = placeOrder(state, 'ZZZZ', {
     shares: 10,
     action: 'BUY',
     type: 'MKT',
@@ -133,10 +132,9 @@ test('placing market buy order and wait for it to be filled at the ask', () => {
 
   const market = createMarket([['09:30:00', 1, 1.2, 1.1, 0]]);
 
-  placeOrder(market.broker, {
+  placeOrder(market.broker, market.symbol, {
     type: 'MKT',
     action: 'BUY',
-    symbol: market.symbol,
     shares,
   });
 
@@ -185,10 +183,9 @@ test('placing market sell order and wait for it to be filled at the bid', () => 
 
   const market = createMarket([['09:30:00', 1, 1.2, 1.1, 0]]);
 
-  placeOrder(market.broker, {
+  placeOrder(market.broker, market.symbol, {
     type: 'MKT',
     action: 'SELL',
-    symbol: market.symbol,
     shares,
   });
 
@@ -237,10 +234,9 @@ test(`place market buy order that won't be filled`, () => {
 
   const market = createMarket([['09:30:00', 1, 1.2, 1.1, 0]]);
 
-  placeOrder(market.broker, {
+  placeOrder(market.broker, market.symbol, {
     type: 'MKT',
     action: 'BUY',
-    symbol: market.symbol,
     shares,
   });
 
@@ -285,10 +281,9 @@ test('place limit BUY order that gets filled', () => {
 
   const market = createMarket([['09:30:00', 1.1, 1.2, 1.1, 0]]);
 
-  placeOrder(market.broker, {
+  placeOrder(market.broker, market.symbol, {
     type: 'LMT',
     action: 'BUY',
-    symbol: market.symbol,
     shares,
     price: 1.3,
   });
@@ -344,10 +339,9 @@ test('place limit SELL order that gets filled', () => {
 
   const market = createMarket([['09:30:00', 1.1, 1.2, 1.1, 0]]);
 
-  placeOrder(market.broker, {
+  placeOrder(market.broker, market.symbol, {
     type: 'LMT',
     action: 'SELL',
-    symbol: market.symbol,
     shares,
     price: 1.1,
   });
@@ -389,10 +383,9 @@ test('place limit order that does not get filled', () => {
   const shares = 100;
   const market = createMarket([['09:30:00', 1.1, 1.2, 1.1, 0]]);
 
-  placeOrder(market.broker, {
+  placeOrder(market.broker, market.symbol, {
     type: 'LMT',
     action: 'BUY',
-    symbol: market.symbol,
     shares,
     price: 1.3,
   });
@@ -445,10 +438,9 @@ test('fill a trailing stop buy order', () => {
   const shares = 100;
   const market = createMarket([['09:30:00', 1, 2, 1, 0]]);
 
-  placeOrder(market.broker, {
+  placeOrder(market.broker, market.symbol, {
     type: 'TRAIL',
     action: 'BUY',
-    symbol: market.symbol,
     shares,
     price: 0.1,
   });
@@ -512,10 +504,10 @@ test('fill a trailing stop sell order', () => {
   const shares = 100;
   const market = createMarket([['09:30:00', 1, 2, 1, 0]]);
 
-  placeOrder(market.broker, {
+  placeOrder(market.broker, market.symbol, {
     type: 'TRAIL',
     action: 'SELL',
-    symbol: market.symbol,
+
     shares,
     price: 0.1,
   });
@@ -579,10 +571,10 @@ test('close all open positions with closePosition', () => {
 
   const shares = 100;
 
-  placeOrder(market.broker, {
+  placeOrder(market.broker, market.symbol, {
     type: 'MKT',
     action: 'BUY',
-    symbol: market.symbol,
+
     shares,
   });
 
@@ -593,10 +585,10 @@ test('close all open positions with closePosition', () => {
   expect(getPositionSize(market.broker, market.symbol)).toEqual(shares);
 
   // Place a second order
-  placeOrder(market.broker, {
+  placeOrder(market.broker, market.symbol, {
     type: 'MKT',
     action: 'BUY',
-    symbol: market.symbol,
+
     shares,
   });
 
@@ -668,10 +660,10 @@ test('close all open positions with closePosition (sell)', () => {
 
   const shares = 100;
 
-  placeOrder(market.broker, {
+  placeOrder(market.broker, market.symbol, {
     type: 'MKT',
     action: 'SELL',
-    symbol: market.symbol,
+
     shares,
   });
 
@@ -682,10 +674,9 @@ test('close all open positions with closePosition (sell)', () => {
   expect(getPositionSize(market.broker, market.symbol)).toEqual(shares * -1);
 
   // Place a second order
-  placeOrder(market.broker, {
+  placeOrder(market.broker, market.symbol, {
     type: 'MKT',
     action: 'SELL',
-    symbol: market.symbol,
     shares,
   });
 
@@ -719,11 +710,10 @@ test('cancelling an open order', () => {
 
   const shares = 100;
 
-  const orderId = placeOrder(market.broker, {
+  const orderId = placeOrder(market.broker, market.symbol, {
     type: 'TRAIL',
     shares,
     action: 'BUY',
-    symbol: market.symbol,
     price: 0.1,
   });
 
@@ -755,11 +745,10 @@ test('attempting to cancel an invalid order', () => {
 
   const shares = 100;
 
-  placeOrder(market.broker, {
+  placeOrder(market.broker, market.symbol, {
     type: 'TRAIL',
     shares,
     action: 'BUY',
-    symbol: market.symbol,
     price: 0.1,
   });
 
@@ -792,11 +781,10 @@ test('cancelling an open order', () => {
 
   const shares = 100;
 
-  placeOrder(market.broker, {
+  placeOrder(market.broker, market.symbol, {
     type: 'TRAIL',
     shares,
     action: 'BUY',
-    symbol: market.symbol,
     price: 0.1,
   });
 
@@ -827,8 +815,7 @@ test('fill a child order once a parent order has been filled', () => {
   const market = createMarket([['09:30:00', 1, 1, 1, 0]]);
   const shares = 100;
 
-  const orderId1 = placeOrder(market.broker, {
-    symbol: market.symbol,
+  const orderId1 = placeOrder(market.broker, market.symbol, {
     type: 'LMT',
     action: 'BUY',
     price: 1.1,
@@ -836,8 +823,7 @@ test('fill a child order once a parent order has been filled', () => {
   });
 
   // Place the trailing stop
-  placeOrder(market.broker, {
-    symbol: market.symbol,
+  placeOrder(market.broker, market.symbol, {
     type: 'TRAIL',
     action: 'SELL',
     price: 0.1,
@@ -937,8 +923,7 @@ test(`cancel a child order with it's parent order`, () => {
   const market = createMarket([['09:30:00', 1, 1, 1, 0]]);
   const shares = 100;
 
-  const orderId1 = placeOrder(market.broker, {
-    symbol: market.symbol,
+  const orderId1 = placeOrder(market.broker, market.symbol, {
     type: 'LMT',
     action: 'BUY',
     price: 1.1,
@@ -946,8 +931,7 @@ test(`cancel a child order with it's parent order`, () => {
   });
 
   // Place the trailing stop
-  placeOrder(market.broker, {
-    symbol: market.symbol,
+  placeOrder(market.broker, market.symbol, {
     type: 'TRAIL',
     action: 'SELL',
     price: 0.1,
@@ -966,10 +950,9 @@ test('creating a position then closing it', () => {
   const market = createMarket([['09:30:00', 1, 2, 1, 0]]);
   const shares = 100;
 
-  placeOrder(market.broker, {
+  placeOrder(market.broker, market.symbol, {
     type: 'MKT',
     shares,
-    symbol: market.symbol,
     action: 'BUY',
   });
 
@@ -1000,10 +983,9 @@ test('creating a position then closing it', () => {
     }
   `);
 
-  placeOrder(market.broker, {
+  placeOrder(market.broker, market.symbol, {
     type: 'MKT',
     shares,
-    symbol: market.symbol,
     action: 'SELL',
   });
 
@@ -1017,10 +999,9 @@ test('closePosition should close pending orders', () => {
   const market = createMarket([['09:30:00', 1.1, 1.2, 1.1, 0]]);
   const shares = 100;
 
-  const orderId = placeOrder(market.broker, {
+  const orderId = placeOrder(market.broker, market.symbol, {
     type: 'MKT',
     action: 'BUY',
-    symbol: market.symbol,
     shares,
   });
 
@@ -1075,10 +1056,9 @@ test('closePosition should close pending orders', () => {
   const market = createMarket([['09:30:00', 1.1, 1.2, 1.1, 0]]);
   const shares = 100;
 
-  const orderId = placeOrder(market.broker, {
+  const orderId = placeOrder(market.broker, market.symbol, {
     type: 'MKT',
     action: 'BUY',
-    symbol: market.symbol,
     shares,
   });
 
@@ -1104,11 +1084,10 @@ test(`placing a BUY stop order`, () => {
   const market = createMarket([['09:30:00', 0.9, 1.1, 1, 0]]);
   const shares = 100;
 
-  placeOrder(market.broker, {
+  placeOrder(market.broker, market.symbol, {
     type: 'STP',
     action: 'BUY',
     shares,
-    symbol: market.symbol,
     price: 1.3,
   });
 
@@ -1132,11 +1111,10 @@ test(`placing a SELL stop order`, () => {
   const market = createMarket([['09:30:00', 0.9, 1.1, 1, 0]]);
   const shares = 100;
 
-  placeOrder(market.broker, {
+  placeOrder(market.broker, market.symbol, {
     type: 'STP',
     action: 'SELL',
     shares,
-    symbol: market.symbol,
     price: 0.7,
   });
 

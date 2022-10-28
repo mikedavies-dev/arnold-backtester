@@ -1,14 +1,41 @@
+/*
+
+# placeOrder
+When we place an order we save the details along with the ID and profileId to the db
+so any future updates are associated with the profile
+
+When we start we load any open orders from the db
+
+1. How can we update their state if we miss an update when the app is closed? reqCompletedOrders ?
+
+# Events
+We need to keep an internal list of open orders and open positions associated with each profileId
+
+# hasOpenOrders
+
+# getPositionSize
+
+# EventName.openOrder
+1. Update the db
+2. If the order is not 'CANCELLED' or 'FILLED' (?) keep/update it in open orders
+3. If the order is 'CANCELLED' or 'FILLED' then remove it from openOrders
+
+# EventName.position
+How do we associate positions with profileIds? We need to load positions from the db and
+match those positions which are still open with the open position from IB
+
+If there is a mismatch then we need to show that with a null profileId?
+
+*/
+
 import {format} from 'date-fns';
 
 import {init as initIb} from '../wrappers/ib-wrapper';
 
-import {
-  BrokerProvider,
-  LoggerCallback,
-  OrderSpecification,
-} from '../../../core';
+import {BrokerProvider, LoggerCallback, PlaceOrderArgs} from '../../../core';
 
 import Env from '../../../utils/env';
+import {Contract, Order, OrderAction, OrderType} from '@stoqey/ib';
 
 const brokerClientIdOffset = 100;
 let currentApiClientId = Number(Env.IB_BASE_CLIENT_ID) + brokerClientIdOffset;
@@ -30,7 +57,12 @@ export function create({log}: {log?: LoggerCallback} = {}): BrokerProvider {
     // Increment the id
     currentApiClientId += 1;
 
-    return api.connect(clientId);
+    await api.connect(clientId);
+    log?.('Connected to IB');
+
+    // Get the current orders
+    // const openOrders = await api.requestOpenOrders();
+    // log?.('Open orders', openOrders);
   }
 
   async function shutdown() {
@@ -39,8 +71,7 @@ export function create({log}: {log?: LoggerCallback} = {}): BrokerProvider {
   }
 
   async function loadState(profileId: string, balance: number) {
-    // Load data from DB for this profile
-
+    // TODO Load data from DB for this profile
     return {
       getMarketTime: () => new Date(),
       nextOrderId: 1,
@@ -52,8 +83,46 @@ export function create({log}: {log?: LoggerCallback} = {}): BrokerProvider {
     };
   }
 
-  function placeOrder(profileId: string, spec: OrderSpecification) {
-    return 0;
+  function placeOrder({instrument, order}: PlaceOrderArgs) {
+    function getOrderType(): Order {
+      switch (order.type) {
+        case 'LMT':
+          return {
+            orderType: OrderType.LMT,
+            lmtPrice: order.price,
+          };
+
+        case 'MKT':
+          return {
+            orderType: OrderType.MKT,
+          };
+
+        case 'STP':
+          return {
+            orderType: OrderType.STP,
+            auxPrice: order.price,
+            totalQuantity: order.shares,
+          };
+
+        case 'TRAIL':
+          return {
+            orderType: OrderType.TRAIL,
+            auxPrice: order.price,
+            totalQuantity: order.shares,
+          };
+      }
+    }
+
+    return api.placeOrder({
+      contract: instrument.data as Contract,
+      order: {
+        ...getOrderType(),
+        action: order.action === 'BUY' ? OrderAction.BUY : OrderAction.SELL,
+        totalQuantity: order.shares,
+        parentId: order.parentId,
+        tif: 'DAY',
+      },
+    });
   }
 
   function hasOpenOrders(profileId: string, symbol: string) {

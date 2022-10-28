@@ -82,8 +82,7 @@ describe('test worker module', () => {
       extraSymbols: [],
       handleTick: ({broker}) => {
         if (!broker.hasOpenOrders(symbol)) {
-          broker.placeOrder({
-            symbol,
+          broker.placeOrder(symbol, {
             type: 'MKT',
             shares: 100,
             action: 'BUY',

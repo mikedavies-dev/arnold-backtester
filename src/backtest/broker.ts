@@ -37,6 +37,7 @@ export function initBroker({
 
 export function placeOrder(
   state: BrokerState,
+  symbol: string,
   spec: OrderSpecification,
 ): number {
   // Get the next order id
@@ -47,11 +48,11 @@ export function placeOrder(
   const order: Order = {
     ...spec,
     id: orderId,
+    symbol,
     openedAt: state.getMarketTime(),
     state: spec.parentId ? 'ACCEPTED' : 'PENDING',
   };
 
-  const {symbol} = spec;
   const {openPositions, positions, orders, openOrders} = state;
 
   // Add the orders
@@ -59,7 +60,7 @@ export function placeOrder(
   orders.push(order);
 
   // Check current position
-  if (!openPositions[spec.symbol]) {
+  if (!openPositions[symbol]) {
     openPositions[symbol] = openPositions[symbol] || {
       symbol,
       orders: [],
@@ -264,10 +265,9 @@ export function closePosition(
     return;
   }
 
-  const orderId = placeOrder(state, {
+  const orderId = placeOrder(state, symbol, {
     type: 'MKT',
     action: position.size > 0 ? 'SELL' : 'BUY',
-    symbol,
     shares: Math.abs(position.size),
   });
 

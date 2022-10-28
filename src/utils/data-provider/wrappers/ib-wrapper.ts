@@ -13,8 +13,10 @@ import {
   HistoricalTickBidAsk,
   ContractDescription,
   ContractDetails,
-  TickType,
   IBApiTickType,
+  Order,
+  OrderState,
+  ErrorCode,
 } from '@stoqey/ib';
 
 export function init({
@@ -31,6 +33,15 @@ export function init({
 
   let nextRequestId = 0;
   let nextValidOrderId = 0;
+
+  type OpenPosition = {
+    account: string;
+    contract: Contract;
+    position: number;
+    avgCost?: number;
+  };
+
+  const openPositions: Record<number, OpenPosition> = {};
 
   function getNextRequestId() {
     return nextRequestId++;
@@ -60,11 +71,23 @@ export function init({
     [EventName.tickPrice]: (field: string, value: number) => void;
     [EventName.tickSize]: (field: string, value: number) => void;
     [EventName.tickString]: (field: string, value: string) => void;
+    [EventName.error]: (err: Error, code: ErrorCode) => void;
+    // [EventName.openOrder]: (
+    //   orderId: number,
+    //   contract: Contract,
+    //   order: Order,
+    //   state: OrderState,
+    // ) => void;
+    // [EventName.openOrderEnd]: () => void;
   };
 
   const requests: Record<number, Partial<IbEventHandler>> = {};
+  const globalHandlers: Record<string, Partial<IbEventHandler>> = {};
 
   // IB Message handlers
+  api.on(EventName.all, (event, args) => {
+    console.log('IB', event, args);
+  });
 
   api.on(EventName.nextValidId, orderId => {
     nextValidOrderId = orderId;
@@ -135,12 +158,67 @@ export function init({
     requests[reqId]?.[EventName.tickString]?.(IBApiTickType[type], value),
   );
 
+  api.on(EventName.openOrder, (orderId, contract, order, state) => {
+    /*
+    1. Update the db
+    2. If the order is not 'CANCELLED' or 'FILLED' (?) keep/update it in open orders
+    3. If the order is 'CANCELLED' or 'FILLED' then remove it from openOrders
+    */
+    // If the order is open then store it in open orders
+    // Otherwise just update the DB
+  });
+
+  // api.on(EventName.openOrder, (orderId, contract, order, state) =>
+  //   globalHandlers['OPEN_ORDERS']?.[EventName.openOrder]?.(
+  //     orderId,
+  //     contract,
+  //     order,
+  //     state,
+  //   ),
+  // );
+
+  // api.on(EventName.openOrderEnd, () =>
+  //   globalHandlers['OPEN_ORDERS']?.[EventName.openOrderEnd]?.(),
+  // );
+
+  api.on(
+    EventName.position,
+    (
+      account: string,
+      contract: Contract,
+      position: number,
+      avgCost?: number,
+    ) => {
+      if (!contract.conId) {
+        return;
+      }
+      openPositions[contract.conId] = {
+        account,
+        contract,
+        position,
+        avgCost,
+      };
+    },
+  );
+
+  api.on(EventName.error, (error, code, reqId) =>
+    requests[reqId]?.[EventName.error]?.(error, code),
+  );
+
   function addRequestHandler(reqId: number, handlers: Partial<IbEventHandler>) {
     requests[reqId] = handlers;
   }
 
   function removeRequestHandler(reqId: number) {
     delete requests[reqId];
+  }
+
+  function addGlobalHandler(name: string, handlers: Partial<IbEventHandler>) {
+    globalHandlers[name] = handlers;
+  }
+
+  function removeGlobalHandler(name: string) {
+    delete globalHandlers[name];
   }
 
   async function connect(clientId: number) {
@@ -153,6 +231,9 @@ export function init({
       api.on(EventName.connected, () => {
         clearTimeout(timeoutTimer);
         setTimeout(resolve, 200);
+
+        // Load any open positions
+        api.reqPositions();
       });
 
       api.connect(clientId);
@@ -375,6 +456,66 @@ export function init({
     });
   }
 
+  // async function requestOpenOrders() {
+  //   type OpenOrder = {
+  //     orderId: number;
+  //     contract: Contract;
+  //     order: Order;
+  //     state: OrderState;
+  //   };
+  //   return new Promise<OpenOrder[]>(resolve => {
+  //     const orders: OpenOrder[] = [];
+
+  //     addGlobalHandler('OPEN_ORDERS', {
+  //       [EventName.openOrder]: (orderId, contract, order, state) => {
+  //         orders.push({
+  //           orderId,
+  //           contract,
+  //           order,
+  //           state,
+  //         });
+  //       },
+  //       [EventName.openOrderEnd]: () => {
+  //         removeGlobalHandler('OPEN_ORDERS');
+  //         resolve(orders);
+  //       },
+  //     });
+
+  //     api.reqAllOpenOrders();
+  //   });
+  // }
+
+  function getOpenPositions() {
+    return openPositions;
+  }
+
+  const placeOrder = ({
+    contract,
+    order,
+    existingOrderId,
+    onError,
+  }: {
+    contract: Contract;
+    order: Order;
+    existingOrderId?: number;
+    onError?: (err: Error, errorCode: ErrorCode) => void;
+  }) => {
+    const reqId = getNextRequestId();
+    const orderId = existingOrderId || getNextOrderId();
+
+    addRequestHandler(reqId, {
+      [EventName.error]: (err, code) => onError?.(err, code),
+    });
+
+    api.placeOrder(orderId, contract, {
+      ...order,
+      orderId,
+      transmit: typeof order.transmit === 'boolean' ? order.transmit : true,
+    });
+
+    return orderId;
+  };
+
   return {
     connect,
     disconnect,
@@ -388,6 +529,9 @@ export function init({
     cancelBarUpdates,
     subscribeMarketData,
     cancelMarketData,
+    // requestOpenOrders,
+    getOpenPositions,
+    placeOrder,
   };
 }
 

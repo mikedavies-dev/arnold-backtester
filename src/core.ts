@@ -132,6 +132,12 @@ export type SubscribeMarketUpdateArgs = {
   onUpdate: ({type, value}: {type: TickType; value: number}) => void;
 };
 
+export type PlaceOrderArgs = {
+  profileId: string;
+  instrument: Instrument;
+  order: OrderSpecification;
+};
+
 export type DataProvider = {
   name: string;
   init(args?: {workerIndex: number}): Promise<void>;
@@ -158,7 +164,7 @@ export type BrokerProvider = {
   loadState(profileId: string, balance: number): Promise<BrokerState>;
 
   // Place an order for a profile
-  placeOrder: (profileId: string, spec: OrderSpecification) => number;
+  placeOrder: (args: PlaceOrderArgs) => number;
 
   // See if a symbol/profile combo has any open orders
   hasOpenOrders: (profileId: string, symbol: string) => boolean;
@@ -188,7 +194,6 @@ export type OrderState = 'ACCEPTED' | 'PENDING' | 'FILLED' | 'CANCELLED';
 export type BaseOrder = {
   type: OrderType;
   parentId?: number;
-  symbol: string;
   action: OrderAction;
   shares: number;
 };
@@ -203,6 +208,7 @@ export type OrderSpecification =
 // Define the full order
 export type Order = OrderSpecification & {
   id: number;
+  symbol: string;
   openedAt: Date;
   state: OrderState;
   filledAt?: Date;
@@ -313,7 +319,7 @@ export type HandleTickParameters = {
   marketState: MarketStatus;
   broker: {
     state: BrokerState;
-    placeOrder: (spec: OrderSpecification) => number;
+    placeOrder: (symbol: string, spec: OrderSpecification) => number;
     hasOpenOrders: (symbol: string) => boolean;
     getPositionSize: (symbol: string) => number;
   };
