@@ -15,7 +15,6 @@ import {
   ContractDetails,
   IBApiTickType,
   Order,
-  OrderState,
   ErrorCode,
 } from '@stoqey/ib';
 
@@ -85,9 +84,9 @@ export function init({
   const globalHandlers: Record<string, Partial<IbEventHandler>> = {};
 
   // IB Message handlers
-  api.on(EventName.all, (event, args) => {
-    console.log('IB', event, args);
-  });
+  // api.on(EventName.all, (event, args) => {
+  //   console.log('IB', event, args);
+  // });
 
   api.on(EventName.nextValidId, orderId => {
     nextValidOrderId = orderId;
@@ -231,9 +230,6 @@ export function init({
       api.on(EventName.connected, () => {
         clearTimeout(timeoutTimer);
         setTimeout(resolve, 200);
-
-        // Load any open positions
-        api.reqPositions();
       });
 
       api.connect(clientId);

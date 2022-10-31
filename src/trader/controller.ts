@@ -18,6 +18,7 @@ import {
   DataProvider,
   LiveTradingConfig,
   BrokerProvider,
+  Instrument,
 } from '../core';
 
 import {createDataProvider, createBroker} from '../utils/data-provider';
@@ -242,8 +243,19 @@ export async function runLiveController({log}: {log: LoggerCallback}) {
                   trackers,
                   broker: {
                     state: brokerState,
-                    placeOrder: (spec: OrderSpecification) =>
-                      broker.placeOrder(profileId, spec),
+                    placeOrder: (symbol: string, order: OrderSpecification) => {
+                      const match = instruments.find(i => i.symbol === symbol);
+
+                      if (!match) {
+                        return -1;
+                      }
+
+                      return broker.placeOrder({
+                        profileId,
+                        instrument: match.instrument,
+                        order,
+                      });
+                    },
                     hasOpenOrders: (symbol: string) =>
                       broker.hasOpenOrders(profileId, symbol),
                     getPositionSize: (symbol: string) =>
