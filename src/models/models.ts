@@ -4,7 +4,6 @@ import {
   DbTimeSeriesBar,
   DbTimeSeriesDataAvailability,
   DbInstrument,
-  DbOrder,
   DbPosition,
 } from '../core';
 
@@ -104,13 +103,43 @@ const Position = new Schema<DbPosition>({
     type: Schema.Types.ObjectId,
     ref: 'Instrument',
   },
+  orders: [
+    {
+      orderId: String,
+      specification: {
+        type: {
+          type: String,
+        },
+        parentId: {
+          type: Number,
+          default: null,
+        },
+        action: String,
+        shares: Number,
+      },
+      status: String,
+      filled: Number,
+      avgOrderPrice: Number,
+      createdAt: Number,
+      filledAt: Date,
+      executions: [
+        {
+          execId: String,
+          execution: {},
+          commission: Number,
+          realizedPnL: Number,
+          data: {},
+        },
+      ],
+      data: {},
+    },
+  ],
 });
 
-const Order = new Schema<DbOrder>({
-  _position: {
-    type: Schema.Types.ObjectId,
-    ref: 'Position',
-  },
+Position.index({
+  profileId: 1,
+  instrument: 1,
+  'orders.orderId': 1,
 });
 
 export async function registerMongooseModels() {
@@ -123,5 +152,4 @@ export async function registerMongooseModels() {
   );
   await model('Instrument', Instrument, 'instruments');
   await model('Position', Position, 'positions');
-  await model('Order', Order, 'orders');
 }

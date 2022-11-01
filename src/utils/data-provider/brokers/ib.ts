@@ -29,13 +29,13 @@ If there is a mismatch then we need to show that with a null profileId?
 */
 
 import {format} from 'date-fns';
+import {Contract, Order, OrderAction, OrderType} from '@stoqey/ib';
 
 import {init as initIb} from '../wrappers/ib-wrapper';
-
+import {create as createPositionManagement} from '../../positions';
 import {BrokerProvider, LoggerCallback, PlaceOrderArgs} from '../../../core';
 
 import Env from '../../../utils/env';
-import {Contract, Order, OrderAction, OrderType} from '@stoqey/ib';
 
 const brokerClientIdOffset = 100;
 let currentApiClientId = Number(Env.IB_BASE_CLIENT_ID) + brokerClientIdOffset;
@@ -50,6 +50,8 @@ export function create({log}: {log?: LoggerCallback} = {}): BrokerProvider {
     port: Number(Env.IB_PORT),
   });
 
+  const positions = createPositionManagement();
+
   async function init({workerIndex}: {workerIndex?: number} = {}) {
     const offset = (workerIndex || 0) + 1;
     const clientId = offset * 10 + currentApiClientId;
@@ -60,12 +62,12 @@ export function create({log}: {log?: LoggerCallback} = {}): BrokerProvider {
     await api.connect(clientId);
     log?.('Connected to IB');
 
-    // Get the current orders
-    // const openOrders = await api.requestOpenOrders();
-    // log?.('Open orders', openOrders);
+    await positions.init();
   }
 
   async function shutdown() {
+    await positions.shutdown();
+
     log?.('Shutting down');
     return api.disconnect();
   }

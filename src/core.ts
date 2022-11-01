@@ -301,11 +301,25 @@ export type DbPosition = {
   _id?: MongoObjectId;
   profileId: string;
   _instrument: MongoObjectId;
-};
-
-export type DbOrder = {
-  _id?: MongoObjectId;
-  _position: MongoObjectId;
+  orders: [
+    orderId: string,
+    specification: OrderSpecification,
+    status: OrderState,
+    filled: number,
+    avgOrderPrice: number,
+    createdAt: number,
+    filledAt: Date,
+    executions: [
+      {
+        execId: string;
+        execution: any;
+        commission: number;
+        realizedPnL: number;
+        data?: any;
+      },
+    ],
+    data?: any,
+  ];
 };
 
 export type MarketStatus = 'CLOSED' | 'PREMARKET' | 'OPEN';
