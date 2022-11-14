@@ -7,6 +7,7 @@ import {
   isSameDay,
   isAfter,
   getUnixTime,
+  startOfDay,
 } from 'date-fns';
 
 // Register the models
@@ -21,6 +22,7 @@ import {
   DbTimeSeriesBar,
   DbTimeSeriesDataAvailability,
   DbInstrument,
+  DbPosition,
   TimeSeriesPeriodToPeriod,
   Bars,
 } from '../core';
@@ -325,4 +327,12 @@ export async function loadTrackerBars(
     m5: await loadBars(symbol, 'm5', until, count),
     daily: await loadBars(symbol, 'daily', until, count),
   };
+}
+
+export async function loadOpenPositions() {
+  const Position = mongoose.model<DbPosition>('Position');
+  return Position.find({
+    openedAt: {$gt: startOfDay(new Date())},
+    closedAt: null,
+  });
 }

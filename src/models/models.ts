@@ -25,12 +25,23 @@ const Backtest = new Schema<DbBacktest>({
           state: String,
           filledAt: Date,
           avgFillPrice: Number,
+          executions: [
+            {
+              execId: String,
+              execution: {},
+              commission: Number,
+              realizedPnL: Number,
+              data: {},
+            },
+          ],
         },
       ],
       size: Number,
       data: {},
       closeReason: String,
       isClosing: Boolean,
+      openedAt: Date,
+      closedAt: Date,
     },
   ],
   profile: {
@@ -98,10 +109,19 @@ Instrument.index(
 );
 
 const Position = new Schema<DbPosition>({
+  symbol: String,
   profileId: String,
   _instrument: {
     type: Schema.Types.ObjectId,
     ref: 'Instrument',
+  },
+  data: {},
+  openedAt: Date,
+  closedAt: Date,
+  closeReason: String,
+  isClosing: {
+    type: Boolean,
+    default: false,
   },
   orders: [
     {

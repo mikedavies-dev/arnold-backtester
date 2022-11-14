@@ -38,6 +38,7 @@ export function createTestPosition({
     filledAt: openedAt,
     avgFillPrice: entryPrice,
     state: 'FILLED',
+    executions: {},
   };
 
   const closedAt = addMinutes(openedAt, length);
@@ -64,6 +65,7 @@ export function createTestPosition({
     filledAt: closedAt,
     avgFillPrice: exitPrice,
     state: 'FILLED',
+    executions: {},
   };
 
   return {
@@ -73,5 +75,7 @@ export function createTestPosition({
     data: null,
     closeReason: 'testing',
     isClosing: false,
+    openedAt,
+    closedAt,
   };
 }

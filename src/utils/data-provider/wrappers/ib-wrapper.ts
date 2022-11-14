@@ -509,6 +509,8 @@ export function init({
       transmit: typeof order.transmit === 'boolean' ? order.transmit : true,
     });
 
+    // Load the order
+
     return orderId;
   };
 

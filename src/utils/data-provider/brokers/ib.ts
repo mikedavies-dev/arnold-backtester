@@ -115,7 +115,7 @@ export function create({log}: {log?: LoggerCallback} = {}): BrokerProvider {
       }
     }
 
-    return api.placeOrder({
+    const orderId = api.placeOrder({
       contract: instrument.data as Contract,
       order: {
         ...getOrderType(),
@@ -125,6 +125,8 @@ export function create({log}: {log?: LoggerCallback} = {}): BrokerProvider {
         tif: 'DAY',
       },
     });
+
+    return orderId;
   }
 
   function hasOpenOrders(profileId: string, symbol: string) {

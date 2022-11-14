@@ -67,31 +67,12 @@ test('get a backtest by id', async () => {
   );
   const res = await instance.get('/api/backtest/abcd');
   expect(res.status).toBe(200);
-  expect(res.data.positions).toMatchInlineSnapshot(`
-    Array [
-      Object {
-        "closeReason": "test",
-        "data": Object {},
-        "isClosing": false,
-        "orders": Array [
-          Object {
-            "action": "BUY",
-            "avgFillPrice": 1,
-            "filledAt": "2022-01-01T05:00:00.000Z",
-            "id": 1,
-            "openedAt": "2022-01-01T05:00:00.000Z",
-            "parentId": 0,
-            "shares": 100,
-            "state": "FILLED",
-            "symbol": "ZZZZ",
-            "type": "MKT",
-          },
-        ],
-        "size": 100,
-        "symbol": "ZZZZ",
-      },
-    ]
-  `);
+
+  expect(res.data.positions[0].closeReason).toEqual('test');
+  expect(res.data.positions[0].orders.length).toEqual(1);
+
+  // expect(res.data.position?.orders?.length).toEqual(1);
+
   expect(res.data.profile).toMatchInlineSnapshot(`
     Object {
       "commissionPerOrder": 1,

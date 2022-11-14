@@ -5,7 +5,6 @@ import {
   Instrument,
   DownloadTickDataArgs,
   TickFileType,
-  Tick,
   TimeSeriesPeriods,
   StoredTick,
 } from '../../core';

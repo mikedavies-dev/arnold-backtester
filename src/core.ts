@@ -213,6 +213,16 @@ export type Order = OrderSpecification & {
   state: OrderState;
   filledAt?: Date;
   avgFillPrice?: number;
+  executions: Record<
+    string,
+    {
+      shares: number;
+      commission: number;
+      price: number;
+      realizedPnL?: number;
+      data?: any;
+    }
+  >;
 };
 
 export type Position = {
@@ -220,8 +230,16 @@ export type Position = {
   orders: Array<Order>;
   size: number;
   data: any;
+  openedAt: Date;
+  closedAt: Date | null;
   closeReason: string | null;
+  // Used to record when the position has been closed by closePosition
+  // so that we don't create multiple close orders
   isClosing: boolean;
+};
+
+export type LivePosition = Position & {
+  externalId: string;
 };
 
 export type PositionDirection = 'LONG' | 'SHORT' | 'UNKNOWN';
@@ -299,8 +317,17 @@ export type DbInstrument = {
 
 export type DbPosition = {
   _id?: MongoObjectId;
+  externalId: string;
+  symbol: string;
   profileId: string;
+  data: any;
   _instrument: MongoObjectId;
+  openedAt: Date;
+  closedAt: Date | null;
+  closeReason: string | null;
+  // Used to record when the position has been closed by closePosition
+  // so that we don't create multiple close orders
+  isClosing: boolean;
   orders: [
     orderId: string,
     specification: OrderSpecification,

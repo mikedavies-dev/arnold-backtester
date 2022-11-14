@@ -9,7 +9,13 @@ So, against my better judgement I'm making functions that mutate on purpose :)
 
 import {differenceInMilliseconds} from 'date-fns';
 
-import {Tracker, Order, BrokerState, OrderSpecification} from '../core';
+import {
+  Tracker,
+  Order,
+  BrokerState,
+  OrderSpecification,
+  Position,
+} from '../core';
 import {getPositionPL, getPositionCommission} from '../utils/results-metrics';
 
 /*
@@ -51,6 +57,7 @@ export function placeOrder(
     symbol,
     openedAt: state.getMarketTime(),
     state: spec.parentId ? 'ACCEPTED' : 'PENDING',
+    executions: {},
   };
 
   const {openPositions, positions, orders, openOrders} = state;
@@ -61,14 +68,18 @@ export function placeOrder(
 
   // Check current position
   if (!openPositions[symbol]) {
-    openPositions[symbol] = openPositions[symbol] || {
+    const newPosition: Position = {
       symbol,
       orders: [],
       size: 0,
       data: {},
       closeReason: null,
       isClosing: false,
+      openedAt: state.getMarketTime(),
+      closedAt: null,
     };
+
+    openPositions[symbol] = openPositions[symbol] || newPosition;
     positions.push(openPositions[symbol]);
   }
 
@@ -163,7 +174,14 @@ export function handleBrokerTick(
       order.state = 'FILLED';
 
       // were we filled at the bid or the ask?
-      order.avgFillPrice = order.action === 'BUY' ? ask : bid;
+      const price = order.action === 'BUY' ? ask : bid;
+      order.avgFillPrice = price;
+
+      order.executions.exec1 = {
+        price,
+        shares: order.shares,
+        commission: options.commissionPerOrder,
+      };
 
       // update open positions
       const position = openPositions[symbol];
@@ -261,6 +279,10 @@ export function closePosition(
 
   // If we don't have any open shares then close the position
   if (position.size === 0) {
+    // Record when the position was closed
+    position.closedAt = state.getMarketTime();
+
+    // Delete the position from memory
     delete state.openPositions[symbol];
     return;
   }

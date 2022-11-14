@@ -63,6 +63,8 @@ describe('mongo db tests', () => {
           symbol,
           closeReason: 'test',
           isClosing: false,
+          openedAt: getTestDate(),
+          closedAt: null,
           size: 0,
           data: {
             data1: '123',
@@ -78,6 +80,7 @@ describe('mongo db tests', () => {
               avgFillPrice: 123,
               openedAt: getTestDate(),
               filledAt: getTestDate(),
+              executions: {},
             },
           ],
         },

@@ -1,6 +1,7 @@
 import {getPositionDirection} from '../../utils/results-metrics';
 
 import {createTestPosition} from '../test-utils/broker';
+import {getTestDate} from '../test-utils/tick';
 
 test('check the direction of a buy order', () => {
   expect(
@@ -40,6 +41,8 @@ test('check the direction of a position without orders', () => {
       symbol: 'ZZZZ',
       orders: [],
       size: 0,
+      openedAt: getTestDate(),
+      closedAt: null,
       closeReason: null,
       isClosing: false,
       data: null,
