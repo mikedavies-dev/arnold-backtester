@@ -73,7 +73,7 @@ describe('test the order position/storage module', () => {
       state: 'PENDING',
       openedAt: new Date(),
       symbol,
-      executions: {},
+      executions: [],
     });
 
     expect(positions.hasOpenPosition(profileId, symbol)).toBe(true);
@@ -87,7 +87,7 @@ describe('test the order position/storage module', () => {
       state: 'PENDING',
       openedAt: new Date(),
       symbol,
-      executions: {},
+      executions: [],
     });
 
     expect(positions.hasOpenPosition(profileId, symbol)).toBe(true);

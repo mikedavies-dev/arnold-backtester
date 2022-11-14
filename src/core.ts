@@ -205,6 +205,15 @@ export type OrderSpecification =
   | (BaseOrder & {type: 'LMT'; price: number})
   | (BaseOrder & {type: 'TRAIL'; price: number; triggerPrice?: number});
 
+type Execution = {
+  execId: string;
+  shares: number;
+  commission: number;
+  price: number;
+  realizedPnL?: number;
+  data?: any;
+};
+
 // Define the full order
 export type Order = OrderSpecification & {
   id: number;
@@ -213,16 +222,7 @@ export type Order = OrderSpecification & {
   state: OrderState;
   filledAt?: Date;
   avgFillPrice?: number;
-  executions: Record<
-    string,
-    {
-      shares: number;
-      commission: number;
-      price: number;
-      realizedPnL?: number;
-      data?: any;
-    }
-  >;
+  executions: Execution[];
 };
 
 export type Position = {
@@ -328,25 +328,7 @@ export type DbPosition = {
   // Used to record when the position has been closed by closePosition
   // so that we don't create multiple close orders
   isClosing: boolean;
-  orders: [
-    orderId: string,
-    specification: OrderSpecification,
-    status: OrderState,
-    filled: number,
-    avgOrderPrice: number,
-    createdAt: number,
-    filledAt: Date,
-    executions: [
-      {
-        execId: string;
-        execution: any;
-        commission: number;
-        realizedPnL: number;
-        data?: any;
-      },
-    ],
-    data?: any,
-  ];
+  orders: Array<Order>;
 };
 
 export type MarketStatus = 'CLOSED' | 'PREMARKET' | 'OPEN';

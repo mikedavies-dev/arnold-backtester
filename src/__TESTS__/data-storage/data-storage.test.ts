@@ -212,6 +212,8 @@ describe('mongo db tests', () => {
   });
 
   test('ensure tick data is available', async () => {
+    const symbol = 'ZZZZ';
+
     const mockProvider = {
       name: 'test',
       init: jest.fn(async () => {}),
@@ -237,13 +239,13 @@ describe('mongo db tests', () => {
     };
     createDataProviderMock.mockReturnValue(mockProvider);
 
-    expect(await hasTickForMinute('ZZZZ', getTestDate())).toBeFalsy();
+    expect(await hasTickForMinute(symbol, getTestDate())).toBeFalsy();
 
     const dataProvider = createDataProvider();
 
     await ensureTickDataIsAvailable({
       dataProvider,
-      symbols: ['ZZZZ'],
+      symbols: [symbol],
       log: () => {},
       minute: getTestDate(),
     });
@@ -252,14 +254,14 @@ describe('mongo db tests', () => {
     expect(mockProvider.downloadTickData).toBeCalledTimes(1);
 
     // Now we have data
-    expect(await hasTickForMinute('ZZZZ', getTestDate())).toBeTruthy();
+    expect(await hasTickForMinute(symbol, getTestDate())).toBeTruthy();
 
     mockProvider.downloadTickData.mockReset();
 
     // If we make the call again we should not download data
     await ensureTickDataIsAvailable({
       dataProvider,
-      symbols: ['ZZZZ'],
+      symbols: [symbol],
       log: () => {},
       minute: getTestDate(),
     });
@@ -280,7 +282,7 @@ describe('mongo db tests', () => {
           "dateTime": 2022-01-01T05:00:00.000Z,
           "index": 0,
           "size": 1,
-          "symbol": "ZZZZ",
+          "symbol": "${symbol}",
           "time": 1641013200,
           "type": "BID",
           "value": 99,
@@ -289,7 +291,7 @@ describe('mongo db tests', () => {
           "dateTime": 2022-01-01T05:00:00.000Z,
           "index": 0,
           "size": 1,
-          "symbol": "ZZZZ",
+          "symbol": "${symbol}",
           "time": 1641013200,
           "type": "TRADE",
           "value": 100,
@@ -298,7 +300,7 @@ describe('mongo db tests', () => {
           "dateTime": 2022-01-01T05:00:01.000Z,
           "index": 0,
           "size": 1,
-          "symbol": "ZZZZ",
+          "symbol": "${symbol}",
           "time": 1641013201,
           "type": "BID",
           "value": 100,
@@ -307,7 +309,7 @@ describe('mongo db tests', () => {
           "dateTime": 2022-01-01T05:00:02.000Z,
           "index": 0,
           "size": 1,
-          "symbol": "ZZZZ",
+          "symbol": "${symbol}",
           "time": 1641013202,
           "type": "TRADE",
           "value": 101,
@@ -316,7 +318,7 @@ describe('mongo db tests', () => {
           "dateTime": 2022-01-01T05:00:03.000Z,
           "index": 0,
           "size": 1,
-          "symbol": "ZZZZ",
+          "symbol": "${symbol}",
           "time": 1641013203,
           "type": "ASK",
           "value": 101,

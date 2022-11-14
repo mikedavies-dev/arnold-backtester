@@ -21,7 +21,7 @@ export const backtestResults: Array<DbBacktest> = [
             state: 'FILLED',
             filledAt: getTestDate(),
             avgFillPrice: 1,
-            executions: {},
+            executions: [],
           },
         ],
         size: 100,

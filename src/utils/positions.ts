@@ -56,13 +56,14 @@ export function create() {
     dbPositions.forEach(dbPosition => {
       const {symbol, profileId} = dbPosition;
       const key = getPositionKey(profileId, symbol);
+
       positions.set(key, {
         externalId: dbPosition.externalId,
         symbol,
         orders: dbPosition.orders,
         size: dbPosition.orders
           .filter(isFilledOrder)
-          .reduce((acc, order) => acc + order.size),
+          .reduce((acc, order) => acc + order.shares, 0),
         data: dbPosition.data,
         closeReason: dbPosition.closeReason,
         isClosing: dbPosition.isClosing,

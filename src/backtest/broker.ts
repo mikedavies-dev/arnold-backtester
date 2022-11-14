@@ -57,7 +57,7 @@ export function placeOrder(
     symbol,
     openedAt: state.getMarketTime(),
     state: spec.parentId ? 'ACCEPTED' : 'PENDING',
-    executions: {},
+    executions: [],
   };
 
   const {openPositions, positions, orders, openOrders} = state;
@@ -177,11 +177,12 @@ export function handleBrokerTick(
       const price = order.action === 'BUY' ? ask : bid;
       order.avgFillPrice = price;
 
-      order.executions.exec1 = {
+      order.executions.push({
+        execId: '1',
         price,
         shares: order.shares,
         commission: options.commissionPerOrder,
-      };
+      });
 
       // update open positions
       const position = openPositions[symbol];

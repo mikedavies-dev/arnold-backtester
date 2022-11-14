@@ -17,7 +17,7 @@ test('order value for non-filled order', () => {
         openedAt: new Date(),
         symbol: 'ZZZZ',
         state: 'PENDING',
-        executions: {},
+        executions: [],
       },
     ]),
   ).toBe(0);

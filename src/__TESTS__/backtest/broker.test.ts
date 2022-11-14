@@ -47,83 +47,11 @@ test('placing a market order and confirm it is pending', () => {
 
   expect(orderId).toBe(1);
 
-  expect(state).toMatchInlineSnapshot(`
-    Object {
-      "balance": 1000,
-      "getMarketTime": [Function],
-      "nextOrderId": 2,
-      "openOrders": Object {
-        "1": Object {
-          "action": "BUY",
-          "executions": Object {},
-          "id": 1,
-          "openedAt": 2022-01-01T14:30:00.000Z,
-          "shares": 10,
-          "state": "PENDING",
-          "symbol": "ZZZZ",
-          "type": "MKT",
-        },
-      },
-      "openPositions": Object {
-        "ZZZZ": Object {
-          "closeReason": null,
-          "closedAt": null,
-          "data": Object {},
-          "isClosing": false,
-          "openedAt": 2022-01-01T14:30:00.000Z,
-          "orders": Array [
-            Object {
-              "action": "BUY",
-              "executions": Object {},
-              "id": 1,
-              "openedAt": 2022-01-01T14:30:00.000Z,
-              "shares": 10,
-              "state": "PENDING",
-              "symbol": "ZZZZ",
-              "type": "MKT",
-            },
-          ],
-          "size": 0,
-          "symbol": "ZZZZ",
-        },
-      },
-      "orders": Array [
-        Object {
-          "action": "BUY",
-          "executions": Object {},
-          "id": 1,
-          "openedAt": 2022-01-01T14:30:00.000Z,
-          "shares": 10,
-          "state": "PENDING",
-          "symbol": "ZZZZ",
-          "type": "MKT",
-        },
-      ],
-      "positions": Array [
-        Object {
-          "closeReason": null,
-          "closedAt": null,
-          "data": Object {},
-          "isClosing": false,
-          "openedAt": 2022-01-01T14:30:00.000Z,
-          "orders": Array [
-            Object {
-              "action": "BUY",
-              "executions": Object {},
-              "id": 1,
-              "openedAt": 2022-01-01T14:30:00.000Z,
-              "shares": 10,
-              "state": "PENDING",
-              "symbol": "ZZZZ",
-              "type": "MKT",
-            },
-          ],
-          "size": 0,
-          "symbol": "ZZZZ",
-        },
-      ],
-    }
-  `);
+  expect(state.orders[0]).toEqual(
+    expect.objectContaining({
+      state: 'PENDING',
+    }),
+  );
 });
 
 test('that updating market data without any ticks fails', () => {
@@ -508,65 +436,6 @@ test('close all open positions with closePosition', () => {
 
   expect(hasOpenOrders(market.broker, market.symbol)).toBe(false);
   expect(getPositionSize(market.broker, market.symbol)).toEqual(0);
-
-  expect(market.broker.orders).toMatchInlineSnapshot(`
-    Array [
-      Object {
-        "action": "BUY",
-        "avgFillPrice": 1.1500000000000001,
-        "executions": Object {
-          "exec1": Object {
-            "commission": 1,
-            "price": 1.1500000000000001,
-            "shares": 100,
-          },
-        },
-        "filledAt": 2022-01-01T14:30:01.000Z,
-        "id": 1,
-        "openedAt": 2022-01-01T14:30:00.000Z,
-        "shares": 100,
-        "state": "FILLED",
-        "symbol": "AAAA",
-        "type": "MKT",
-      },
-      Object {
-        "action": "BUY",
-        "avgFillPrice": 1.25,
-        "executions": Object {
-          "exec1": Object {
-            "commission": 1,
-            "price": 1.25,
-            "shares": 100,
-          },
-        },
-        "filledAt": 2022-01-01T14:30:02.000Z,
-        "id": 2,
-        "openedAt": 2022-01-01T14:30:01.000Z,
-        "shares": 100,
-        "state": "FILLED",
-        "symbol": "AAAA",
-        "type": "MKT",
-      },
-      Object {
-        "action": "SELL",
-        "avgFillPrice": 1.45,
-        "executions": Object {
-          "exec1": Object {
-            "commission": 1,
-            "price": 1.45,
-            "shares": 200,
-          },
-        },
-        "filledAt": 2022-01-01T14:30:05.000Z,
-        "id": 3,
-        "openedAt": 2022-01-01T14:30:04.000Z,
-        "shares": 200,
-        "state": "FILLED",
-        "symbol": "AAAA",
-        "type": "MKT",
-      },
-    ]
-  `);
 });
 
 test('close all open positions with closePosition (sell)', () => {
@@ -756,51 +625,6 @@ test('fill a child order once a parent order has been filled', () => {
 
   expect(hasOpenOrders(market.broker, market.symbol)).toBe(false);
   expect(getPositionSize(market.broker, market.symbol)).toEqual(0);
-
-  expect(market.broker.orders).toMatchInlineSnapshot(`
-    Array [
-      Object {
-        "action": "BUY",
-        "avgFillPrice": 1.05,
-        "executions": Object {
-          "exec1": Object {
-            "commission": 1,
-            "price": 1.05,
-            "shares": 100,
-          },
-        },
-        "filledAt": 2022-01-01T14:30:02.000Z,
-        "id": 1,
-        "openedAt": 2022-01-01T14:30:00.000Z,
-        "price": 1.1,
-        "shares": 100,
-        "state": "FILLED",
-        "symbol": "AAAA",
-        "type": "LMT",
-      },
-      Object {
-        "action": "SELL",
-        "avgFillPrice": 1.15,
-        "executions": Object {
-          "exec1": Object {
-            "commission": 1,
-            "price": 1.15,
-            "shares": 100,
-          },
-        },
-        "filledAt": 2022-01-01T14:30:08.000Z,
-        "id": 2,
-        "openedAt": 2022-01-01T14:30:00.000Z,
-        "parentId": 1,
-        "price": 0.1,
-        "shares": 100,
-        "state": "FILLED",
-        "symbol": "AAAA",
-        "triggerPrice": 1.2999999999999998,
-        "type": "TRAIL",
-      },
-    ]
-  `);
 });
 
 test(`cancel a child order with it's parent order`, () => {

@@ -27,6 +27,8 @@ export async function ensureBarDataIsAvailable({
   to: Date;
   dataProvider: DataProvider;
 }) {
+  // console.trace('ensureBarDataIsAvailable');
+
   const requiredBarPeriods: Array<TimeSeriesPeriod> = [
     'm1',
     'm5',
