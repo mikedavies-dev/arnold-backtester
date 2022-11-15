@@ -1,4 +1,4 @@
-import {OrderState} from '../../core';
+import {OrderState, Instrument} from '../../core';
 import {create, isPendingOrder} from '../../utils/positions';
 
 import {connect, disconnect, resetDatabase} from '../../utils/db';
@@ -16,10 +16,24 @@ describe('test the order position/storage module', () => {
     await disconnect();
   });
 
+  const instrumentA: Instrument = {
+    symbol: 'AAAA',
+    externalId: '',
+    data: null,
+    name: 'AAAA CORP',
+  };
+
+  const instrumentB: Instrument = {
+    symbol: 'BBBB',
+    externalId: '',
+    data: null,
+    name: 'BBBB CORP',
+  };
+
   test('basic position setup', async () => {
     const positions = create();
     await positions.init();
-    expect(positions.hasOpenOrders('test-1', 'AAAA')).toBe(false);
+    expect(positions.hasOpenOrders('test-1', instrumentA)).toBe(false);
     await positions.shutdown();
   });
 
@@ -54,7 +68,7 @@ describe('test the order position/storage module', () => {
   test('has no open position', async () => {
     const positions = create();
     await positions.init();
-    expect(positions.hasOpenPosition('test-1', 'AAAA')).toBe(false);
+    expect(positions.hasOpenPosition('test-1', instrumentA)).toBe(false);
     await positions.shutdown();
   });
 
@@ -62,36 +76,35 @@ describe('test the order position/storage module', () => {
     const positions = create();
     await positions.init();
 
-    const symbol = 'BBBB';
     const profileId = 'test-2';
 
-    positions.createOrder(profileId, symbol, {
+    positions.createOrder(profileId, instrumentA, {
       type: 'MKT',
       shares: 100,
       id: 1,
       action: 'BUY',
       state: 'PENDING',
       openedAt: new Date(),
-      symbol,
-      executions: [],
+      symbol: instrumentB.symbol,
+      executions: {},
     });
 
-    expect(positions.hasOpenPosition(profileId, symbol)).toBe(true);
-    expect(positions.hasOpenOrders(profileId, symbol)).toBe(true);
+    expect(positions.hasOpenPosition(profileId, instrumentA)).toBe(true);
+    expect(positions.hasOpenOrders(profileId, instrumentA)).toBe(true);
 
-    positions.createOrder(profileId, symbol, {
+    positions.createOrder(profileId, instrumentA, {
       type: 'MKT',
       shares: 100,
       id: 2,
       action: 'BUY',
       state: 'PENDING',
       openedAt: new Date(),
-      symbol,
-      executions: [],
+      symbol: instrumentB.symbol,
+      executions: {},
     });
 
-    expect(positions.hasOpenPosition(profileId, symbol)).toBe(true);
-    expect(positions.hasOpenOrders(profileId, symbol)).toBe(true);
+    expect(positions.hasOpenPosition(profileId, instrumentA)).toBe(true);
+    expect(positions.hasOpenOrders(profileId, instrumentA)).toBe(true);
 
     await positions.shutdown();
   });

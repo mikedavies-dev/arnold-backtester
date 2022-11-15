@@ -4,38 +4,38 @@ import {
   DbTimeSeriesBar,
   DbTimeSeriesDataAvailability,
   DbInstrument,
-  DbPosition,
+  DbLivePosition,
 } from '../core';
+
+const Order = {
+  parentId: Number,
+  // https://stackoverflow.com/a/15100043/1167223
+  type: {type: String},
+  symbol: String,
+  action: String,
+  shares: Number,
+  id: Number,
+  openedAt: Date,
+  state: String,
+  filledAt: Date,
+  avgFillPrice: Number,
+  executions: {
+    type: Map,
+    of: {
+      execution: {},
+      commission: Number,
+      realizedPnL: Number,
+      data: {},
+    },
+  },
+};
 
 const Backtest = new Schema<DbBacktest>({
   createdAt: Date,
   positions: [
     {
       symbol: String,
-      orders: [
-        {
-          parentId: Number,
-          // https://stackoverflow.com/a/15100043/1167223
-          type: {type: String},
-          symbol: String,
-          action: String,
-          shares: Number,
-          id: Number,
-          openedAt: Date,
-          state: String,
-          filledAt: Date,
-          avgFillPrice: Number,
-          executions: [
-            {
-              execId: String,
-              execution: {},
-              commission: Number,
-              realizedPnL: Number,
-              data: {},
-            },
-          ],
-        },
-      ],
+      orders: [Order],
       size: Number,
       data: {},
       closeReason: String,
@@ -108,7 +108,7 @@ Instrument.index(
   },
 );
 
-const Position = new Schema<DbPosition>({
+const LivePosition = new Schema<DbLivePosition>({
   symbol: String,
   profileId: String,
   _instrument: {
@@ -123,42 +123,12 @@ const Position = new Schema<DbPosition>({
     type: Boolean,
     default: false,
   },
-  orders: [
-    {
-      orderId: String,
-      specification: {
-        type: {
-          type: String,
-        },
-        parentId: {
-          type: Number,
-          default: null,
-        },
-        action: String,
-        shares: Number,
-      },
-      status: String,
-      filled: Number,
-      avgOrderPrice: Number,
-      createdAt: Number,
-      filledAt: Date,
-      executions: [
-        {
-          execId: String,
-          execution: {},
-          commission: Number,
-          realizedPnL: Number,
-          data: {},
-        },
-      ],
-      data: {},
-    },
-  ],
+  orders: [Order],
 });
 
-Position.index({
+LivePosition.index({
   profileId: 1,
-  instrument: 1,
+  externalId: 1,
   'orders.orderId': 1,
 });
 
@@ -171,5 +141,5 @@ export async function registerMongooseModels() {
     'timeseries_data_availability',
   );
   await model('Instrument', Instrument, 'instruments');
-  await model('Position', Position, 'positions');
+  await model('LivePosition', LivePosition, 'live_positions');
 }

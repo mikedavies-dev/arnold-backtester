@@ -167,10 +167,17 @@ export type BrokerProvider = {
   placeOrder: (args: PlaceOrderArgs) => number;
 
   // See if a symbol/profile combo has any open orders
-  hasOpenOrders: (profileId: string, symbol: string) => boolean;
+  hasOpenOrders: (profileId: string, instrument: Instrument) => boolean;
 
   // Get the current position size for an symbol/profile combo
-  getPositionSize: (profileId: string, symbol: string) => number;
+  getPositionSize: (profileId: string, instrument: Instrument) => number;
+
+  // Close an open position with a reason
+  closePosition: (
+    profileId: string,
+    instrument: Instrument,
+    reason: string | null,
+  ) => void;
 };
 
 export type Tracker = {
@@ -205,8 +212,7 @@ export type OrderSpecification =
   | (BaseOrder & {type: 'LMT'; price: number})
   | (BaseOrder & {type: 'TRAIL'; price: number; triggerPrice?: number});
 
-type Execution = {
-  execId: string;
+export type OrderExecution = {
   shares: number;
   commission: number;
   price: number;
@@ -222,7 +228,7 @@ export type Order = OrderSpecification & {
   state: OrderState;
   filledAt?: Date;
   avgFillPrice?: number;
-  executions: Execution[];
+  executions: Record<string, OrderExecution>;
 };
 
 export type Position = {
@@ -315,13 +321,13 @@ export type DbInstrument = {
   data?: any;
 };
 
-export type DbPosition = {
+export type DbLivePosition = {
   _id?: MongoObjectId;
   externalId: string;
   symbol: string;
   profileId: string;
-  data: any;
   _instrument: MongoObjectId;
+  data: any;
   openedAt: Date;
   closedAt: Date | null;
   closeReason: string | null;
@@ -345,6 +351,7 @@ export type HandleTickParameters = {
     placeOrder: (symbol: string, spec: OrderSpecification) => number;
     hasOpenOrders: (symbol: string) => boolean;
     getPositionSize: (symbol: string) => number;
+    closePosition: (symbol: string, reason: string) => void;
   };
 };
 

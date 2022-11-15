@@ -22,9 +22,12 @@ import {
   DbTimeSeriesBar,
   DbTimeSeriesDataAvailability,
   DbInstrument,
-  DbPosition,
+  DbLivePosition,
   TimeSeriesPeriodToPeriod,
   Bars,
+  OrderState,
+  Order,
+  OrderExecution,
 } from '../core';
 
 import Env from './env';
@@ -330,9 +333,88 @@ export async function loadTrackerBars(
 }
 
 export async function loadOpenPositions() {
-  const Position = mongoose.model<DbPosition>('Position');
+  const Position = mongoose.model<DbLivePosition>('LivePosition');
   return Position.find({
     openedAt: {$gt: startOfDay(new Date())},
     closedAt: null,
   });
+}
+
+export async function createLivePosition(position: DbLivePosition) {
+  const LivePosition = mongoose.model<DbLivePosition>('LivePosition');
+  await LivePosition.create(position);
+}
+
+export async function updateLiveOrderStatus(
+  externalId: string,
+  orderId: number,
+  state: OrderState,
+) {
+  const Position = mongoose.model<DbLivePosition>('LivePosition');
+  await Position.findOneAndUpdate(
+    {
+      externalId,
+      'orders.orderId': orderId,
+    },
+    {
+      $set: {
+        'orders.$.state': state,
+      },
+    },
+  );
+}
+
+export async function createLiveOrder(externalId: string, order: Order) {
+  const Position = mongoose.model<DbLivePosition>('LivePosition');
+
+  await Position.findOneAndUpdate(
+    {
+      externalId,
+    },
+    {
+      $push: {
+        orders: order,
+      },
+    },
+  );
+}
+
+export async function updateLiveOrderExecution(
+  externalId: string,
+  orderId: number,
+  execId: string,
+  execution: OrderExecution,
+) {
+  const Position = mongoose.model<DbLivePosition>('LivePosition');
+
+  await Position.findOneAndUpdate(
+    {
+      externalId,
+      'orders.orderId': orderId,
+    },
+    {
+      $set: {
+        [`orders.$.executions.${execId}`]: execution,
+      },
+    },
+  );
+}
+
+export async function updatePositionClosing(
+  externalId: string,
+  reason: string | null,
+) {
+  const Position = mongoose.model<DbLivePosition>('LivePosition');
+
+  await Position.findOneAndUpdate(
+    {
+      externalId,
+    },
+    {
+      $set: {
+        isClosing: true,
+        closeReason: reason,
+      },
+    },
+  );
 }

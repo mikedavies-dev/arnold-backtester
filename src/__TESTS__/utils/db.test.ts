@@ -80,7 +80,7 @@ describe('mongo db tests', () => {
               avgFillPrice: 123,
               openedAt: getTestDate(),
               filledAt: getTestDate(),
-              executions: [],
+              executions: {},
             },
           ],
         },

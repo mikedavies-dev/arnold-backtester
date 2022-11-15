@@ -57,7 +57,7 @@ export function placeOrder(
     symbol,
     openedAt: state.getMarketTime(),
     state: spec.parentId ? 'ACCEPTED' : 'PENDING',
-    executions: [],
+    executions: {},
   };
 
   const {openPositions, positions, orders, openOrders} = state;
@@ -177,12 +177,11 @@ export function handleBrokerTick(
       const price = order.action === 'BUY' ? ask : bid;
       order.avgFillPrice = price;
 
-      order.executions.push({
-        execId: '1',
+      order.executions.exec1 = {
         price,
         shares: order.shares,
         commission: options.commissionPerOrder,
-      });
+      };
 
       // update open positions
       const position = openPositions[symbol];
@@ -208,9 +207,13 @@ export function handleBrokerTick(
       const childOrders = Object.values(openOrders).filter(
         o => o.parentId === order.id,
       );
+
       childOrders.forEach(o => {
         o.state = 'PENDING';
       });
+
+      // Record when the position was closed
+      position.closedAt = state.getMarketTime();
 
       // delete the open order
       delete openOrders[order.id];
@@ -280,9 +283,6 @@ export function closePosition(
 
   // If we don't have any open shares then close the position
   if (position.size === 0) {
-    // Record when the position was closed
-    position.closedAt = state.getMarketTime();
-
     // Delete the position from memory
     delete state.openPositions[symbol];
     return;

@@ -42,6 +42,7 @@ import {
   handleBrokerTick,
   hasOpenOrders,
   getPositionSize,
+  closePosition,
 } from './broker';
 
 import Env from '../utils/env';
@@ -277,6 +278,8 @@ export async function runBacktest({
                 hasOpenOrders(brokerState, symbol),
               getPositionSize: (symbol: string) =>
                 getPositionSize(brokerState, symbol),
+              closePosition: (symbol: string, reason: string | null) =>
+                closePosition(brokerState, symbol, reason),
             },
           });
         }

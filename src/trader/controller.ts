@@ -18,7 +18,6 @@ import {
   DataProvider,
   LiveTradingConfig,
   BrokerProvider,
-  Instrument,
 } from '../core';
 
 import {createDataProvider, createBroker} from '../utils/data-provider';
@@ -256,10 +255,40 @@ export async function runLiveController({log}: {log: LoggerCallback}) {
                         order,
                       });
                     },
-                    hasOpenOrders: (symbol: string) =>
-                      broker.hasOpenOrders(profileId, symbol),
-                    getPositionSize: (symbol: string) =>
-                      broker.getPositionSize(profileId, symbol),
+                    hasOpenOrders: (symbol: string) => {
+                      const match = instruments.find(i => i.symbol === symbol);
+
+                      if (!match) {
+                        return false;
+                      }
+
+                      return broker.hasOpenOrders(profileId, match.instrument);
+                    },
+                    getPositionSize: (symbol: string) => {
+                      const match = instruments.find(i => i.symbol === symbol);
+
+                      if (!match) {
+                        return 0;
+                      }
+
+                      return broker.getPositionSize(
+                        profileId,
+                        match.instrument,
+                      );
+                    },
+                    closePosition: (symbol: string, reason: string | null) => {
+                      const match = instruments.find(i => i.symbol === symbol);
+
+                      if (!match) {
+                        return -1;
+                      }
+
+                      return broker.closePosition(
+                        profileId,
+                        match.instrument,
+                        reason,
+                      );
+                    },
                   },
                 });
               });

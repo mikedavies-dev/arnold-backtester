@@ -33,7 +33,12 @@ import {Contract, Order, OrderAction, OrderType} from '@stoqey/ib';
 
 import {init as initIb} from '../wrappers/ib-wrapper';
 import {create as createPositionManagement} from '../../positions';
-import {BrokerProvider, LoggerCallback, PlaceOrderArgs} from '../../../core';
+import {
+  BrokerProvider,
+  Instrument,
+  LoggerCallback,
+  PlaceOrderArgs,
+} from '../../../core';
 
 import Env from '../../../utils/env';
 
@@ -129,12 +134,41 @@ export function create({log}: {log?: LoggerCallback} = {}): BrokerProvider {
     return orderId;
   }
 
-  function hasOpenOrders(profileId: string, symbol: string) {
-    return false;
+  function hasOpenOrders(profileId: string, instrument: Instrument) {
+    return positions.hasOpenOrders(profileId, instrument);
   }
 
-  function getPositionSize(profileId: string, symbol: string) {
-    return 0;
+  function getPositionSize(profileId: string, instrument: Instrument) {
+    return positions.getPositionSize(profileId, instrument);
+  }
+
+  function closePosition(
+    profileId: string,
+    instrument: Instrument,
+    reason: string | null,
+  ) {
+    // Place a market order for the current open position size
+    const shares = getPositionSize(profileId, instrument);
+
+    if (!shares) {
+      // no open position
+      return;
+    }
+
+    const orderId = placeOrder({
+      profileId,
+      instrument,
+      order: {
+        type: 'MKT',
+        shares: Math.abs(shares),
+        action: shares > 0 ? 'SELL' : 'BUY',
+      },
+    });
+
+    // set the close reason
+    positions.setPositionClosing(profileId, instrument, reason);
+
+    return orderId;
   }
 
   return {
@@ -145,5 +179,6 @@ export function create({log}: {log?: LoggerCallback} = {}): BrokerProvider {
     placeOrder,
     hasOpenOrders,
     getPositionSize,
+    closePosition,
   };
 }
