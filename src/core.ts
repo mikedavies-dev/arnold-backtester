@@ -180,6 +180,38 @@ export type BrokerProvider = {
   ) => void;
 };
 
+export type PositionProvider = {
+  init: () => Promise<void>;
+  shutdown: () => Promise<void>;
+  writeDbUpdates: () => Promise<void>;
+  hasOpenOrders: (profileId: string, instrument: Instrument) => boolean;
+  hasOpenPosition: (profileId: string, instrument: Instrument) => boolean;
+  createOrder: (
+    profileId: string,
+    instrument: Instrument,
+    order: Order,
+  ) => void;
+  updateOrderState: (
+    profileId: string,
+    instrument: Instrument,
+    orderId: number,
+    state: OrderState,
+  ) => void;
+  updateOrderExecution: (
+    profileId: string,
+    instrument: Instrument,
+    orderId: number,
+    execId: string,
+    execution: OrderExecution,
+  ) => void;
+  getPositionSize: (profileId: string, instrument: Instrument) => number;
+  setPositionClosing: (
+    profileId: string,
+    instrument: Instrument,
+    reason: string | null,
+  ) => void;
+};
+
 export type Tracker = {
   open: number;
   high: number;
@@ -326,7 +358,6 @@ export type DbLivePosition = {
   externalId: string;
   symbol: string;
   profileId: string;
-  _instrument: MongoObjectId;
   data: any;
   openedAt: Date;
   closedAt: Date | null;

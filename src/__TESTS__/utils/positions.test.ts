@@ -1,7 +1,13 @@
 import {OrderState, Instrument} from '../../core';
 import {create, isPendingOrder} from '../../utils/positions';
 
-import {connect, disconnect, resetDatabase} from '../../utils/db';
+import {
+  connect,
+  disconnect,
+  resetDatabase,
+  createLivePosition,
+  loadOpenPositions,
+} from '../../utils/db';
 
 describe('test the order position/storage module', () => {
   beforeAll(async () => {
@@ -106,6 +112,31 @@ describe('test the order position/storage module', () => {
     expect(positions.hasOpenPosition(profileId, instrumentA)).toBe(true);
     expect(positions.hasOpenOrders(profileId, instrumentA)).toBe(true);
 
+    await positions.writeDbUpdates();
     await positions.shutdown();
+  });
+
+  test('store position and load open positions', async () => {
+    expect(
+      (await loadOpenPositions()).filter(p => p.symbol === 'store-position-1')
+        .length,
+    ).toBe(0);
+
+    await createLivePosition({
+      openedAt: new Date(),
+      closedAt: null,
+      isClosing: false,
+      orders: [],
+      symbol: 'store-position-1',
+      data: {},
+      profileId: 'test3',
+      externalId: '123',
+      closeReason: '',
+    });
+
+    expect(
+      (await loadOpenPositions()).filter(p => p.symbol === 'store-position-1')
+        .length,
+    ).toBe(1);
   });
 });

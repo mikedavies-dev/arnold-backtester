@@ -1,4 +1,9 @@
-import {BrokerProvider, DataProvider, LoggerCallback} from '../../core';
+import {
+  BrokerProvider,
+  DataProvider,
+  LoggerCallback,
+  PositionProvider,
+} from '../../core';
 
 import Env from '../env';
 
@@ -19,10 +24,14 @@ export function createDataProvider({
 
 export function createBroker({
   log,
-}: {log?: LoggerCallback} = {}): BrokerProvider {
+  positions,
+}: {
+  log?: LoggerCallback;
+  positions: PositionProvider;
+}): BrokerProvider {
   switch (Env.BROKER_PROVIDER) {
     case 'ib':
-      return createIBBrokerProvider({log});
+      return createIBBrokerProvider({log, positions});
 
     default:
       throw new Error(`Unknown data provider ${Env.BROKER_PROVIDER}`);

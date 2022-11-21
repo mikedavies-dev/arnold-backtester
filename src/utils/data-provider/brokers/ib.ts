@@ -32,12 +32,13 @@ import {format} from 'date-fns';
 import {Contract, Order, OrderAction, OrderType} from '@stoqey/ib';
 
 import {init as initIb} from '../wrappers/ib-wrapper';
-import {create as createPositionManagement} from '../../positions';
+
 import {
   BrokerProvider,
   Instrument,
   LoggerCallback,
   PlaceOrderArgs,
+  PositionProvider,
 } from '../../../core';
 
 import Env from '../../../utils/env';
@@ -49,13 +50,17 @@ export function formatIbRequestDate(date: Date) {
   return format(date, 'yyyyMMdd HH:mm:ss');
 }
 
-export function create({log}: {log?: LoggerCallback} = {}): BrokerProvider {
+export function create({
+  log,
+  positions,
+}: {
+  log?: LoggerCallback;
+  positions: PositionProvider;
+}): BrokerProvider {
   const api = initIb({
     host: Env.IB_HOST,
     port: Number(Env.IB_PORT),
   });
-
-  const positions = createPositionManagement();
 
   async function init({workerIndex}: {workerIndex?: number} = {}) {
     const offset = (workerIndex || 0) + 1;
@@ -66,13 +71,9 @@ export function create({log}: {log?: LoggerCallback} = {}): BrokerProvider {
 
     await api.connect(clientId);
     log?.('Connected to IB');
-
-    await positions.init();
   }
 
   async function shutdown() {
-    await positions.shutdown();
-
     log?.('Shutting down');
     return api.disconnect();
   }

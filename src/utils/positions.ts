@@ -7,6 +7,7 @@ import {
   LivePosition,
   OrderExecution,
   Instrument,
+  PositionProvider,
 } from '../core';
 
 import {
@@ -30,12 +31,10 @@ export function isPositionOpen(position: LivePosition) {
   return !position.closedAt;
 }
 
-export function create({log}: {log?: LoggerCallback} = {}) {
+export function create({log}: {log?: LoggerCallback} = {}): PositionProvider {
   const dbUpdates: {
-    timer: NodeJS.Timer | null;
     queue: Array<() => Promise<void>>;
   } = {
-    timer: null,
     queue: [],
   };
 
@@ -44,7 +43,7 @@ export function create({log}: {log?: LoggerCallback} = {}) {
     position: LivePosition;
   }> = [];
 
-  async function storeDatabaseUpdates() {
+  async function writeDbUpdates() {
     // get the current queue
     const queue = dbUpdates.queue;
 
@@ -59,19 +58,9 @@ export function create({log}: {log?: LoggerCallback} = {}) {
     }
   }
 
-  async function shutdown() {
-    if (dbUpdates.timer) {
-      clearTimeout(dbUpdates.timer);
-    }
-
-    // Write any pending database updates
-    await storeDatabaseUpdates();
-  }
+  async function shutdown() {}
 
   async function init() {
-    // Init the DB writer
-    dbUpdates.timer = setInterval(storeDatabaseUpdates, 1000);
-
     // Load open positions form the db and store in memory
     const dbPositions = await loadOpenPositions();
 
@@ -154,7 +143,6 @@ export function create({log}: {log?: LoggerCallback} = {}) {
         createLivePosition({
           ...newPosition,
           profileId,
-          _instrument: instrument,
         }),
       );
     }
@@ -252,6 +240,7 @@ export function create({log}: {log?: LoggerCallback} = {}) {
   return {
     init,
     shutdown,
+    writeDbUpdates,
     hasOpenOrders,
     hasOpenPosition,
     createOrder,

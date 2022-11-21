@@ -19,6 +19,7 @@ import {
   LiveTradingConfig,
   BrokerProvider,
 } from '../core';
+import {create as createPositions} from '../utils/positions';
 
 import {createDataProvider, createBroker} from '../utils/data-provider';
 import {getLiveConfig} from '../utils/live-config';
@@ -116,7 +117,11 @@ export async function runLiveController({log}: {log: LoggerCallback}) {
 
   // connect to the data provider
   log('Connecting to broker');
-  const broker = await createBroker({log});
+
+  const positions = createPositions();
+  await positions.init();
+
+  const broker = await createBroker({log, positions});
   await broker.init();
 
   // Load the live config
@@ -346,9 +351,12 @@ export async function runLiveController({log}: {log: LoggerCallback}) {
         });
 
         currentMinute = nextMinute;
-
-        // TODO, update the main UI process via IPC
       }
+
+      // TODO, update the main UI process via IPC
+
+      // store the current positions in the database
+      await positions.writeDbUpdates();
 
       await sleep(1000);
     }
@@ -357,6 +365,9 @@ export async function runLiveController({log}: {log: LoggerCallback}) {
   }
 
   // Disconnect
+  log('Shutting down positions');
+  await positions.shutdown();
+
   log('Disconnecting from data provider');
   await dataProvider.shutdown();
 

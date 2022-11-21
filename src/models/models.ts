@@ -111,10 +111,6 @@ Instrument.index(
 const LivePosition = new Schema<DbLivePosition>({
   symbol: String,
   profileId: String,
-  _instrument: {
-    type: Schema.Types.ObjectId,
-    ref: 'Instrument',
-  },
   data: {},
   openedAt: Date,
   closedAt: Date,
