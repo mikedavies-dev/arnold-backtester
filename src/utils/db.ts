@@ -1,5 +1,7 @@
 import mongoose from 'mongoose';
 
+// mongoose.set('debug', true);
+
 import {
   isBefore,
   addDays,
@@ -354,7 +356,7 @@ export async function updateLiveOrderStatus(
   await Position.findOneAndUpdate(
     {
       externalId,
-      'orders.orderId': orderId,
+      'orders.id': orderId,
     },
     {
       $set: {
@@ -387,10 +389,10 @@ export async function updateLiveOrderExecution(
 ) {
   const Position = mongoose.model<DbLivePosition>('LivePosition');
 
-  await Position.findOneAndUpdate(
+  await Position.updateOne(
     {
       externalId,
-      'orders.orderId': orderId,
+      'orders.id': orderId,
     },
     {
       $set: {

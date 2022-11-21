@@ -20,47 +20,45 @@ const Order = {
   filledAt: Date,
   avgFillPrice: Number,
   executions: {
-    type: Map,
-    of: {
-      execution: {},
-      commission: Number,
-      realizedPnL: Number,
-      data: {},
-    },
+    type: Schema.Types.Mixed,
+    default: {},
   },
 };
 
-const Backtest = new Schema<DbBacktest>({
-  createdAt: Date,
-  positions: [
-    {
-      symbol: String,
-      orders: [Order],
-      size: Number,
-      data: {},
-      closeReason: String,
-      isClosing: Boolean,
-      openedAt: Date,
-      closedAt: Date,
+const Backtest = new Schema<DbBacktest>(
+  {
+    createdAt: Date,
+    positions: [
+      {
+        symbol: String,
+        orders: [Order],
+        size: Number,
+        data: {},
+        closeReason: String,
+        isClosing: Boolean,
+        openedAt: Date,
+        closedAt: Date,
+      },
+    ],
+    profile: {
+      strategy: {
+        name: String,
+        source: String,
+      },
+      dates: {
+        from: Date,
+        to: Date,
+        dates: [Date],
+      },
+      symbols: [String],
+      extraSymbols: [String],
+      threads: Number,
+      initialBalance: Number,
+      commissionPerOrder: Number,
     },
-  ],
-  profile: {
-    strategy: {
-      name: String,
-      source: String,
-    },
-    dates: {
-      from: Date,
-      to: Date,
-      dates: [Date],
-    },
-    symbols: [String],
-    extraSymbols: [String],
-    threads: Number,
-    initialBalance: Number,
-    commissionPerOrder: Number,
   },
-});
+  {minimize: false},
+);
 
 const TimeSeriesBar = new Schema<DbTimeSeriesBar>({
   symbol: String,
@@ -108,24 +106,31 @@ Instrument.index(
   },
 );
 
-const LivePosition = new Schema<DbLivePosition>({
-  symbol: String,
-  profileId: String,
-  data: {},
-  openedAt: Date,
-  closedAt: Date,
-  closeReason: String,
-  isClosing: {
-    type: Boolean,
-    default: false,
+const LivePosition = new Schema<DbLivePosition>(
+  {
+    symbol: String,
+    profileId: String,
+    externalId: String,
+    data: {},
+    openedAt: Date,
+    closedAt: Date,
+    closeReason: {
+      type: String,
+      default: null,
+    },
+    isClosing: {
+      type: Boolean,
+      default: false,
+    },
+    orders: [Order],
   },
-  orders: [Order],
-});
+  {minimize: false},
+);
 
 LivePosition.index({
   profileId: 1,
   externalId: 1,
-  'orders.orderId': 1,
+  'orders.id': 1,
 });
 
 export async function registerMongooseModels() {

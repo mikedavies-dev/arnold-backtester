@@ -7,6 +7,10 @@ import {
   resetDatabase,
   createLivePosition,
   loadOpenPositions,
+  createLiveOrder,
+  updatePositionClosing,
+  updateLiveOrderExecution,
+  updateLiveOrderStatus,
 } from '../../utils/db';
 
 describe('test the order position/storage module', () => {
@@ -116,27 +120,191 @@ describe('test the order position/storage module', () => {
     await positions.shutdown();
   });
 
+  async function loadOpenPositionsForSymbol(symbol: string) {
+    const positions = await loadOpenPositions();
+    return positions.filter(p => p.symbol === symbol);
+  }
+
+  async function getOpenPositionsForSymbolCount(symbol: string) {
+    const positions = await loadOpenPositionsForSymbol(symbol);
+    return positions.length;
+  }
+
   test('store position and load open positions', async () => {
-    expect(
-      (await loadOpenPositions()).filter(p => p.symbol === 'store-position-1')
-        .length,
-    ).toBe(0);
+    const testId = 'store-position-1';
+
+    expect(await getOpenPositionsForSymbolCount(testId)).toBe(0);
 
     await createLivePosition({
       openedAt: new Date(),
       closedAt: null,
       isClosing: false,
       orders: [],
-      symbol: 'store-position-1',
+      symbol: testId,
       data: {},
-      profileId: 'test3',
-      externalId: '123',
+      profileId: testId,
+      externalId: testId,
       closeReason: '',
     });
 
-    expect(
-      (await loadOpenPositions()).filter(p => p.symbol === 'store-position-1')
-        .length,
-    ).toBe(1);
+    expect(await getOpenPositionsForSymbolCount(testId)).toBe(1);
+  });
+
+  test('store an order with a position', async () => {
+    const testId = 'store-position-2';
+    await createLivePosition({
+      openedAt: new Date(),
+      closedAt: null,
+      isClosing: false,
+      orders: [],
+      symbol: testId,
+      data: {},
+      profileId: testId,
+      externalId: testId,
+      closeReason: '',
+    });
+
+    await createLiveOrder(testId, {
+      id: 1,
+      type: 'MKT',
+      shares: 100,
+      action: 'BUY',
+      symbol: testId,
+      openedAt: new Date(),
+      state: 'ACCEPTED',
+      executions: {},
+    });
+
+    // get the position
+    const positions = await loadOpenPositionsForSymbol(testId);
+
+    expect(positions[0].orders.length).toBe(1);
+    expect(positions[0].orders[0]).toEqual(
+      expect.objectContaining({
+        id: 1,
+      }),
+    );
+  });
+
+  test('store executions for an order', async () => {
+    const testId = 'store-position-executions-1';
+
+    await createLivePosition({
+      openedAt: new Date(),
+      closedAt: null,
+      isClosing: false,
+      orders: [],
+      symbol: testId,
+      data: {},
+      profileId: testId,
+      externalId: testId,
+      closeReason: '',
+    });
+
+    await createLiveOrder(testId, {
+      id: 1,
+      type: 'MKT',
+      shares: 100,
+      action: 'BUY',
+      symbol: testId,
+      openedAt: new Date(),
+      state: 'ACCEPTED',
+      executions: {},
+    });
+
+    const execs = {
+      exec1: {
+        commission: 1,
+        price: 1,
+        shares: 50,
+        data: {},
+      },
+      exec2: {
+        commission: 1,
+        price: 1.5,
+        shares: 50,
+        data: {},
+      },
+    };
+
+    await updateLiveOrderExecution(testId, 1, 'exec1', execs.exec1);
+    await updateLiveOrderExecution(testId, 1, 'exec2', execs.exec2);
+
+    // get the order and make
+    const positions = await loadOpenPositionsForSymbol(testId);
+
+    expect(positions[0].orders[0].executions['exec1']).toEqual(
+      expect.objectContaining(execs.exec1),
+    );
+
+    expect(positions[0].orders[0].executions['exec2']).toEqual(
+      expect.objectContaining(execs.exec2),
+    );
+  });
+
+  test('set a position to be closing with a reason', async () => {
+    const testId = 'store-position-3';
+
+    expect(await getOpenPositionsForSymbolCount(testId)).toBe(0);
+
+    await createLivePosition({
+      openedAt: new Date(),
+      closedAt: null,
+      isClosing: false,
+      orders: [],
+      symbol: testId,
+      data: {},
+      profileId: testId,
+      externalId: testId,
+      closeReason: null,
+    });
+
+    const positions1 = await loadOpenPositionsForSymbol(testId);
+    expect(positions1[0].isClosing).toBe(false);
+    expect(positions1[0].closeReason).toBe(null);
+
+    await updatePositionClosing(testId, 'some reason');
+
+    const positions2 = await loadOpenPositionsForSymbol(testId);
+    expect(positions2[0].isClosing).toBe(true);
+    expect(positions2[0].closeReason).toBe('some reason');
+  });
+
+  test('update the status of an order', async () => {
+    const testId = 'store-position-order-status-1';
+
+    await createLivePosition({
+      openedAt: new Date(),
+      closedAt: null,
+      isClosing: false,
+      orders: [],
+      symbol: testId,
+      data: {},
+      profileId: testId,
+      externalId: testId,
+      closeReason: null,
+    });
+
+    await createLiveOrder(testId, {
+      id: 1,
+      type: 'MKT',
+      shares: 100,
+      action: 'BUY',
+      symbol: testId,
+      openedAt: new Date(),
+      state: 'ACCEPTED',
+      executions: {},
+    });
+
+    // get the position
+    const positions1 = await loadOpenPositionsForSymbol(testId);
+    expect(positions1[0].orders[0].state).toBe('ACCEPTED');
+
+    // update the status
+    await updateLiveOrderStatus(testId, 1, 'FILLED');
+
+    // check
+    const positions2 = await loadOpenPositionsForSymbol(testId);
+    expect(positions2[0].orders[0].state).toBe('FILLED');
   });
 });
