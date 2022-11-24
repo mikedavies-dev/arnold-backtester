@@ -1,5 +1,5 @@
 import {OrderState, Instrument} from '../../core';
-import {create, isPendingOrder} from '../../utils/positions';
+import {create, isPendingOrder, isFilledOrder} from '../../utils/positions';
 
 import {
   connect,
@@ -72,6 +72,34 @@ describe('test the order position/storage module', () => {
 
     tests.forEach(({state, result}) => {
       expect(isPendingOrder({state})).toBe(result);
+    });
+  });
+
+  test('check if an order is filled', () => {
+    const tests: Array<{
+      state: OrderState;
+      result: boolean;
+    }> = [
+      {
+        state: 'ACCEPTED',
+        result: false,
+      },
+      {
+        state: 'CANCELLED',
+        result: false,
+      },
+      {
+        state: 'FILLED',
+        result: true,
+      },
+      {
+        state: 'PENDING',
+        result: false,
+      },
+    ];
+
+    tests.forEach(({state, result}) => {
+      expect(isFilledOrder({state})).toBe(result);
     });
   });
 
@@ -306,5 +334,275 @@ describe('test the order position/storage module', () => {
     // check
     const positions2 = await loadOpenPositionsForSymbol(testId);
     expect(positions2[0].orders[0].state).toBe('FILLED');
+  });
+
+  test('save position data to the db and load it again', async () => {
+    const positions1 = create();
+    await positions1.init();
+
+    const profileId = 'test-save-and-load-positions';
+
+    positions1.createOrder(profileId, instrumentA, {
+      type: 'MKT',
+      shares: 100,
+      id: 1,
+      action: 'BUY',
+      state: 'PENDING',
+      openedAt: new Date(),
+      symbol: instrumentA.symbol,
+      executions: {},
+    });
+
+    await positions1.writeDbUpdates();
+    await positions1.shutdown();
+
+    // load the positions from the db and check that ew still have open orders and positions
+    const positions2 = create();
+    await positions2.init();
+
+    expect(positions2.hasOpenPosition(profileId, instrumentA)).toBe(true);
+    expect(positions2.hasOpenOrders(profileId, instrumentA)).toBe(true);
+
+    await positions2.shutdown();
+  });
+
+  test('update the state of an order', async () => {
+    const positions1 = create();
+    await positions1.init();
+
+    const profileId = 'test-update-order-state';
+
+    positions1.createOrder(profileId, instrumentA, {
+      type: 'MKT',
+      shares: 100,
+      id: 1,
+      action: 'BUY',
+      state: 'PENDING',
+      openedAt: new Date(),
+      symbol: instrumentA.symbol,
+      executions: {},
+    });
+
+    expect(positions1.hasOpenOrders(profileId, instrumentA)).toBe(true);
+    positions1.updateOrderState(profileId, instrumentA, 1, 'FILLED');
+    expect(positions1.hasOpenOrders(profileId, instrumentA)).toBe(false);
+
+    // write the changes
+    await positions1.writeDbUpdates();
+    await positions1.shutdown();
+
+    // load from db
+    const positions2 = create();
+    await positions2.init();
+
+    positions2.updateOrderState(profileId, instrumentA, 1, 'FILLED');
+  });
+
+  test('add order exec details to an order', async () => {
+    const positions1 = create();
+    await positions1.init();
+
+    const profileId = 'test-update-order-exec';
+
+    positions1.createOrder(profileId, instrumentA, {
+      type: 'MKT',
+      shares: 100,
+      id: 1,
+      action: 'BUY',
+      state: 'PENDING',
+      openedAt: new Date(),
+      symbol: instrumentA.symbol,
+      executions: {},
+    });
+
+    const execs = {
+      exec1: {
+        commission: 1,
+        price: 10,
+        shares: 45,
+      },
+      exec2: {
+        commission: 1,
+        price: 10,
+        shares: 55,
+      },
+    };
+
+    positions1.updateOrderExecution(
+      profileId,
+      instrumentA,
+      1,
+      'exec1',
+      execs.exec1,
+    );
+
+    positions1.updateOrderExecution(
+      profileId,
+      instrumentA,
+      1,
+      'exec2',
+      execs.exec2,
+    );
+
+    const position1 = positions1.getOpenPosition(profileId, instrumentA);
+
+    expect(position1).not.toBe(null);
+    expect(position1?.orders[0].executions.exec1).toEqual(
+      expect.objectContaining(execs.exec1),
+    );
+    expect(position1?.orders[0].executions.exec2).toEqual(
+      expect.objectContaining(execs.exec2),
+    );
+
+    // test saving execs to the db
+    await positions1.writeDbUpdates();
+
+    // load the positions from the db and check that ew still have open orders and positions
+    const positions2 = create();
+    await positions2.init();
+
+    const position2 = positions2.getOpenPosition(profileId, instrumentA);
+
+    expect(position2).not.toBe(null);
+    expect(position2?.orders[0].executions.exec1).toEqual(
+      expect.objectContaining(execs.exec1),
+    );
+    expect(position2?.orders[0].executions.exec2).toEqual(
+      expect.objectContaining(execs.exec2),
+    );
+
+    await positions1.shutdown();
+  });
+
+  test('update the order state of an invalid position', async () => {
+    const positions = create();
+    await positions.init();
+
+    const profileId = 'test-update-order-state-without-position';
+    positions.updateOrderState(profileId, instrumentA, 1, 'FILLED');
+
+    await positions.shutdown();
+  });
+
+  test('update the order execution of an invalid position', async () => {
+    const positions = create();
+    await positions.init();
+
+    const profileId = 'test-update-order-state-without-position';
+
+    positions.updateOrderExecution(profileId, instrumentA, 1, 'exec1', {
+      commission: 1,
+      price: 10,
+      shares: 45,
+    });
+
+    await positions.shutdown();
+  });
+
+  test('check open position size', async () => {
+    const positions = create();
+    await positions.init();
+
+    const profileId = 'test-open-position-size';
+
+    expect(positions.getPositionSize(profileId, instrumentA)).toBe(0);
+
+    positions.createOrder(profileId, instrumentA, {
+      type: 'MKT',
+      shares: 100,
+      id: 1,
+      action: 'BUY',
+      state: 'PENDING',
+      openedAt: new Date(),
+      symbol: instrumentA.symbol,
+      executions: {},
+    });
+
+    expect(positions.getPositionSize(profileId, instrumentA)).toBe(0);
+
+    // fill the position
+    positions.updateOrderState(profileId, instrumentA, 1, 'FILLED');
+
+    expect(positions.getPositionSize(profileId, instrumentA)).toBe(100);
+
+    positions.createOrder(profileId, instrumentA, {
+      type: 'MKT',
+      shares: 100,
+      id: 2,
+      action: 'SELL',
+      state: 'PENDING',
+      openedAt: new Date(),
+      symbol: instrumentA.symbol,
+      executions: {},
+    });
+
+    expect(positions.getPositionSize(profileId, instrumentA)).toBe(100);
+
+    // fill the position
+    positions.updateOrderState(profileId, instrumentA, 2, 'FILLED');
+
+    expect(positions.getPositionSize(profileId, instrumentA)).toBe(0);
+
+    // set the open position size by creating a new order
+    positions.createOrder(profileId, instrumentA, {
+      type: 'MKT',
+      shares: 100,
+      id: 3,
+      action: 'BUY',
+      state: 'FILLED',
+      openedAt: new Date(),
+      symbol: instrumentA.symbol,
+      executions: {},
+    });
+
+    expect(positions.getPositionSize(profileId, instrumentA)).toBe(100);
+
+    await positions.shutdown();
+  });
+
+  test('set a position to be closing', async () => {
+    const positions1 = create();
+    await positions1.init();
+
+    const profileId = 'test-closing-position';
+
+    positions1.createOrder(profileId, instrumentA, {
+      type: 'MKT',
+      shares: 100,
+      id: 1,
+      action: 'BUY',
+      state: 'FILLED',
+      openedAt: new Date(),
+      symbol: instrumentA.symbol,
+      executions: {},
+    });
+
+    expect(positions1.hasOpenPosition(profileId, instrumentA)).toBe(true);
+    expect(positions1.getPositionSize(profileId, instrumentA)).toBe(100);
+
+    const position1 = positions1.getOpenPosition(profileId, instrumentA);
+    expect(position1?.isClosing).toBe(false);
+    expect(position1?.closeReason).toBe(null);
+
+    positions1.setPositionClosing(
+      profileId,
+      instrumentA,
+      'Test closing a position',
+    );
+
+    // save to the db
+    await positions1.writeDbUpdates();
+    await positions1.shutdown();
+
+    // load the positions from the db and check that ew still have open orders and positions
+    const positions2 = create();
+    await positions2.init();
+
+    const position2 = positions2.getOpenPosition(profileId, instrumentA);
+
+    expect(position2?.isClosing).toBe(true);
+    expect(position2?.closeReason).toBe('Test closing a position');
+
+    await positions2.shutdown();
   });
 });

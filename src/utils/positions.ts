@@ -67,21 +67,23 @@ export function create({log}: {log?: LoggerCallback} = {}): PositionProvider {
     dbPositions.forEach(dbPosition => {
       const {symbol, profileId} = dbPosition;
 
+      const position = {
+        externalId: dbPosition.externalId,
+        symbol,
+        orders: dbPosition.orders,
+        size: 0,
+        data: dbPosition.data,
+        closeReason: dbPosition.closeReason,
+        isClosing: dbPosition.isClosing,
+        openedAt: dbPosition.openedAt,
+        closedAt: dbPosition.closedAt,
+      };
+
+      updatePositionSize(position);
+
       positions.push({
         profileId,
-        position: {
-          externalId: dbPosition.externalId,
-          symbol,
-          orders: dbPosition.orders,
-          size: dbPosition.orders
-            .filter(isFilledOrder)
-            .reduce((acc, order) => acc + order.shares, 0),
-          data: dbPosition.data,
-          closeReason: dbPosition.closeReason,
-          isClosing: dbPosition.isClosing,
-          openedAt: dbPosition.openedAt,
-          closedAt: dbPosition.closedAt,
-        },
+        position,
       });
     });
   }
@@ -116,6 +118,16 @@ export function create({log}: {log?: LoggerCallback} = {}): PositionProvider {
     return entry?.position || null;
   }
 
+  function updatePositionSize(position: LivePosition) {
+    position.size = position.orders
+      .filter(isFilledOrder)
+      .reduce(
+        (acc, order) =>
+          acc + (order.action === 'BUY' ? order.shares : order.shares * -1),
+        0,
+      );
+  }
+
   function createOrder(
     profileId: string,
     instrument: Instrument,
@@ -147,14 +159,11 @@ export function create({log}: {log?: LoggerCallback} = {}): PositionProvider {
       );
     }
 
-    const position = getOpenPosition(profileId, instrument);
-
-    if (!position) {
-      log?.(`Position not found for ${profileId}/${instrument.symbol}`);
-      return;
-    }
+    const position = getOpenPosition(profileId, instrument) as LivePosition;
 
     position.orders.push(order);
+
+    updatePositionSize(position);
 
     // queue the db update
     dbUpdates.queue.push(() => createLiveOrder(position.externalId, order));
@@ -168,21 +177,20 @@ export function create({log}: {log?: LoggerCallback} = {}): PositionProvider {
   ) {
     const position = getOpenPosition(profileId, instrument);
 
-    if (!position) {
-      log?.(`Position not found for ${profileId}/${instrument.symbol}`);
-      return;
+    if (position) {
+      position.orders.forEach(order => {
+        if (order.id === orderId) {
+          order.state = state;
+        }
+      });
+
+      updatePositionSize(position);
+
+      // update the db
+      dbUpdates.queue.push(() =>
+        updateLiveOrderStatus(position.externalId, orderId, state),
+      );
     }
-
-    position.orders.forEach(order => {
-      if (order.id === orderId) {
-        order.state = state;
-      }
-    });
-
-    // update the db
-    dbUpdates.queue.push(() =>
-      updateLiveOrderStatus(position.externalId, orderId, state),
-    );
   }
 
   function updateOrderExecution(
@@ -195,21 +203,23 @@ export function create({log}: {log?: LoggerCallback} = {}): PositionProvider {
     const position = getOpenPosition(profileId, instrument);
 
     // update memory
-    if (!position) {
-      log?.(`Position not found for ${profileId}/${instrument.symbol}`);
-      return;
+    if (position) {
+      position.orders.forEach(order => {
+        if (order.id === orderId) {
+          order.executions[execId] = execution;
+        }
+      });
+
+      // update the db
+      dbUpdates.queue.push(() =>
+        updateLiveOrderExecution(
+          position.externalId,
+          orderId,
+          execId,
+          execution,
+        ),
+      );
     }
-
-    position.orders.forEach(order => {
-      if (order.id === orderId) {
-        order.executions[execId] = execution;
-      }
-    });
-
-    // update the db
-    dbUpdates.queue.push(() =>
-      updateLiveOrderExecution(position.externalId, orderId, execId, execution),
-    );
   }
 
   function getPositionSize(profileId: string, instrument: Instrument) {
@@ -224,17 +234,15 @@ export function create({log}: {log?: LoggerCallback} = {}): PositionProvider {
   ) {
     const position = getOpenPosition(profileId, instrument);
 
-    if (!position) {
-      return;
+    if (position) {
+      position.closeReason = reason;
+      position.isClosing = true;
+
+      // update the db
+      dbUpdates.queue.push(() =>
+        updatePositionClosing(position.externalId, reason),
+      );
     }
-
-    position.closeReason = reason;
-    position.isClosing = true;
-
-    // update the db
-    dbUpdates.queue.push(() =>
-      updatePositionClosing(position.externalId, reason),
-    );
   }
 
   return {
@@ -248,5 +256,6 @@ export function create({log}: {log?: LoggerCallback} = {}): PositionProvider {
     updateOrderExecution,
     getPositionSize,
     setPositionClosing,
+    getOpenPosition,
   };
 }

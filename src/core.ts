@@ -210,6 +210,10 @@ export type PositionProvider = {
     instrument: Instrument,
     reason: string | null,
   ) => void;
+  getOpenPosition: (
+    profileId: string,
+    instrument: Instrument,
+  ) => LivePosition | null;
 };
 
 export type Tracker = {
