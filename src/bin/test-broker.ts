@@ -1,5 +1,6 @@
 import {create} from '../utils/data-provider/brokers/ib';
 import {instrumentLookup, connect, disconnect} from '../utils/db';
+import {create as createPositions} from '../utils/positions';
 
 const {log} = console;
 
@@ -8,8 +9,12 @@ async function run() {
     log('Connecting to database');
     await connect();
 
+    const positions = createPositions({log});
+    await positions.init();
+
     const ib = create({
       log,
+      positions,
     });
 
     log('Connecting to IB');
