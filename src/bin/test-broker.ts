@@ -26,17 +26,17 @@ async function run() {
       symbols: ['AAPL'],
     });
 
-    // const orderId = ib.placeOrder({
-    //   profileId: 'ABCD',
-    //   instrument,
-    //   order: {
-    //     type: 'MKT',
-    //     shares: 100,
-    //     action: 'BUY',
-    //   },
-    // });
+    const orderId = ib.placeOrder({
+      profileId: 'ABCD',
+      instrument,
+      order: {
+        type: 'MKT',
+        shares: 100,
+        action: 'BUY',
+      },
+    });
 
-    // log('Order placed!', orderId);
+    log('Order placed!', orderId);
 
     await new Promise(resolve => setTimeout(resolve, 3000000));
 

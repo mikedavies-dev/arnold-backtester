@@ -71,6 +71,47 @@ export function create({
 
     await api.connect(clientId);
     log?.('Connected to IB');
+
+    api.addGlobalHandler('ORDER_UPDATES', {
+      [api.EventName.openOrder]: (orderId, contract, order, state) => {
+        log?.('openOrder', orderId, contract, order, state);
+
+        // Crate/update the order in positions
+      },
+      [api.EventName.execDetails]: (contract, execution) => {
+        log?.('execDetails', contract, execution);
+      },
+      [api.EventName.commissionReport]: report => {
+        log?.('commissionReport', report);
+      },
+      [api.EventName.orderStatus]: (
+        orderId,
+        status,
+        filled,
+        remaining,
+        avgFillPrice,
+        permId,
+        parentId,
+        lastFillPrice,
+        clientId,
+        whyHeld,
+        mktCapPrice,
+      ) => {
+        log?.('orderStatus', {
+          orderId,
+          status,
+          filled,
+          remaining,
+          avgFillPrice,
+          permId,
+          parentId,
+          lastFillPrice,
+          clientId,
+          whyHeld,
+          mktCapPrice,
+        });
+      },
+    });
   }
 
   async function shutdown() {
@@ -79,7 +120,7 @@ export function create({
   }
 
   async function loadState(profileId: string, balance: number) {
-    // TODO Load data from DB for this profile
+    // TODO Load data from DB for this profile via positions
     return {
       getMarketTime: () => new Date(),
       nextOrderId: 1,

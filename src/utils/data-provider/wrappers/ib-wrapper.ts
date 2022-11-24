@@ -16,6 +16,9 @@ import {
   IBApiTickType,
   Order,
   ErrorCode,
+  OrderState,
+  Execution,
+  CommissionReport,
 } from '@stoqey/ib';
 
 export function init({
@@ -71,22 +74,36 @@ export function init({
     [EventName.tickSize]: (field: string, value: number) => void;
     [EventName.tickString]: (field: string, value: string) => void;
     [EventName.error]: (err: Error, code: ErrorCode) => void;
-    // [EventName.openOrder]: (
-    //   orderId: number,
-    //   contract: Contract,
-    //   order: Order,
-    //   state: OrderState,
-    // ) => void;
-    // [EventName.openOrderEnd]: () => void;
+    [EventName.openOrder]: (
+      orderId: number,
+      contract: Contract,
+      order: Order,
+      state: OrderState,
+    ) => void;
+    [EventName.execDetails]: (contract: Contract, execution: Execution) => void;
+    [EventName.commissionReport]: (report: CommissionReport) => void;
+    [EventName.orderStatus]: (
+      orderId: number,
+      status: string,
+      filled: number,
+      remaining: number,
+      avgFillPrice: number,
+      permId?: number,
+      parentId?: number,
+      lastFillPrice?: number,
+      clientId?: number,
+      whyHeld?: string,
+      mktCapPrice?: number,
+    ) => void;
   };
 
   const requests: Record<number, Partial<IbEventHandler>> = {};
   const globalHandlers: Record<string, Partial<IbEventHandler>> = {};
 
   // IB Message handlers
-  // api.on(EventName.all, (event, args) => {
-  //   console.log('IB', event, args);
-  // });
+  api.on(EventName.all, (event, args) => {
+    console.log('IB', event, args);
+  });
 
   api.on(EventName.nextValidId, orderId => {
     nextValidOrderId = orderId;
@@ -157,28 +174,65 @@ export function init({
     requests[reqId]?.[EventName.tickString]?.(IBApiTickType[type], value),
   );
 
-  api.on(EventName.openOrder, (orderId, contract, order, state) => {
-    /*
-    1. Update the db
-    2. If the order is not 'CANCELLED' or 'FILLED' (?) keep/update it in open orders
-    3. If the order is 'CANCELLED' or 'FILLED' then remove it from openOrders
-    */
-    // If the order is open then store it in open orders
-    // Otherwise just update the DB
+  api.on(EventName.openOrder, (orderId, contract, order, state) =>
+    Object.keys(globalHandlers).forEach(handlerName => {
+      globalHandlers[handlerName]?.[EventName.openOrder]?.(
+        orderId,
+        contract,
+        order,
+        state,
+      );
+    }),
+  );
+
+  api.on(EventName.execDetails, (reqId, contract, execution) => {
+    // TODO, why do we have q reqId here?
+    Object.keys(globalHandlers).forEach(handlerName => {
+      globalHandlers[handlerName]?.[EventName.execDetails]?.(
+        contract,
+        execution,
+      );
+    });
   });
 
-  // api.on(EventName.openOrder, (orderId, contract, order, state) =>
-  //   globalHandlers['OPEN_ORDERS']?.[EventName.openOrder]?.(
-  //     orderId,
-  //     contract,
-  //     order,
-  //     state,
-  //   ),
-  // );
+  api.on(EventName.commissionReport, report => {
+    Object.keys(globalHandlers).forEach(handlerName => {
+      globalHandlers[handlerName]?.[EventName.commissionReport]?.(report);
+    });
+  });
 
-  // api.on(EventName.openOrderEnd, () =>
-  //   globalHandlers['OPEN_ORDERS']?.[EventName.openOrderEnd]?.(),
-  // );
+  api.on(
+    EventName.orderStatus,
+    (
+      orderId,
+      status,
+      filled,
+      remaining,
+      avgFillPrice,
+      permId,
+      parentId,
+      lastFillPrice,
+      clientId,
+      whyHeld,
+      mktCapPrice,
+    ) => {
+      Object.keys(globalHandlers).forEach(handlerName => {
+        globalHandlers[handlerName]?.[EventName.orderStatus]?.(
+          orderId,
+          status,
+          filled,
+          remaining,
+          avgFillPrice,
+          permId,
+          parentId,
+          lastFillPrice,
+          clientId,
+          whyHeld,
+          mktCapPrice,
+        );
+      });
+    },
+  );
 
   api.on(
     EventName.position,
@@ -530,6 +584,9 @@ export function init({
     // requestOpenOrders,
     getOpenPositions,
     placeOrder,
+    addGlobalHandler,
+    removeGlobalHandler,
+    EventName: EventName,
   };
 }
 
