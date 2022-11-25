@@ -27,7 +27,6 @@ import {
   DbLivePosition,
   TimeSeriesPeriodToPeriod,
   Bars,
-  OrderState,
   Order,
   OrderExecution,
 } from '../core';
@@ -347,21 +346,25 @@ export async function createLivePosition(position: DbLivePosition) {
   await LivePosition.create(position);
 }
 
-export async function updateLiveOrderStatus(
+export async function updateLiveOrder(
   externalId: string,
   orderId: number,
-  state: OrderState,
+  updates: Partial<Order>,
 ) {
   const Position = mongoose.model<DbLivePosition>('LivePosition');
+
+  const set = Object.keys(updates).reduce((acc, key) => {
+    acc[`orders.$.${key}`] = updates[key as keyof Order];
+    return acc;
+  }, {} as Record<string, any>);
+
   await Position.findOneAndUpdate(
     {
       externalId,
       'orders.id': orderId,
     },
     {
-      $set: {
-        'orders.$.state': state,
-      },
+      $set: set,
     },
   );
 }

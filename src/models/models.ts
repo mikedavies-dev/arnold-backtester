@@ -14,6 +14,7 @@ const Order = {
   symbol: String,
   action: String,
   shares: Number,
+  remaining: Number,
   id: Number,
   openedAt: Date,
   state: String,
@@ -23,6 +24,7 @@ const Order = {
     type: Schema.Types.Mixed,
     default: {},
   },
+  data: {},
 };
 
 const Backtest = new Schema<DbBacktest>(

@@ -19,6 +19,7 @@ import {
   OrderState,
   Execution,
   CommissionReport,
+  OrderStatus,
 } from '@stoqey/ib';
 
 export function init({
@@ -84,7 +85,7 @@ export function init({
     [EventName.commissionReport]: (report: CommissionReport) => void;
     [EventName.orderStatus]: (
       orderId: number,
-      status: string,
+      status: OrderStatus,
       filled: number,
       remaining: number,
       avgFillPrice: number,
@@ -219,7 +220,7 @@ export function init({
       Object.keys(globalHandlers).forEach(handlerName => {
         globalHandlers[handlerName]?.[EventName.orderStatus]?.(
           orderId,
-          status,
+          status as OrderStatus,
           filled,
           remaining,
           avgFillPrice,

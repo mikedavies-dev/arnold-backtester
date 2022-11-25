@@ -76,6 +76,7 @@ describe('mongo db tests', () => {
               symbol,
               action: 'BUY',
               shares: 100,
+              remaining: 100,
               state: 'FILLED',
               avgFillPrice: 123,
               openedAt: getTestDate(),

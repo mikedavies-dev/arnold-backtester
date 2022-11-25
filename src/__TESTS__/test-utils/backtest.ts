@@ -16,6 +16,7 @@ export const backtestResults: Array<DbBacktest> = [
             symbol: 'ZZZZ',
             action: 'BUY',
             shares: 100,
+            remaining: 100,
             id: 1,
             openedAt: getTestDate(),
             state: 'FILLED',

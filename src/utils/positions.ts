@@ -13,10 +13,10 @@ import {
 import {
   loadOpenPositions,
   createLivePosition,
-  updateLiveOrderStatus,
   createLiveOrder,
   updateLiveOrderExecution,
   updatePositionClosing,
+  updateLiveOrder,
 } from '../utils/db';
 
 export function isPendingOrder(order: {state: OrderState}) {
@@ -118,6 +118,28 @@ export function create({log}: {log?: LoggerCallback} = {}): PositionProvider {
     return entry?.position || null;
   }
 
+  function getPositionFromOrderId(orderId: number) {
+    const entry = positions.find(p =>
+      p.position.orders.find(o => o.id === orderId),
+    );
+    return entry?.position || null;
+  }
+
+  function getOrderIdFromExecId(execId: string) {
+    for (let index = 0; index < positions.length; index += 1) {
+      const {position} = positions[index];
+
+      // find the order with this execution id
+      const order = position.orders.find(o => Boolean(o.executions[execId]));
+
+      if (order) {
+        return order.id;
+      }
+    }
+
+    return null;
+  }
+
   function updatePositionSize(position: LivePosition) {
     position.size = position.orders
       .filter(isFilledOrder)
@@ -169,18 +191,16 @@ export function create({log}: {log?: LoggerCallback} = {}): PositionProvider {
     dbUpdates.queue.push(() => createLiveOrder(position.externalId, order));
   }
 
-  function updateOrderState(
-    profileId: string,
-    instrument: Instrument,
-    orderId: number,
-    state: OrderState,
-  ) {
-    const position = getOpenPosition(profileId, instrument);
+  function updateOrder(orderId: number, updates: Partial<Order>) {
+    const position = getPositionFromOrderId(orderId);
 
     if (position) {
       position.orders.forEach(order => {
         if (order.id === orderId) {
-          order.state = state;
+          Object.keys(updates).forEach(key => {
+            const field = key as keyof Order;
+            (order[field] as any) = updates[field];
+          });
         }
       });
 
@@ -188,37 +208,40 @@ export function create({log}: {log?: LoggerCallback} = {}): PositionProvider {
 
       // update the db
       dbUpdates.queue.push(() =>
-        updateLiveOrderStatus(position.externalId, orderId, state),
+        updateLiveOrder(position.externalId, orderId, updates),
       );
     }
   }
 
   function updateOrderExecution(
-    profileId: string,
-    instrument: Instrument,
     orderId: number,
     execId: string,
-    execution: OrderExecution,
+    execution: Partial<OrderExecution>,
   ) {
-    const position = getOpenPosition(profileId, instrument);
+    const position = getPositionFromOrderId(orderId);
 
     // update memory
     if (position) {
       position.orders.forEach(order => {
         if (order.id === orderId) {
-          order.executions[execId] = execution;
+          const fullExecution = {
+            ...(order.executions[execId] || {}),
+            ...execution,
+          };
+
+          order.executions[execId] = fullExecution;
+
+          // update the db
+          dbUpdates.queue.push(() =>
+            updateLiveOrderExecution(
+              position.externalId,
+              orderId,
+              execId,
+              fullExecution,
+            ),
+          );
         }
       });
-
-      // update the db
-      dbUpdates.queue.push(() =>
-        updateLiveOrderExecution(
-          position.externalId,
-          orderId,
-          execId,
-          execution,
-        ),
-      );
     }
   }
 
@@ -252,10 +275,11 @@ export function create({log}: {log?: LoggerCallback} = {}): PositionProvider {
     hasOpenOrders,
     hasOpenPosition,
     createOrder,
-    updateOrderState,
     updateOrderExecution,
     getPositionSize,
     setPositionClosing,
     getOpenPosition,
+    getOrderIdFromExecId,
+    updateOrder,
   };
 }

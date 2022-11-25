@@ -53,6 +53,7 @@ export function placeOrder(
 
   const order: Order = {
     ...spec,
+    remaining: spec.shares,
     id: orderId,
     symbol,
     openedAt: state.getMarketTime(),

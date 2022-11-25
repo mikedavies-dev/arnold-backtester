@@ -191,19 +191,12 @@ export type PositionProvider = {
     instrument: Instrument,
     order: Order,
   ) => void;
-  updateOrderState: (
-    profileId: string,
-    instrument: Instrument,
-    orderId: number,
-    state: OrderState,
-  ) => void;
   updateOrderExecution: (
-    profileId: string,
-    instrument: Instrument,
     orderId: number,
     execId: string,
-    execution: OrderExecution,
+    execution: Partial<OrderExecution>,
   ) => void;
+  getOrderIdFromExecId: (execId: string) => number | null;
   getPositionSize: (profileId: string, instrument: Instrument) => number;
   setPositionClosing: (
     profileId: string,
@@ -214,6 +207,7 @@ export type PositionProvider = {
     profileId: string,
     instrument: Instrument,
   ) => LivePosition | null;
+  updateOrder: (orderId: number, updates: Partial<Order>) => void;
 };
 
 export type Tracker = {
@@ -232,7 +226,13 @@ export type Tracker = {
 
 export type OrderAction = 'BUY' | 'SELL';
 export type OrderType = 'MKT' | 'LMT' | 'STP' | 'TRAIL';
-export type OrderState = 'ACCEPTED' | 'PENDING' | 'FILLED' | 'CANCELLED';
+export type OrderState =
+  | 'ACCEPTED'
+  | 'PENDING'
+  | 'FILLED'
+  | 'CANCELLED'
+  | 'INACTIVE'
+  | 'UNKNOWN';
 
 export type BaseOrder = {
   type: OrderType;
@@ -263,8 +263,10 @@ export type Order = OrderSpecification & {
   openedAt: Date;
   state: OrderState;
   filledAt?: Date;
+  remaining: number;
   avgFillPrice?: number;
   executions: Record<string, OrderExecution>;
+  data?: any;
 };
 
 export type Position = {

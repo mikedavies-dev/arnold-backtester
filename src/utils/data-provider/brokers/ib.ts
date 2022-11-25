@@ -29,7 +29,7 @@ If there is a mismatch then we need to show that with a null profileId?
 */
 
 import {format} from 'date-fns';
-import {Contract, Order, OrderAction, OrderType} from '@stoqey/ib';
+import {Contract, Order, OrderAction, OrderType, OrderStatus} from '@stoqey/ib';
 
 import {init as initIb} from '../wrappers/ib-wrapper';
 
@@ -37,6 +37,8 @@ import {
   BrokerProvider,
   Instrument,
   LoggerCallback,
+  OrderExecution,
+  OrderState,
   PlaceOrderArgs,
   PositionProvider,
 } from '../../../core';
@@ -76,13 +78,49 @@ export function create({
       [api.EventName.openOrder]: (orderId, contract, order, state) => {
         log?.('openOrder', orderId, contract, order, state);
 
-        // Crate/update the order in positions
+        positions.updateOrder(orderId, {
+          data: order,
+        });
       },
       [api.EventName.execDetails]: (contract, execution) => {
         log?.('execDetails', contract, execution);
+
+        const {orderId, execId} = execution;
+
+        if (orderId && execId) {
+          const updates: Partial<OrderExecution> = {
+            data: execution,
+          };
+
+          if (execution.shares) {
+            updates.shares = execution.shares;
+          }
+
+          positions.updateOrderExecution(orderId, execId, execution);
+        }
       },
       [api.EventName.commissionReport]: report => {
         log?.('commissionReport', report);
+
+        const {execId} = report;
+
+        if (execId) {
+          const orderId = positions.getOrderIdFromExecId(execId);
+
+          if (orderId) {
+            const updates: Partial<OrderExecution> = {};
+
+            if (report.commission) {
+              updates.commission = report.commission;
+            }
+
+            if (report.realizedPNL) {
+              updates.realizedPnL = report.realizedPNL;
+            }
+
+            positions.updateOrderExecution(orderId, execId, updates);
+          }
+        }
       },
       [api.EventName.orderStatus]: (
         orderId,
@@ -110,6 +148,29 @@ export function create({
           whyHeld,
           mktCapPrice,
         });
+
+        const lookup: Partial<Record<OrderStatus, OrderState>> = {
+          [OrderStatus.ApiCancelled]: 'CANCELLED',
+          [OrderStatus.ApiPending]: 'PENDING',
+          [OrderStatus.Cancelled]: 'CANCELLED',
+          [OrderStatus.Filled]: 'FILLED',
+          [OrderStatus.Inactive]: 'INACTIVE',
+          [OrderStatus.PendingSubmit]: 'PENDING',
+          [OrderStatus.PreSubmitted]: 'PENDING',
+          [OrderStatus.Submitted]: 'PENDING',
+          [OrderStatus.Unknown]: 'UNKNOWN',
+        };
+
+        const ourState = lookup[status];
+
+        if (ourState) {
+          positions.updateOrder(orderId, {
+            state: ourState,
+            remaining,
+            avgFillPrice,
+            filledAt: remaining === 0 ? new Date() : undefined,
+          });
+        }
       },
     });
   }

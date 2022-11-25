@@ -14,6 +14,7 @@ test('order value for non-filled order', () => {
         type: 'MKT',
         action: 'BUY',
         shares: 100,
+        remaining: 100,
         openedAt: new Date(),
         symbol: 'ZZZZ',
         state: 'PENDING',

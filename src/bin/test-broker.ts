@@ -38,7 +38,13 @@ async function run() {
 
     log('Order placed!', orderId);
 
-    await new Promise(resolve => setTimeout(resolve, 3000000));
+    // eslint-disable-next-line
+    while (true) {
+      // dump data to the database
+      await positions.writeDbUpdates();
+
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
 
     await ib.shutdown();
     await disconnect();

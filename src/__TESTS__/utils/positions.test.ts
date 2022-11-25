@@ -10,8 +10,14 @@ import {
   createLiveOrder,
   updatePositionClosing,
   updateLiveOrderExecution,
-  updateLiveOrderStatus,
+  updateLiveOrder,
 } from '../../utils/db';
+
+let nextOrderId = 0;
+
+function getNextOrderId() {
+  return nextOrderId++;
+}
 
 describe('test the order position/storage module', () => {
   beforeAll(async () => {
@@ -119,6 +125,7 @@ describe('test the order position/storage module', () => {
     positions.createOrder(profileId, instrumentA, {
       type: 'MKT',
       shares: 100,
+      remaining: 100,
       id: 1,
       action: 'BUY',
       state: 'PENDING',
@@ -133,6 +140,7 @@ describe('test the order position/storage module', () => {
     positions.createOrder(profileId, instrumentA, {
       type: 'MKT',
       shares: 100,
+      remaining: 100,
       id: 2,
       action: 'BUY',
       state: 'PENDING',
@@ -196,6 +204,7 @@ describe('test the order position/storage module', () => {
       id: 1,
       type: 'MKT',
       shares: 100,
+      remaining: 100,
       action: 'BUY',
       symbol: testId,
       openedAt: new Date(),
@@ -233,6 +242,7 @@ describe('test the order position/storage module', () => {
       id: 1,
       type: 'MKT',
       shares: 100,
+      remaining: 100,
       action: 'BUY',
       symbol: testId,
       openedAt: new Date(),
@@ -317,6 +327,7 @@ describe('test the order position/storage module', () => {
       id: 1,
       type: 'MKT',
       shares: 100,
+      remaining: 100,
       action: 'BUY',
       symbol: testId,
       openedAt: new Date(),
@@ -329,7 +340,9 @@ describe('test the order position/storage module', () => {
     expect(positions1[0].orders[0].state).toBe('ACCEPTED');
 
     // update the status
-    await updateLiveOrderStatus(testId, 1, 'FILLED');
+    await updateLiveOrder(testId, 1, {
+      state: 'FILLED',
+    });
 
     // check
     const positions2 = await loadOpenPositionsForSymbol(testId);
@@ -345,6 +358,7 @@ describe('test the order position/storage module', () => {
     positions1.createOrder(profileId, instrumentA, {
       type: 'MKT',
       shares: 100,
+      remaining: 100,
       id: 1,
       action: 'BUY',
       state: 'PENDING',
@@ -372,10 +386,13 @@ describe('test the order position/storage module', () => {
 
     const profileId = 'test-update-order-state';
 
+    const orderId = getNextOrderId();
+
     positions1.createOrder(profileId, instrumentA, {
       type: 'MKT',
       shares: 100,
-      id: 1,
+      remaining: 100,
+      id: orderId,
       action: 'BUY',
       state: 'PENDING',
       openedAt: new Date(),
@@ -384,7 +401,9 @@ describe('test the order position/storage module', () => {
     });
 
     expect(positions1.hasOpenOrders(profileId, instrumentA)).toBe(true);
-    positions1.updateOrderState(profileId, instrumentA, 1, 'FILLED');
+    positions1.updateOrder(orderId, {
+      state: 'FILLED',
+    });
     expect(positions1.hasOpenOrders(profileId, instrumentA)).toBe(false);
 
     // write the changes
@@ -395,7 +414,9 @@ describe('test the order position/storage module', () => {
     const positions2 = create();
     await positions2.init();
 
-    positions2.updateOrderState(profileId, instrumentA, 1, 'FILLED');
+    positions2.updateOrder(1, {
+      state: 'FILLED',
+    });
   });
 
   test('add order exec details to an order', async () => {
@@ -404,10 +425,13 @@ describe('test the order position/storage module', () => {
 
     const profileId = 'test-update-order-exec';
 
+    const orderId = getNextOrderId();
+
     positions1.createOrder(profileId, instrumentA, {
       type: 'MKT',
       shares: 100,
-      id: 1,
+      remaining: 100,
+      id: orderId,
       action: 'BUY',
       state: 'PENDING',
       openedAt: new Date(),
@@ -428,21 +452,9 @@ describe('test the order position/storage module', () => {
       },
     };
 
-    positions1.updateOrderExecution(
-      profileId,
-      instrumentA,
-      1,
-      'exec1',
-      execs.exec1,
-    );
+    positions1.updateOrderExecution(orderId, 'exec1', execs.exec1);
 
-    positions1.updateOrderExecution(
-      profileId,
-      instrumentA,
-      1,
-      'exec2',
-      execs.exec2,
-    );
+    positions1.updateOrderExecution(orderId, 'exec2', execs.exec2);
 
     const position1 = positions1.getOpenPosition(profileId, instrumentA);
 
@@ -474,12 +486,69 @@ describe('test the order position/storage module', () => {
     await positions1.shutdown();
   });
 
+  test('get an order form the exec id', async () => {
+    const positions1 = create();
+    await positions1.init();
+
+    const profileId = 'test-getting-order-from-exec-id';
+
+    const orderId = getNextOrderId();
+
+    positions1.createOrder(profileId, instrumentA, {
+      type: 'MKT',
+      shares: 100,
+      remaining: 100,
+      id: orderId,
+      action: 'BUY',
+      state: 'PENDING',
+      openedAt: new Date(),
+      symbol: instrumentA.symbol,
+      executions: {},
+    });
+
+    const execs = {
+      exec1: {
+        commission: 1,
+        price: 10,
+        shares: 45,
+      },
+      exec2: {
+        commission: 1,
+        price: 10,
+        shares: 55,
+      },
+    };
+
+    positions1.updateOrderExecution(
+      orderId,
+      'test_random_exec_id_1',
+      execs.exec1,
+    );
+    positions1.updateOrderExecution(
+      orderId,
+      'test_random_exec_id_2',
+      execs.exec2,
+    );
+
+    expect(positions1.getOrderIdFromExecId('test_random_exec_id_1')).toBe(
+      orderId,
+    );
+    expect(positions1.getOrderIdFromExecId('test_random_exec_id_2')).toBe(
+      orderId,
+    );
+
+    expect(positions1.getOrderIdFromExecId('invalid_exec_id')).toBe(null);
+
+    await positions1.shutdown();
+  });
+
   test('update the order state of an invalid position', async () => {
     const positions = create();
     await positions.init();
 
-    const profileId = 'test-update-order-state-without-position';
-    positions.updateOrderState(profileId, instrumentA, 1, 'FILLED');
+    positions.updateOrder(1, {
+      state: 'FILLED',
+    });
 
     await positions.shutdown();
   });
@@ -488,9 +557,7 @@ describe('test the order position/storage module', () => {
     const positions = create();
     await positions.init();
 
-    const profileId = 'test-update-order-state-without-position';
-
-    positions.updateOrderExecution(profileId, instrumentA, 1, 'exec1', {
+    positions.updateOrderExecution(1, 'exec1', {
       commission: 1,
       price: 10,
       shares: 45,
@@ -505,12 +572,17 @@ describe('test the order position/storage module', () => {
 
     const profileId = 'test-open-position-size';
 
+    const orderId1 = getNextOrderId();
+    const orderId2 = getNextOrderId();
+    const orderId3 = getNextOrderId();
+
     expect(positions.getPositionSize(profileId, instrumentA)).toBe(0);
 
     positions.createOrder(profileId, instrumentA, {
       type: 'MKT',
       shares: 100,
-      id: 1,
+      remaining: 100,
+      id: orderId1,
       action: 'BUY',
       state: 'PENDING',
       openedAt: new Date(),
@@ -521,14 +593,17 @@ describe('test the order position/storage module', () => {
     expect(positions.getPositionSize(profileId, instrumentA)).toBe(0);
 
     // fill the position
-    positions.updateOrderState(profileId, instrumentA, 1, 'FILLED');
+    positions.updateOrder(orderId1, {
+      state: 'FILLED',
+    });
 
     expect(positions.getPositionSize(profileId, instrumentA)).toBe(100);
 
     positions.createOrder(profileId, instrumentA, {
       type: 'MKT',
       shares: 100,
-      id: 2,
+      remaining: 100,
+      id: orderId2,
       action: 'SELL',
       state: 'PENDING',
       openedAt: new Date(),
@@ -539,7 +614,9 @@ describe('test the order position/storage module', () => {
     expect(positions.getPositionSize(profileId, instrumentA)).toBe(100);
 
     // fill the position
-    positions.updateOrderState(profileId, instrumentA, 2, 'FILLED');
+    positions.updateOrder(orderId2, {
+      state: 'FILLED',
+    });
 
     expect(positions.getPositionSize(profileId, instrumentA)).toBe(0);
 
@@ -547,7 +624,8 @@ describe('test the order position/storage module', () => {
     positions.createOrder(profileId, instrumentA, {
       type: 'MKT',
       shares: 100,
-      id: 3,
+      remaining: 100,
+      id: orderId3,
       action: 'BUY',
       state: 'FILLED',
       openedAt: new Date(),
@@ -565,11 +643,13 @@ describe('test the order position/storage module', () => {
     await positions1.init();
 
     const profileId = 'test-closing-position';
+    const orderId = getNextOrderId();
 
     positions1.createOrder(profileId, instrumentA, {
       type: 'MKT',
       shares: 100,
-      id: 1,
+      remaining: 100,
+      id: orderId,
       action: 'BUY',
       state: 'FILLED',
       openedAt: new Date(),
