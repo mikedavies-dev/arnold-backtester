@@ -122,7 +122,12 @@ export function create({log}: {log?: LoggerCallback} = {}): PositionProvider {
     const entry = positions.find(p =>
       p.position.orders.find(o => o.id === orderId),
     );
-    return entry?.position || null;
+
+    if (!entry) {
+      return null;
+    }
+
+    return entry.position;
   }
 
   function getOrderIdFromExecId(execId: string) {

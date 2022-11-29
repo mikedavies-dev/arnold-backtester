@@ -122,11 +122,14 @@ describe('test the order position/storage module', () => {
 
     const profileId = 'test-2';
 
+    const orderId1 = getNextOrderId();
+    const orderId2 = getNextOrderId();
+
     positions.createOrder(profileId, instrumentA, {
       type: 'MKT',
       shares: 100,
       remaining: 100,
-      id: 1,
+      id: orderId1,
       action: 'BUY',
       state: 'PENDING',
       openedAt: new Date(),
@@ -141,7 +144,7 @@ describe('test the order position/storage module', () => {
       type: 'MKT',
       shares: 100,
       remaining: 100,
-      id: 2,
+      id: orderId2,
       action: 'BUY',
       state: 'PENDING',
       openedAt: new Date(),
@@ -188,6 +191,9 @@ describe('test the order position/storage module', () => {
 
   test('store an order with a position', async () => {
     const testId = 'store-position-2';
+
+    const orderId = getNextOrderId();
+
     await createLivePosition({
       openedAt: new Date(),
       closedAt: null,
@@ -201,7 +207,7 @@ describe('test the order position/storage module', () => {
     });
 
     await createLiveOrder(testId, {
-      id: 1,
+      id: orderId,
       type: 'MKT',
       shares: 100,
       remaining: 100,
@@ -218,13 +224,15 @@ describe('test the order position/storage module', () => {
     expect(positions[0].orders.length).toBe(1);
     expect(positions[0].orders[0]).toEqual(
       expect.objectContaining({
-        id: 1,
+        id: orderId,
       }),
     );
   });
 
   test('store executions for an order', async () => {
     const testId = 'store-position-executions-1';
+
+    const orderId = getNextOrderId();
 
     await createLivePosition({
       openedAt: new Date(),
@@ -239,7 +247,7 @@ describe('test the order position/storage module', () => {
     });
 
     await createLiveOrder(testId, {
-      id: 1,
+      id: orderId,
       type: 'MKT',
       shares: 100,
       remaining: 100,
@@ -265,8 +273,8 @@ describe('test the order position/storage module', () => {
       },
     };
 
-    await updateLiveOrderExecution(testId, 1, 'exec1', execs.exec1);
-    await updateLiveOrderExecution(testId, 1, 'exec2', execs.exec2);
+    await updateLiveOrderExecution(testId, orderId, 'exec1', execs.exec1);
+    await updateLiveOrderExecution(testId, orderId, 'exec2', execs.exec2);
 
     // get the order and make
     const positions = await loadOpenPositionsForSymbol(testId);
@@ -311,6 +319,8 @@ describe('test the order position/storage module', () => {
   test('update the status of an order', async () => {
     const testId = 'store-position-order-status-1';
 
+    const orderId = getNextOrderId();
+
     await createLivePosition({
       openedAt: new Date(),
       closedAt: null,
@@ -324,7 +334,7 @@ describe('test the order position/storage module', () => {
     });
 
     await createLiveOrder(testId, {
-      id: 1,
+      id: orderId,
       type: 'MKT',
       shares: 100,
       remaining: 100,
@@ -340,7 +350,7 @@ describe('test the order position/storage module', () => {
     expect(positions1[0].orders[0].state).toBe('ACCEPTED');
 
     // update the status
-    await updateLiveOrder(testId, 1, {
+    await updateLiveOrder(testId, orderId, {
       state: 'FILLED',
     });
 
@@ -355,11 +365,13 @@ describe('test the order position/storage module', () => {
 
     const profileId = 'test-save-and-load-positions';
 
+    const orderId = getNextOrderId();
+
     positions1.createOrder(profileId, instrumentA, {
       type: 'MKT',
       shares: 100,
       remaining: 100,
-      id: 1,
+      id: orderId,
       action: 'BUY',
       state: 'PENDING',
       openedAt: new Date(),
@@ -453,7 +465,6 @@ describe('test the order position/storage module', () => {
     };
 
     positions1.updateOrderExecution(orderId, 'exec1', execs.exec1);
-
     positions1.updateOrderExecution(orderId, 'exec2', execs.exec2);
 
     const position1 = positions1.getOpenPosition(profileId, instrumentA);
@@ -546,7 +557,7 @@ describe('test the order position/storage module', () => {
     const positions = create();
     await positions.init();
 
-    positions.updateOrder(1, {
+    positions.updateOrder(999999, {
       state: 'FILLED',
     });
 
