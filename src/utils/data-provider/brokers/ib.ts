@@ -263,15 +263,18 @@ export function create({
   ) {
     // make sure the position is not already closing
     if (positions.isClosing(profileId, instrument)) {
-      return;
+      return -1;
     }
+
+    // set the close reason
+    positions.setPositionClosing(profileId, instrument, reason);
 
     // Place a market order for the current open position size
     const shares = getPositionSize(profileId, instrument);
 
     if (!shares) {
       // no open position
-      return;
+      return -1;
     }
 
     const orderId = placeOrder({
@@ -283,9 +286,6 @@ export function create({
         action: shares > 0 ? 'SELL' : 'BUY',
       },
     });
-
-    // set the close reason
-    positions.setPositionClosing(profileId, instrument, reason);
 
     return orderId;
   }

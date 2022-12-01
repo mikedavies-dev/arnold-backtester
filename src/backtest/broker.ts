@@ -269,7 +269,7 @@ export function closePosition(
   const position = state.openPositions[symbol] || null;
 
   if (!position || position.isClosing) {
-    return;
+    return -1;
   }
 
   position.closeReason = reason;
@@ -286,7 +286,7 @@ export function closePosition(
   if (position.size === 0) {
     // Delete the position from memory
     delete state.openPositions[symbol];
-    return;
+    return -1;
   }
 
   const orderId = placeOrder(state, symbol, {
