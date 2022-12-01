@@ -4,6 +4,9 @@ import {create as createPositions} from '../utils/positions';
 
 const {log} = console;
 
+const sleep = (timeout: number) =>
+  new Promise(resolve => setTimeout(resolve, timeout));
+
 async function run() {
   try {
     log('Connecting to database');
@@ -26,24 +29,46 @@ async function run() {
       symbols: ['AAPL'],
     });
 
-    const orderId = ib.placeOrder({
+    const buyOrderId = ib.placeOrder({
       profileId: 'ABCD',
       instrument,
       order: {
         type: 'MKT',
-        shares: 100,
-        action: 'BUY',
+        shares: 1100,
+        action: 'SELL',
       },
     });
 
-    log('Order placed!', orderId);
+    log('Buy order placed!', buyOrderId);
+
+    await sleep(10000);
+
+    await positions.writeDbUpdates();
+
+    ib.closePosition('ABCD', instrument, 'Test closing the position');
+
+    // await sleep(5000);
+
+    // await positions.writeDbUpdates();
+
+    // const sellOrderId = ib.placeOrder({
+    //   profileId: 'ABCD',
+    //   instrument,
+    //   order: {
+    //     type: 'MKT',
+    //     shares: 100,
+    //     action: 'SELL',
+    //   },
+    // });
+
+    // log('Sell order placed!', sellOrderId);
 
     // eslint-disable-next-line
     while (true) {
       // dump data to the database
       await positions.writeDbUpdates();
 
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await sleep(1000);
     }
 
     await ib.shutdown();

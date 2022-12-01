@@ -1,5 +1,10 @@
 import {OrderState, Instrument} from '../../core';
-import {create, isPendingOrder, isFilledOrder} from '../../utils/positions';
+import {
+  create,
+  isPendingOrder,
+  isFilledOrder,
+  cleanExecId,
+} from '../../utils/positions';
 
 import {
   connect,
@@ -695,5 +700,122 @@ describe('test the order position/storage module', () => {
     expect(position2?.closeReason).toBe('Test closing a position');
 
     await positions2.shutdown();
+  });
+
+  test('clean exec id', () => {
+    const execId = '0000e0d5.640275e2.01.01';
+    expect(cleanExecId(execId)).toBe('0000e0d5:640275e2:01:01');
+  });
+
+  test('open a new position and close it when we have a position size of 0', async () => {
+    const positions1 = create();
+    await positions1.init();
+
+    const profileId = 'test-close-position-when-no-shares';
+
+    const orderId1 = getNextOrderId();
+    const orderId2 = getNextOrderId();
+
+    expect(positions1.getPositionSize(profileId, instrumentA)).toBe(0);
+
+    positions1.createOrder(profileId, instrumentA, {
+      type: 'MKT',
+      shares: 100,
+      remaining: 100,
+      id: orderId1,
+      action: 'BUY',
+      state: 'PENDING',
+      openedAt: new Date(),
+      symbol: instrumentA.symbol,
+      executions: {},
+    });
+
+    expect(positions1.getPositionSize(profileId, instrumentA)).toBe(0);
+
+    // fill the position
+    positions1.updateOrder(orderId1, {
+      state: 'FILLED',
+    });
+
+    expect(positions1.getPositionSize(profileId, instrumentA)).toBe(100);
+
+    // make sure the position has been closed
+    expect(positions1.hasOpenPosition(profileId, instrumentA)).toBe(true);
+
+    positions1.createOrder(profileId, instrumentA, {
+      type: 'MKT',
+      shares: 100,
+      remaining: 100,
+      id: orderId2,
+      action: 'SELL',
+      state: 'PENDING',
+      openedAt: new Date(),
+      symbol: instrumentA.symbol,
+      executions: {},
+    });
+
+    expect(positions1.getPositionSize(profileId, instrumentA)).toBe(100);
+
+    // fill the position
+    positions1.updateOrder(orderId2, {
+      state: 'FILLED',
+    });
+
+    expect(positions1.getPositionSize(profileId, instrumentA)).toBe(0);
+
+    // make sure the position has been closed
+    expect(positions1.hasOpenPosition(profileId, instrumentA)).toBe(false);
+
+    // write db updates
+    await positions1.writeDbUpdates();
+    await positions1.shutdown();
+
+    // load positions again and make sure we don't have any open positions
+    const positions2 = create();
+    await positions2.init();
+
+    expect(positions2.hasOpenPosition(profileId, instrumentA)).toBe(false);
+  });
+
+  test('check that a position is closing', async () => {
+    const positions1 = create();
+    await positions1.init();
+
+    // check an invalid profile id
+    expect(
+      positions1.isClosing('invalid-is-closing-profile-id', instrumentA),
+    ).toBe(false);
+
+    const profileId = 'test-check-position-closing-status';
+    const orderId1 = getNextOrderId();
+
+    expect(positions1.isClosing(profileId, instrumentA)).toBe(false);
+
+    positions1.createOrder(profileId, instrumentA, {
+      type: 'MKT',
+      shares: 100,
+      remaining: 100,
+      id: orderId1,
+      action: 'BUY',
+      state: 'PENDING',
+      openedAt: new Date(),
+      symbol: instrumentA.symbol,
+      executions: {},
+    });
+
+    // we are not closing
+    expect(positions1.isClosing(profileId, instrumentA)).toBe(false);
+    positions1.setPositionClosing(profileId, instrumentA, 'test closing');
+
+    // we should now be closing
+    expect(positions1.isClosing(profileId, instrumentA)).toBe(true);
+
+    // save results to the db and make sure we are still closing
+    await positions1.writeDbUpdates();
+
+    const positions2 = create();
+    await positions2.init();
+
+    expect(positions2.isClosing(profileId, instrumentA)).toBe(true);
   });
 });

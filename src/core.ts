@@ -203,6 +203,7 @@ export type PositionProvider = {
     instrument: Instrument,
     reason: string | null,
   ) => void;
+  isClosing: (profileId: string, instrument: Instrument) => boolean;
   getOpenPosition: (
     profileId: string,
     instrument: Instrument,

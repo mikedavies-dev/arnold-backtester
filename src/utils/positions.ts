@@ -17,6 +17,7 @@ import {
   updateLiveOrderExecution,
   updatePositionClosing,
   updateLiveOrder,
+  closePosition,
 } from '../utils/db';
 
 export function isPendingOrder(order: {state: OrderState}) {
@@ -29,6 +30,11 @@ export function isFilledOrder(order: {state: OrderState}) {
 
 export function isPositionOpen(position: LivePosition) {
   return !position.closedAt;
+}
+
+export function cleanExecId(execId: string) {
+  // Mongo doesn't like some.exec.value so replace with :
+  return execId.replace(/\./gi, ':');
 }
 
 export function create({log}: {log?: LoggerCallback} = {}): PositionProvider {
@@ -44,6 +50,10 @@ export function create({log}: {log?: LoggerCallback} = {}): PositionProvider {
   }> = [];
 
   async function writeDbUpdates() {
+    if (dbUpdates.queue.length) {
+      log?.(`Writing ${dbUpdates.queue.length} updates to the database`);
+    }
+
     // get the current queue
     const queue = dbUpdates.queue;
 
@@ -131,11 +141,13 @@ export function create({log}: {log?: LoggerCallback} = {}): PositionProvider {
   }
 
   function getOrderIdFromExecId(execId: string) {
+    const cleanedId = cleanExecId(execId);
+
     for (let index = 0; index < positions.length; index += 1) {
       const {position} = positions[index];
 
       // find the order with this execution id
-      const order = position.orders.find(o => Boolean(o.executions[execId]));
+      const order = position.orders.find(o => Boolean(o.executions[cleanedId]));
 
       if (order) {
         return order.id;
@@ -146,6 +158,7 @@ export function create({log}: {log?: LoggerCallback} = {}): PositionProvider {
   }
 
   function updatePositionSize(position: LivePosition) {
+    // update the position size based on filled orders
     position.size = position.orders
       .filter(isFilledOrder)
       .reduce(
@@ -153,6 +166,21 @@ export function create({log}: {log?: LoggerCallback} = {}): PositionProvider {
           acc + (order.action === 'BUY' ? order.shares : order.shares * -1),
         0,
       );
+
+    // close the position if our new size is 0, we haven't already been
+    // closed and we have at least one filled order
+    if (
+      position.size === 0 &&
+      !position.closedAt &&
+      position.orders.filter(isFilledOrder).length > 0
+    ) {
+      log?.(`Closing position for ${position.externalId}/${position.symbol}`);
+
+      position.closedAt = new Date();
+      dbUpdates.queue.push(() =>
+        closePosition(position.externalId, position.closedAt as Date),
+      );
+    }
   }
 
   function createOrder(
@@ -161,10 +189,12 @@ export function create({log}: {log?: LoggerCallback} = {}): PositionProvider {
     order: Order,
   ) {
     if (!hasOpenPosition(profileId, instrument)) {
+      log?.(`Creating new position for ${instrument.symbol}`);
+
       const newPosition = {
         externalId: uuidv4(),
         symbol: instrument.symbol,
-        orders: [],
+        orders: [order],
         size: 0,
         data: null,
         closeReason: null,
@@ -184,22 +214,34 @@ export function create({log}: {log?: LoggerCallback} = {}): PositionProvider {
           profileId,
         }),
       );
+
+      updatePositionSize(newPosition);
+    } else {
+      const position = getOpenPosition(profileId, instrument) as LivePosition;
+
+      log?.(
+        `Creating new order for ${instrument.symbol} (${position.externalId}) (${order.shares}/${order.action}/${order.type})`,
+      );
+
+      position.orders.push(order);
+
+      updatePositionSize(position);
+
+      // queue the db update
+      dbUpdates.queue.push(() => createLiveOrder(position.externalId, order));
     }
-
-    const position = getOpenPosition(profileId, instrument) as LivePosition;
-
-    position.orders.push(order);
-
-    updatePositionSize(position);
-
-    // queue the db update
-    dbUpdates.queue.push(() => createLiveOrder(position.externalId, order));
   }
 
   function updateOrder(orderId: number, updates: Partial<Order>) {
     const position = getPositionFromOrderId(orderId);
 
     if (position) {
+      log?.(
+        `Order update ${orderId} to with keys ${Object.keys(updates).join(
+          ', ',
+        )}`,
+      );
+
       position.orders.forEach(order => {
         if (order.id === orderId) {
           Object.keys(updates).forEach(key => {
@@ -225,23 +267,32 @@ export function create({log}: {log?: LoggerCallback} = {}): PositionProvider {
   ) {
     const position = getPositionFromOrderId(orderId);
 
+    // Mongo doesn't like some.exec.value so replace with :
+    const cleanedId = cleanExecId(execId);
+
     // update memory
     if (position) {
+      log?.(
+        `Execution update ${orderId}/${cleanedId} with ${Object.keys(
+          execution,
+        ).join(', ')}`,
+      );
+
       position.orders.forEach(order => {
         if (order.id === orderId) {
           const fullExecution = {
-            ...(order.executions[execId] || {}),
+            ...(order.executions[cleanedId] || {}),
             ...execution,
           };
 
-          order.executions[execId] = fullExecution;
+          order.executions[cleanedId] = fullExecution;
 
           // update the db
           dbUpdates.queue.push(() =>
             updateLiveOrderExecution(
               position.externalId,
               orderId,
-              execId,
+              cleanedId,
               fullExecution,
             ),
           );
@@ -260,6 +311,10 @@ export function create({log}: {log?: LoggerCallback} = {}): PositionProvider {
     instrument: Instrument,
     reason: string | null,
   ) {
+    log?.(
+      `Closing position ${profileId}/${instrument.symbol} with reason '${reason}'`,
+    );
+
     const position = getOpenPosition(profileId, instrument);
 
     if (position) {
@@ -271,6 +326,16 @@ export function create({log}: {log?: LoggerCallback} = {}): PositionProvider {
         updatePositionClosing(position.externalId, reason),
       );
     }
+  }
+
+  function isClosing(profileId: string, instrument: Instrument) {
+    const position = getOpenPosition(profileId, instrument);
+
+    if (!position) {
+      return false;
+    }
+
+    return position.isClosing;
   }
 
   return {
@@ -286,5 +351,6 @@ export function create({log}: {log?: LoggerCallback} = {}): PositionProvider {
     getOpenPosition,
     getOrderIdFromExecId,
     updateOrder,
+    isClosing,
   };
 }

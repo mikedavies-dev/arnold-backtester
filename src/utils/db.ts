@@ -33,6 +33,7 @@ import {
 
 import Env from './env';
 import {BacktestResults} from '../backtest/controller';
+import {date} from 'fp-ts';
 
 export async function connect() {
   // Connect to the db
@@ -419,6 +420,22 @@ export async function updatePositionClosing(
       $set: {
         isClosing: true,
         closeReason: reason,
+      },
+    },
+  );
+}
+
+export async function closePosition(externalId: string, closedAt: Date) {
+  const Position = mongoose.model<DbLivePosition>('LivePosition');
+
+  await Position.findOneAndUpdate(
+    {
+      externalId,
+    },
+    {
+      $set: {
+        isClosing: false,
+        closedAt,
       },
     },
   );

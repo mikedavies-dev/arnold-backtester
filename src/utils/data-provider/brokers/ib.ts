@@ -76,32 +76,33 @@ export function create({
 
     api.addGlobalHandler('ORDER_UPDATES', {
       [api.EventName.openOrder]: (orderId, contract, order, state) => {
-        log?.('openOrder', orderId, contract, order, state);
+        // log?.('openOrder', orderId, contract, order, state);
 
         positions.updateOrder(orderId, {
           data: order,
         });
       },
       [api.EventName.execDetails]: (contract, execution) => {
-        log?.('execDetails', contract, execution);
+        // log?.('execDetails', contract, execution);
 
         const {orderId, execId} = execution;
 
         if (orderId && execId) {
-          const updates: Partial<OrderExecution> = {
-            data: execution,
-          };
+          const updates: Partial<OrderExecution> = {};
 
           if (execution.shares) {
             updates.shares = execution.shares;
           }
 
-          positions.updateOrderExecution(orderId, execId, execution);
+          if (execution.price) {
+            updates.price = execution.price;
+          }
+
+          positions.updateOrderExecution(orderId, execId, updates);
         }
       },
       [api.EventName.commissionReport]: report => {
-        log?.('commissionReport', report);
-
+        // log?.('commissionReport', report);
         const {execId} = report;
 
         if (execId) {
@@ -128,26 +129,26 @@ export function create({
         filled,
         remaining,
         avgFillPrice,
-        permId,
-        parentId,
-        lastFillPrice,
-        clientId,
-        whyHeld,
-        mktCapPrice,
+        // permId,
+        // parentId,
+        // lastFillPrice,
+        // clientId,
+        // whyHeld,
+        // mktCapPrice,
       ) => {
-        log?.('orderStatus', {
-          orderId,
-          status,
-          filled,
-          remaining,
-          avgFillPrice,
-          permId,
-          parentId,
-          lastFillPrice,
-          clientId,
-          whyHeld,
-          mktCapPrice,
-        });
+        // log?.('orderStatus', {
+        //   orderId,
+        //   status,
+        //   filled,
+        //   remaining,
+        //   avgFillPrice,
+        //   permId,
+        //   parentId,
+        //   lastFillPrice,
+        //   clientId,
+        //   whyHeld,
+        //   mktCapPrice,
+        // });
 
         const lookup: Partial<Record<OrderStatus, OrderState>> = {
           [OrderStatus.ApiCancelled]: 'CANCELLED',
@@ -193,7 +194,7 @@ export function create({
     };
   }
 
-  function placeOrder({instrument, order}: PlaceOrderArgs) {
+  function placeOrder({profileId, instrument, order}: PlaceOrderArgs) {
     function getOrderType(): Order {
       switch (order.type) {
         case 'LMT':
@@ -234,6 +235,16 @@ export function create({
       },
     });
 
+    positions.createOrder(profileId, instrument, {
+      ...order,
+      id: orderId,
+      symbol: instrument.symbol,
+      state: 'PENDING',
+      openedAt: new Date(),
+      remaining: order.shares,
+      executions: {},
+    });
+
     return orderId;
   }
 
@@ -250,6 +261,11 @@ export function create({
     instrument: Instrument,
     reason: string | null,
   ) {
+    // make sure the position is not already closing
+    if (positions.isClosing(profileId, instrument)) {
+      return;
+    }
+
     // Place a market order for the current open position size
     const shares = getPositionSize(profileId, instrument);
 
