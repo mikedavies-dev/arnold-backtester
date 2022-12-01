@@ -18,19 +18,16 @@ import {
 test('init positions function returns an empty positions ds', () => {
   const state = initBroker({
     initialBalance: 1000,
-    commissionPerOrder: 1,
     getMarketTime: () => createTimeAsDate('09:30'),
   });
 
   expect(state).toMatchInlineSnapshot(`
     Object {
       "balance": 1000,
-      "commissionPerOrder": 1,
       "getMarketTime": [Function],
       "nextOrderId": 1,
       "openOrders": Object {},
       "openPositions": Object {},
-      "orderExecutionDelayMs": 1000,
       "orders": Array [],
       "positions": Array [],
     }
@@ -40,11 +37,9 @@ test('init positions function returns an empty positions ds', () => {
 test('placing a market order and confirm it is pending', () => {
   const state = initBroker({
     initialBalance: 1000,
-    commissionPerOrder: 1,
     getMarketTime: () => createTimeAsDate('09:30'),
   });
-  const orderId = placeOrder(state, {
-    symbol: 'ZZZZ',
+  const orderId = placeOrder(state, 'ZZZZ', {
     shares: 10,
     action: 'BUY',
     type: 'MKT',
@@ -52,77 +47,11 @@ test('placing a market order and confirm it is pending', () => {
 
   expect(orderId).toBe(1);
 
-  expect(state).toMatchInlineSnapshot(`
-    Object {
-      "balance": 1000,
-      "commissionPerOrder": 1,
-      "getMarketTime": [Function],
-      "nextOrderId": 2,
-      "openOrders": Object {
-        "1": Object {
-          "action": "BUY",
-          "id": 1,
-          "openedAt": 2022-01-01T14:30:00.000Z,
-          "shares": 10,
-          "state": "PENDING",
-          "symbol": "ZZZZ",
-          "type": "MKT",
-        },
-      },
-      "openPositions": Object {
-        "ZZZZ": Object {
-          "closeReason": null,
-          "data": Object {},
-          "isClosing": false,
-          "orders": Array [
-            Object {
-              "action": "BUY",
-              "id": 1,
-              "openedAt": 2022-01-01T14:30:00.000Z,
-              "shares": 10,
-              "state": "PENDING",
-              "symbol": "ZZZZ",
-              "type": "MKT",
-            },
-          ],
-          "size": 0,
-          "symbol": "ZZZZ",
-        },
-      },
-      "orderExecutionDelayMs": 1000,
-      "orders": Array [
-        Object {
-          "action": "BUY",
-          "id": 1,
-          "openedAt": 2022-01-01T14:30:00.000Z,
-          "shares": 10,
-          "state": "PENDING",
-          "symbol": "ZZZZ",
-          "type": "MKT",
-        },
-      ],
-      "positions": Array [
-        Object {
-          "closeReason": null,
-          "data": Object {},
-          "isClosing": false,
-          "orders": Array [
-            Object {
-              "action": "BUY",
-              "id": 1,
-              "openedAt": 2022-01-01T14:30:00.000Z,
-              "shares": 10,
-              "state": "PENDING",
-              "symbol": "ZZZZ",
-              "type": "MKT",
-            },
-          ],
-          "size": 0,
-          "symbol": "ZZZZ",
-        },
-      ],
-    }
-  `);
+  expect(state.orders[0]).toEqual(
+    expect.objectContaining({
+      state: 'PENDING',
+    }),
+  );
 });
 
 test('that updating market data without any ticks fails', () => {
@@ -139,24 +68,13 @@ test('placing market buy order and wait for it to be filled at the ask', () => {
 
   const market = createMarket([['09:30:00', 1, 1.2, 1.1, 0]]);
 
-  placeOrder(market.broker, {
+  placeOrder(market.broker, market.symbol, {
     type: 'MKT',
     action: 'BUY',
-    symbol: market.symbol,
     shares,
   });
 
-  expect(market.broker.orders[0]).toMatchInlineSnapshot(`
-    Object {
-      "action": "BUY",
-      "id": 1,
-      "openedAt": 2022-01-01T14:30:00.000Z,
-      "shares": 100,
-      "state": "PENDING",
-      "symbol": "AAAA",
-      "type": "MKT",
-    }
-  `);
+  expect(market.broker.orders[0].state).toEqual('PENDING');
 
   // Make sure we have open orders
   expect(hasOpenOrders(market.broker, market.symbol)).toBe(true);
@@ -169,21 +87,7 @@ test('placing market buy order and wait for it to be filled at the ask', () => {
 
   // And have no more open orders
   expect(hasOpenOrders(market.broker, market.symbol)).toBe(false);
-
-  // We should have been filled at the ask
-  expect(market.broker.orders[0]).toMatchInlineSnapshot(`
-    Object {
-      "action": "BUY",
-      "avgFillPrice": 1.3,
-      "filledAt": 2022-01-01T14:30:02.000Z,
-      "id": 1,
-      "openedAt": 2022-01-01T14:30:00.000Z,
-      "shares": 100,
-      "state": "FILLED",
-      "symbol": "AAAA",
-      "type": "MKT",
-    }
-  `);
+  expect(market.broker.orders[0].avgFillPrice).toEqual(1.3);
 });
 
 test('placing market sell order and wait for it to be filled at the bid', () => {
@@ -191,24 +95,11 @@ test('placing market sell order and wait for it to be filled at the bid', () => 
 
   const market = createMarket([['09:30:00', 1, 1.2, 1.1, 0]]);
 
-  placeOrder(market.broker, {
+  placeOrder(market.broker, market.symbol, {
     type: 'MKT',
     action: 'SELL',
-    symbol: market.symbol,
     shares,
   });
-
-  expect(market.broker.orders[0]).toMatchInlineSnapshot(`
-    Object {
-      "action": "SELL",
-      "id": 1,
-      "openedAt": 2022-01-01T14:30:00.000Z,
-      "shares": 100,
-      "state": "PENDING",
-      "symbol": "AAAA",
-      "type": "MKT",
-    }
-  `);
 
   // Make sure we have open orders
   expect(hasOpenOrders(market.broker, market.symbol)).toBe(true);
@@ -223,19 +114,12 @@ test('placing market sell order and wait for it to be filled at the bid', () => 
   expect(hasOpenOrders(market.broker, market.symbol)).toBe(false);
 
   // We should have been filled at the ask
-  expect(market.broker.orders[0]).toMatchInlineSnapshot(`
-    Object {
-      "action": "SELL",
-      "avgFillPrice": 1.1,
-      "filledAt": 2022-01-01T14:30:02.000Z,
-      "id": 1,
-      "openedAt": 2022-01-01T14:30:00.000Z,
-      "shares": 100,
-      "state": "FILLED",
-      "symbol": "AAAA",
-      "type": "MKT",
-    }
-  `);
+  expect(market.broker.orders[0]).toEqual(
+    expect.objectContaining({
+      state: 'FILLED',
+      avgFillPrice: 1.1,
+    }),
+  );
 });
 
 test(`place market buy order that won't be filled`, () => {
@@ -243,24 +127,17 @@ test(`place market buy order that won't be filled`, () => {
 
   const market = createMarket([['09:30:00', 1, 1.2, 1.1, 0]]);
 
-  placeOrder(market.broker, {
+  placeOrder(market.broker, market.symbol, {
     type: 'MKT',
     action: 'BUY',
-    symbol: market.symbol,
     shares,
   });
 
-  expect(market.broker.orders[0]).toMatchInlineSnapshot(`
-    Object {
-      "action": "BUY",
-      "id": 1,
-      "openedAt": 2022-01-01T14:30:00.000Z,
-      "shares": 100,
-      "state": "PENDING",
-      "symbol": "AAAA",
-      "type": "MKT",
-    }
-  `);
+  expect(market.broker.orders[0]).toEqual(
+    expect.objectContaining({
+      state: 'PENDING',
+    }),
+  );
 
   // Make sure we have open orders
   expect(hasOpenOrders(market.broker, market.symbol)).toBe(true);
@@ -273,17 +150,11 @@ test(`place market buy order that won't be filled`, () => {
   expect(hasOpenOrders(market.broker, market.symbol)).toBe(true);
 
   // We should not been filled
-  expect(market.broker.orders[0]).toMatchInlineSnapshot(`
-    Object {
-      "action": "BUY",
-      "id": 1,
-      "openedAt": 2022-01-01T14:30:00.000Z,
-      "shares": 100,
-      "state": "PENDING",
-      "symbol": "AAAA",
-      "type": "MKT",
-    }
-  `);
+  expect(market.broker.orders[0]).toEqual(
+    expect.objectContaining({
+      state: 'PENDING',
+    }),
+  );
 });
 
 test('place limit BUY order that gets filled', () => {
@@ -291,26 +162,18 @@ test('place limit BUY order that gets filled', () => {
 
   const market = createMarket([['09:30:00', 1.1, 1.2, 1.1, 0]]);
 
-  placeOrder(market.broker, {
+  placeOrder(market.broker, market.symbol, {
     type: 'LMT',
     action: 'BUY',
-    symbol: market.symbol,
     shares,
     price: 1.3,
   });
 
-  expect(market.broker.orders[0]).toMatchInlineSnapshot(`
-    Object {
-      "action": "BUY",
-      "id": 1,
-      "openedAt": 2022-01-01T14:30:00.000Z,
-      "price": 1.3,
-      "shares": 100,
-      "state": "PENDING",
-      "symbol": "AAAA",
-      "type": "LMT",
-    }
-  `);
+  expect(market.broker.orders[0]).toEqual(
+    expect.objectContaining({
+      state: 'PENDING',
+    }),
+  );
 
   // Make sure we have open orders
   expect(hasOpenOrders(market.broker, market.symbol)).toBe(true);
@@ -329,20 +192,12 @@ test('place limit BUY order that gets filled', () => {
   expect(hasOpenOrders(market.broker, market.symbol)).toBe(false);
 
   // We should have been filled at the ask
-  expect(market.broker.orders[0]).toMatchInlineSnapshot(`
-    Object {
-      "action": "BUY",
-      "avgFillPrice": 1.3,
-      "filledAt": 2022-01-01T14:30:01.000Z,
-      "id": 1,
-      "openedAt": 2022-01-01T14:30:00.000Z,
-      "price": 1.3,
-      "shares": 100,
-      "state": "FILLED",
-      "symbol": "AAAA",
-      "type": "LMT",
-    }
-  `);
+  expect(market.broker.orders[0]).toEqual(
+    expect.objectContaining({
+      state: 'FILLED',
+      avgFillPrice: 1.3,
+    }),
+  );
 });
 
 test('place limit SELL order that gets filled', () => {
@@ -350,10 +205,9 @@ test('place limit SELL order that gets filled', () => {
 
   const market = createMarket([['09:30:00', 1.1, 1.2, 1.1, 0]]);
 
-  placeOrder(market.broker, {
+  placeOrder(market.broker, market.symbol, {
     type: 'LMT',
     action: 'SELL',
-    symbol: market.symbol,
     shares,
     price: 1.1,
   });
@@ -375,46 +229,30 @@ test('place limit SELL order that gets filled', () => {
   expect(hasOpenOrders(market.broker, market.symbol)).toBe(false);
 
   // We should have been filled at the ask
-  expect(market.broker.orders[0]).toMatchInlineSnapshot(`
-    Object {
-      "action": "SELL",
-      "avgFillPrice": 1.1,
-      "filledAt": 2022-01-01T14:30:01.000Z,
-      "id": 1,
-      "openedAt": 2022-01-01T14:30:00.000Z,
-      "price": 1.1,
-      "shares": 100,
-      "state": "FILLED",
-      "symbol": "AAAA",
-      "type": "LMT",
-    }
-  `);
+  expect(market.broker.orders[0]).toEqual(
+    expect.objectContaining({
+      state: 'FILLED',
+      avgFillPrice: 1.1,
+    }),
+  );
 });
 
 test('place limit order that does not get filled', () => {
   const shares = 100;
   const market = createMarket([['09:30:00', 1.1, 1.2, 1.1, 0]]);
 
-  placeOrder(market.broker, {
+  placeOrder(market.broker, market.symbol, {
     type: 'LMT',
     action: 'BUY',
-    symbol: market.symbol,
     shares,
     price: 1.3,
   });
 
-  expect(market.broker.orders[0]).toMatchInlineSnapshot(`
-    Object {
-      "action": "BUY",
-      "id": 1,
-      "openedAt": 2022-01-01T14:30:00.000Z,
-      "price": 1.3,
-      "shares": 100,
-      "state": "PENDING",
-      "symbol": "AAAA",
-      "type": "LMT",
-    }
-  `);
+  expect(market.broker.orders[0]).toEqual(
+    expect.objectContaining({
+      state: 'PENDING',
+    }),
+  );
 
   // Make sure we have open orders
   expect(hasOpenOrders(market.broker, market.symbol)).toBe(true);
@@ -428,33 +266,24 @@ test('place limit order that does not get filled', () => {
   // Ask is > price so it won't be filled
   updateMarketDataAndBroker(market, [['09:30:01', 1.1, 1.4, 1.2, 0]]);
 
-  // The order should have been filled
+  // The order should not have been filled
   expect(getPositionSize(market.broker, market.symbol)).toEqual(0);
   expect(hasOpenOrders(market.broker, market.symbol)).toBe(true);
 
-  // We should have been filled at the ask
-  expect(market.broker.orders[0]).toMatchInlineSnapshot(`
-    Object {
-      "action": "BUY",
-      "id": 1,
-      "openedAt": 2022-01-01T14:30:00.000Z,
-      "price": 1.3,
-      "shares": 100,
-      "state": "PENDING",
-      "symbol": "AAAA",
-      "type": "LMT",
-    }
-  `);
+  expect(market.broker.orders[0]).toEqual(
+    expect.objectContaining({
+      state: 'PENDING',
+    }),
+  );
 });
 
 test('fill a trailing stop buy order', () => {
   const shares = 100;
   const market = createMarket([['09:30:00', 1, 2, 1, 0]]);
 
-  placeOrder(market.broker, {
+  placeOrder(market.broker, market.symbol, {
     type: 'TRAIL',
     action: 'BUY',
-    symbol: market.symbol,
     shares,
     price: 0.1,
   });
@@ -495,33 +324,22 @@ test('fill a trailing stop buy order', () => {
   expect(hasOpenOrders(market.broker, market.symbol)).toBe(false);
   expect(getPositionSize(market.broker, market.symbol)).toEqual(shares);
 
-  expect(market.broker.orders).toMatchInlineSnapshot(`
-    Array [
-      Object {
-        "action": "BUY",
-        "avgFillPrice": 0.65,
-        "filledAt": 2022-01-01T14:30:15.000Z,
-        "id": 1,
-        "openedAt": 2022-01-01T14:30:00.000Z,
-        "price": 0.1,
-        "shares": 100,
-        "state": "FILLED",
-        "symbol": "AAAA",
-        "triggerPrice": 0.6,
-        "type": "TRAIL",
-      },
-    ]
-  `);
+  expect(market.broker.orders[0]).toEqual(
+    expect.objectContaining({
+      state: 'FILLED',
+      avgFillPrice: 0.65,
+    }),
+  );
 });
 
 test('fill a trailing stop sell order', () => {
   const shares = 100;
   const market = createMarket([['09:30:00', 1, 2, 1, 0]]);
 
-  placeOrder(market.broker, {
+  placeOrder(market.broker, market.symbol, {
     type: 'TRAIL',
     action: 'SELL',
-    symbol: market.symbol,
+
     shares,
     price: 0.1,
   });
@@ -561,23 +379,12 @@ test('fill a trailing stop sell order', () => {
   expect(hasOpenOrders(market.broker, market.symbol)).toBe(false);
   expect(getPositionSize(market.broker, market.symbol)).toEqual(shares * -1);
 
-  expect(market.broker.orders).toMatchInlineSnapshot(`
-    Array [
-      Object {
-        "action": "SELL",
-        "avgFillPrice": 1.3499999999999999,
-        "filledAt": 2022-01-01T14:30:15.000Z,
-        "id": 1,
-        "openedAt": 2022-01-01T14:30:00.000Z,
-        "price": 0.1,
-        "shares": 100,
-        "state": "FILLED",
-        "symbol": "AAAA",
-        "triggerPrice": 1.4,
-        "type": "TRAIL",
-      },
-    ]
-  `);
+  expect(market.broker.orders[0]).toEqual(
+    expect.objectContaining({
+      state: 'FILLED',
+      avgFillPrice: 1.3499999999999999,
+    }),
+  );
 });
 
 test('close all open positions with closePosition', () => {
@@ -585,10 +392,10 @@ test('close all open positions with closePosition', () => {
 
   const shares = 100;
 
-  placeOrder(market.broker, {
+  placeOrder(market.broker, market.symbol, {
     type: 'MKT',
     action: 'BUY',
-    symbol: market.symbol,
+
     shares,
   });
 
@@ -599,10 +406,10 @@ test('close all open positions with closePosition', () => {
   expect(getPositionSize(market.broker, market.symbol)).toEqual(shares);
 
   // Place a second order
-  placeOrder(market.broker, {
+  placeOrder(market.broker, market.symbol, {
     type: 'MKT',
     action: 'BUY',
-    symbol: market.symbol,
+
     shares,
   });
 
@@ -629,44 +436,6 @@ test('close all open positions with closePosition', () => {
 
   expect(hasOpenOrders(market.broker, market.symbol)).toBe(false);
   expect(getPositionSize(market.broker, market.symbol)).toEqual(0);
-
-  expect(market.broker.orders).toMatchInlineSnapshot(`
-    Array [
-      Object {
-        "action": "BUY",
-        "avgFillPrice": 1.1500000000000001,
-        "filledAt": 2022-01-01T14:30:01.000Z,
-        "id": 1,
-        "openedAt": 2022-01-01T14:30:00.000Z,
-        "shares": 100,
-        "state": "FILLED",
-        "symbol": "AAAA",
-        "type": "MKT",
-      },
-      Object {
-        "action": "BUY",
-        "avgFillPrice": 1.25,
-        "filledAt": 2022-01-01T14:30:02.000Z,
-        "id": 2,
-        "openedAt": 2022-01-01T14:30:01.000Z,
-        "shares": 100,
-        "state": "FILLED",
-        "symbol": "AAAA",
-        "type": "MKT",
-      },
-      Object {
-        "action": "SELL",
-        "avgFillPrice": 1.45,
-        "filledAt": 2022-01-01T14:30:05.000Z,
-        "id": 3,
-        "openedAt": 2022-01-01T14:30:04.000Z,
-        "shares": 200,
-        "state": "FILLED",
-        "symbol": "AAAA",
-        "type": "MKT",
-      },
-    ]
-  `);
 });
 
 test('close all open positions with closePosition (sell)', () => {
@@ -674,10 +443,10 @@ test('close all open positions with closePosition (sell)', () => {
 
   const shares = 100;
 
-  placeOrder(market.broker, {
+  placeOrder(market.broker, market.symbol, {
     type: 'MKT',
     action: 'SELL',
-    symbol: market.symbol,
+
     shares,
   });
 
@@ -688,10 +457,9 @@ test('close all open positions with closePosition (sell)', () => {
   expect(getPositionSize(market.broker, market.symbol)).toEqual(shares * -1);
 
   // Place a second order
-  placeOrder(market.broker, {
+  placeOrder(market.broker, market.symbol, {
     type: 'MKT',
     action: 'SELL',
-    symbol: market.symbol,
     shares,
   });
 
@@ -725,11 +493,10 @@ test('cancelling an open order', () => {
 
   const shares = 100;
 
-  const orderId = placeOrder(market.broker, {
+  const orderId = placeOrder(market.broker, market.symbol, {
     type: 'TRAIL',
     shares,
     action: 'BUY',
-    symbol: market.symbol,
     price: 0.1,
   });
 
@@ -739,21 +506,11 @@ test('cancelling an open order', () => {
   closeOrder(market.broker, orderId);
   expect(hasOpenOrders(market.broker, market.symbol)).toBe(false);
 
-  expect(market.broker.orders).toMatchInlineSnapshot(`
-    Array [
-      Object {
-        "action": "BUY",
-        "id": 1,
-        "openedAt": 2022-01-01T14:30:00.000Z,
-        "price": 0.1,
-        "shares": 100,
-        "state": "CANCELLED",
-        "symbol": "AAAA",
-        "triggerPrice": 1.1,
-        "type": "TRAIL",
-      },
-    ]
-  `);
+  expect(market.broker.orders[0]).toEqual(
+    expect.objectContaining({
+      state: 'CANCELLED',
+    }),
+  );
 });
 
 test('attempting to cancel an invalid order', () => {
@@ -761,11 +518,10 @@ test('attempting to cancel an invalid order', () => {
 
   const shares = 100;
 
-  placeOrder(market.broker, {
+  placeOrder(market.broker, market.symbol, {
     type: 'TRAIL',
     shares,
     action: 'BUY',
-    symbol: market.symbol,
     price: 0.1,
   });
 
@@ -776,21 +532,11 @@ test('attempting to cancel an invalid order', () => {
   expect(hasOpenOrders(market.broker, market.symbol)).toBe(true);
 
   // The original order is still pending
-  expect(market.broker.orders).toMatchInlineSnapshot(`
-    Array [
-      Object {
-        "action": "BUY",
-        "id": 1,
-        "openedAt": 2022-01-01T14:30:00.000Z,
-        "price": 0.1,
-        "shares": 100,
-        "state": "PENDING",
-        "symbol": "AAAA",
-        "triggerPrice": 1.1,
-        "type": "TRAIL",
-      },
-    ]
-  `);
+  expect(market.broker.orders[0]).toEqual(
+    expect.objectContaining({
+      state: 'PENDING',
+    }),
+  );
 });
 
 test('cancelling an open order', () => {
@@ -798,11 +544,10 @@ test('cancelling an open order', () => {
 
   const shares = 100;
 
-  placeOrder(market.broker, {
+  placeOrder(market.broker, market.symbol, {
     type: 'TRAIL',
     shares,
     action: 'BUY',
-    symbol: market.symbol,
     price: 0.1,
   });
 
@@ -812,29 +557,18 @@ test('cancelling an open order', () => {
   closeOpenOrders(market.broker);
   expect(hasOpenOrders(market.broker, market.symbol)).toBe(false);
 
-  expect(market.broker.orders).toMatchInlineSnapshot(`
-    Array [
-      Object {
-        "action": "BUY",
-        "id": 1,
-        "openedAt": 2022-01-01T14:30:00.000Z,
-        "price": 0.1,
-        "shares": 100,
-        "state": "CANCELLED",
-        "symbol": "AAAA",
-        "triggerPrice": 1.1,
-        "type": "TRAIL",
-      },
-    ]
-  `);
+  expect(market.broker.orders[0]).toEqual(
+    expect.objectContaining({
+      state: 'CANCELLED',
+    }),
+  );
 });
 
 test('fill a child order once a parent order has been filled', () => {
   const market = createMarket([['09:30:00', 1, 1, 1, 0]]);
   const shares = 100;
 
-  const orderId1 = placeOrder(market.broker, {
-    symbol: market.symbol,
+  const orderId1 = placeOrder(market.broker, market.symbol, {
     type: 'LMT',
     action: 'BUY',
     price: 1.1,
@@ -842,8 +576,7 @@ test('fill a child order once a parent order has been filled', () => {
   });
 
   // Place the trailing stop
-  placeOrder(market.broker, {
-    symbol: market.symbol,
+  placeOrder(market.broker, market.symbol, {
     type: 'TRAIL',
     action: 'SELL',
     price: 0.1,
@@ -851,32 +584,18 @@ test('fill a child order once a parent order has been filled', () => {
     parentId: orderId1,
   });
 
-  // We should have a PENDING and ACCEPTED order
-  expect(market.broker.orders).toMatchInlineSnapshot(`
-    Array [
-      Object {
-        "action": "BUY",
-        "id": 1,
-        "openedAt": 2022-01-01T14:30:00.000Z,
-        "price": 1.1,
-        "shares": 100,
-        "state": "PENDING",
-        "symbol": "AAAA",
-        "type": "LMT",
-      },
-      Object {
-        "action": "SELL",
-        "id": 2,
-        "openedAt": 2022-01-01T14:30:00.000Z,
-        "parentId": 1,
-        "price": 0.1,
-        "shares": 100,
-        "state": "ACCEPTED",
-        "symbol": "AAAA",
-        "type": "TRAIL",
-      },
-    ]
-  `);
+  expect(market.broker.orders[0]).toEqual(
+    expect.objectContaining({
+      state: 'PENDING',
+    }),
+  );
+
+  expect(market.broker.orders[1]).toEqual(
+    expect.objectContaining({
+      state: 'ACCEPTED',
+    }),
+  );
+
   expect(hasOpenOrders(market.broker, market.symbol)).toBe(true);
 
   const [order1, order2] = market.broker.orders;
@@ -906,45 +625,13 @@ test('fill a child order once a parent order has been filled', () => {
 
   expect(hasOpenOrders(market.broker, market.symbol)).toBe(false);
   expect(getPositionSize(market.broker, market.symbol)).toEqual(0);
-
-  expect(market.broker.orders).toMatchInlineSnapshot(`
-    Array [
-      Object {
-        "action": "BUY",
-        "avgFillPrice": 1.05,
-        "filledAt": 2022-01-01T14:30:02.000Z,
-        "id": 1,
-        "openedAt": 2022-01-01T14:30:00.000Z,
-        "price": 1.1,
-        "shares": 100,
-        "state": "FILLED",
-        "symbol": "AAAA",
-        "type": "LMT",
-      },
-      Object {
-        "action": "SELL",
-        "avgFillPrice": 1.15,
-        "filledAt": 2022-01-01T14:30:08.000Z,
-        "id": 2,
-        "openedAt": 2022-01-01T14:30:00.000Z,
-        "parentId": 1,
-        "price": 0.1,
-        "shares": 100,
-        "state": "FILLED",
-        "symbol": "AAAA",
-        "triggerPrice": 1.2999999999999998,
-        "type": "TRAIL",
-      },
-    ]
-  `);
 });
 
 test(`cancel a child order with it's parent order`, () => {
   const market = createMarket([['09:30:00', 1, 1, 1, 0]]);
   const shares = 100;
 
-  const orderId1 = placeOrder(market.broker, {
-    symbol: market.symbol,
+  const orderId1 = placeOrder(market.broker, market.symbol, {
     type: 'LMT',
     action: 'BUY',
     price: 1.1,
@@ -952,8 +639,7 @@ test(`cancel a child order with it's parent order`, () => {
   });
 
   // Place the trailing stop
-  placeOrder(market.broker, {
-    symbol: market.symbol,
+  placeOrder(market.broker, market.symbol, {
     type: 'TRAIL',
     action: 'SELL',
     price: 0.1,
@@ -972,10 +658,9 @@ test('creating a position then closing it', () => {
   const market = createMarket([['09:30:00', 1, 2, 1, 0]]);
   const shares = 100;
 
-  placeOrder(market.broker, {
+  placeOrder(market.broker, market.symbol, {
     type: 'MKT',
     shares,
-    symbol: market.symbol,
     action: 'BUY',
   });
 
@@ -983,33 +668,9 @@ test('creating a position then closing it', () => {
 
   const [position] = market.broker.positions;
 
-  expect(position).toMatchInlineSnapshot(`
-    Object {
-      "closeReason": null,
-      "data": Object {},
-      "isClosing": false,
-      "orders": Array [
-        Object {
-          "action": "BUY",
-          "avgFillPrice": 0.9500000000000001,
-          "filledAt": 2022-01-01T14:30:01.000Z,
-          "id": 1,
-          "openedAt": 2022-01-01T14:30:00.000Z,
-          "shares": 100,
-          "state": "FILLED",
-          "symbol": "AAAA",
-          "type": "MKT",
-        },
-      ],
-      "size": 100,
-      "symbol": "AAAA",
-    }
-  `);
-
-  placeOrder(market.broker, {
+  placeOrder(market.broker, market.symbol, {
     type: 'MKT',
     shares,
-    symbol: market.symbol,
     action: 'SELL',
   });
 
@@ -1023,10 +684,9 @@ test('closePosition should close pending orders', () => {
   const market = createMarket([['09:30:00', 1.1, 1.2, 1.1, 0]]);
   const shares = 100;
 
-  const orderId = placeOrder(market.broker, {
+  const orderId = placeOrder(market.broker, market.symbol, {
     type: 'MKT',
     action: 'BUY',
-    symbol: market.symbol,
     shares,
   });
 
@@ -1038,53 +698,15 @@ test('closePosition should close pending orders', () => {
 
   // Make sure it closed the position
   expect(market.broker.openPositions).toMatchInlineSnapshot(`Object {}`);
-
-  // Check the position
-  expect(market.broker.positions).toMatchInlineSnapshot(`
-    Array [
-      Object {
-        "closeReason": null,
-        "data": Object {},
-        "isClosing": true,
-        "orders": Array [
-          Object {
-            "action": "BUY",
-            "id": 1,
-            "openedAt": 2022-01-01T14:30:00.000Z,
-            "shares": 100,
-            "state": "CANCELLED",
-            "symbol": "AAAA",
-            "type": "MKT",
-          },
-        ],
-        "size": 0,
-        "symbol": "AAAA",
-      },
-    ]
-  `);
-
-  // Make sure it closed the orders
-  expect(market.broker.orders[0]).toMatchInlineSnapshot(`
-    Object {
-      "action": "BUY",
-      "id": 1,
-      "openedAt": 2022-01-01T14:30:00.000Z,
-      "shares": 100,
-      "state": "CANCELLED",
-      "symbol": "AAAA",
-      "type": "MKT",
-    }
-  `);
 });
 
 test('closePosition should close pending orders', () => {
   const market = createMarket([['09:30:00', 1.1, 1.2, 1.1, 0]]);
   const shares = 100;
 
-  const orderId = placeOrder(market.broker, {
+  const orderId = placeOrder(market.broker, market.symbol, {
     type: 'MKT',
     action: 'BUY',
-    symbol: market.symbol,
     shares,
   });
 
@@ -1110,11 +732,10 @@ test(`placing a BUY stop order`, () => {
   const market = createMarket([['09:30:00', 0.9, 1.1, 1, 0]]);
   const shares = 100;
 
-  placeOrder(market.broker, {
+  placeOrder(market.broker, market.symbol, {
     type: 'STP',
     action: 'BUY',
     shares,
-    symbol: market.symbol,
     price: 1.3,
   });
 
@@ -1138,11 +759,10 @@ test(`placing a SELL stop order`, () => {
   const market = createMarket([['09:30:00', 0.9, 1.1, 1, 0]]);
   const shares = 100;
 
-  placeOrder(market.broker, {
+  placeOrder(market.broker, market.symbol, {
     type: 'STP',
     action: 'SELL',
     shares,
-    symbol: market.symbol,
     price: 0.7,
   });
 

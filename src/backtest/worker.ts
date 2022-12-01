@@ -25,7 +25,7 @@ import {
 } from '../utils/market';
 
 import {
-  Tick,
+  StoredTick,
   LoggerCallback,
   Tracker,
   OrderSpecification,
@@ -42,6 +42,7 @@ import {
   handleBrokerTick,
   hasOpenOrders,
   getPositionSize,
+  closePosition,
 } from './broker';
 
 import Env from '../utils/env';
@@ -62,20 +63,13 @@ export class BacktestWorkerError extends Error {
   }
 }
 
-function marketSortFn(row1: Tick, row2: Tick) {
+function marketSortFn(row1: StoredTick, row2: StoredTick) {
   // Sort on both index and time so we don't loose th original order
   // if we have multiple values per second
   const val1 = row1.time * 1000000 + row1.index;
   const val2 = row2.time * 1000000 + row1.index;
 
   return val1 - val2;
-}
-
-async function loadJsOrTsStrategy(strategy: string) {
-  return (
-    (await loadStrategy(Env.getUserPath(`./strategies/${strategy}.js`))) ||
-    (await loadStrategy(Env.getUserPath(`./strategies/${strategy}.ts`)))
-  );
 }
 
 export async function runBacktest({
@@ -101,7 +95,9 @@ export async function runBacktest({
   });
 
   // Make sure the module exists
-  const strategy = await loadJsOrTsStrategy(profile.strategy.name);
+  const strategy = await loadStrategy(
+    Env.getUserPath(`./test-strategies/${profile.strategy.name}.ts`),
+  );
 
   if (!strategy) {
     throw new BacktestWorkerError('strategy-not-found');
@@ -133,7 +129,6 @@ export async function runBacktest({
       return currentMarketTime.current;
     },
     initialBalance: profile.initialBalance,
-    commissionPerOrder: profile.commissionPerOrder,
   });
 
   // Load trackers for all symbols using data from the db
@@ -245,8 +240,8 @@ export async function runBacktest({
       );
 
       // Merge all the data
-      const marketData = mergeSortedArrays<Tick>(
-        symbolData as Array<Tick[]>,
+      const marketData = mergeSortedArrays<StoredTick>(
+        symbolData as Array<StoredTick[]>,
         marketSortFn,
       );
 
@@ -277,12 +272,14 @@ export async function runBacktest({
             trackers,
             broker: {
               state: brokerState,
-              placeOrder: (spec: OrderSpecification) =>
-                placeOrder(brokerState, spec),
+              placeOrder: (symbol: string, spec: OrderSpecification) =>
+                placeOrder(brokerState, symbol, spec),
               hasOpenOrders: (symbol: string) =>
                 hasOpenOrders(brokerState, symbol),
               getPositionSize: (symbol: string) =>
                 getPositionSize(brokerState, symbol),
+              closePosition: (symbol: string, reason: string | null) =>
+                closePosition(brokerState, symbol, reason),
             },
           });
         }
@@ -296,7 +293,10 @@ export async function runBacktest({
         });
 
         // Update broker, open orders, etc
-        handleBrokerTick(brokerState, tick.symbol, tracker);
+        handleBrokerTick(brokerState, tick.symbol, tracker, {
+          commissionPerOrder: profile.commissionPerOrder,
+          orderExecutionDelayMs: 1000,
+        });
       });
 
       // Increment the market time 60 seconds (next minute bar)

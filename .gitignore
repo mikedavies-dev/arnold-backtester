@@ -15,8 +15,8 @@ node_modules/
 
 # User data
 user/
-!user/strategies/sample.ts
-!user/profiles/sample.json
 
 # Parcel output folder
 dist/
+
+src/bin/test*

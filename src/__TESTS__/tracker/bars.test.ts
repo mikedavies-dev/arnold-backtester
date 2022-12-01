@@ -748,4 +748,59 @@ describe('test updating bar data', () => {
       }
     `);
   });
+
+  test('updating the same bar multiple times should not over count the volume', () => {
+    const tracker = initTracker();
+
+    const updateBar = ({volume}: {volume: number}) => {
+      const marketOpen = getMarketOpen(getTestDate());
+      const marketClose = getMarketClose(getTestDate());
+
+      // Update a bar
+      handleTrackerMinuteBar({
+        data: tracker,
+        bar: {
+          open: 1,
+          high: 1,
+          low: 1,
+          close: 1,
+          volume: volume,
+          time: formatBarTime(Periods.m1, createTimeAsUnix('09:30')),
+        },
+        marketTime: createTimeAsUnix('09:30'),
+        marketOpen,
+        marketClose,
+      });
+    };
+
+    // Update the bar data
+    updateBar({volume: 1});
+    expect(tracker.bars.m1[0].volume).toEqual(1);
+    expect(tracker.bars.m5[0].volume).toEqual(1);
+    expect(tracker.bars.daily[0].volume).toEqual(1);
+
+    // Update again, volume should be the same
+    updateBar({volume: 1});
+    expect(tracker.bars.m1[0].volume).toEqual(1);
+    expect(tracker.bars.m5[0].volume).toEqual(1);
+    expect(tracker.bars.daily[0].volume).toEqual(1);
+
+    // Update volume to 2
+    updateBar({volume: 2});
+    expect(tracker.bars.m1[0].volume).toEqual(2);
+    expect(tracker.bars.m5[0].volume).toEqual(2);
+    expect(tracker.bars.daily[0].volume).toEqual(2);
+
+    // Update volume to 10
+    updateBar({volume: 10});
+    expect(tracker.bars.m1[0].volume).toEqual(10);
+    expect(tracker.bars.m5[0].volume).toEqual(10);
+    expect(tracker.bars.daily[0].volume).toEqual(10);
+
+    // Back to 5 should not reduce the volume
+    updateBar({volume: 5});
+    expect(tracker.bars.m1[0].volume).toEqual(10);
+    expect(tracker.bars.m5[0].volume).toEqual(10);
+    expect(tracker.bars.daily[0].volume).toEqual(10);
+  });
 });

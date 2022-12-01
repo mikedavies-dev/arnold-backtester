@@ -1,4 +1,4 @@
-import {Tick, Tracker, BarPeriod, Bar, Periods} from '../core';
+import {Tracker, BarPeriod, Bar, Periods, TickType} from '../core';
 
 import {updateBarFromTick, updateBarFromMinuteBar, formatBarTime} from './bars';
 
@@ -31,7 +31,12 @@ export function handleTrackerTick({
   marketClose,
 }: {
   data: Tracker;
-  tick: Tick;
+  tick: {
+    time: number;
+    type: TickType;
+    value: number;
+    size: number;
+  };
   marketOpen: number;
   marketClose: number;
 }): void {
@@ -91,6 +96,27 @@ export function handleTrackerTick({
         }),
       );
       break;
+
+    case 'VOLUME_DELTA':
+      periods.forEach(period =>
+        updateBarFromTick({
+          bars: data.bars,
+          price: data.last,
+          volume: value,
+          period,
+          time,
+        }),
+      );
+      data.volume += value;
+      break;
+
+    case 'HIGH':
+      data.high = value;
+      break;
+
+    case 'LOW':
+      data.low = value;
+      break;
   }
 }
 
@@ -107,6 +133,20 @@ export function handleTrackerMinuteBar({
   marketClose: number;
   marketTime: number;
 }) {
+  // If we have already created a minute bar for this minute we should update the volume
+  // to the diff of the the new bar - the last bar otherwise we'll add extra volume
+
+  const {m1} = data.bars;
+
+  const time = formatBarTime(Periods.m1, marketTime);
+
+  if (m1.length) {
+    const currentBar = m1[m1.length - 1];
+    if (currentBar.time === time) {
+      bar.volume = Math.max(0, bar.volume - currentBar.volume);
+    }
+  }
+
   const isMarketOpen = marketTime >= marketOpen && marketTime <= marketClose;
   const isPreMarket = marketTime < marketOpen;
 
@@ -137,6 +177,8 @@ export function handleTrackerMinuteBar({
       data.low = bar.low;
     }
   }
+
+  data.volume += bar.volume;
 
   periods.forEach(period =>
     updateBarFromMinuteBar({

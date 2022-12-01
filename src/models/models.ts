@@ -4,51 +4,63 @@ import {
   DbTimeSeriesBar,
   DbTimeSeriesDataAvailability,
   DbInstrument,
+  DbLivePosition,
 } from '../core';
 
-const Backtest = new Schema<DbBacktest>({
-  createdAt: Date,
-  positions: [
-    {
-      symbol: String,
-      orders: [
-        {
-          parentId: Number,
-          // https://stackoverflow.com/a/15100043/1167223
-          type: {type: String},
-          symbol: String,
-          action: String,
-          shares: Number,
-          id: Number,
-          openedAt: Date,
-          state: String,
-          filledAt: Date,
-          avgFillPrice: Number,
-        },
-      ],
-      size: Number,
-      data: {},
-      closeReason: String,
-      isClosing: Boolean,
-    },
-  ],
-  profile: {
-    strategy: {
-      name: String,
-      source: String,
-    },
-    dates: {
-      from: Date,
-      to: Date,
-      dates: [Date],
-    },
-    symbols: [String],
-    extraSymbols: [String],
-    threads: Number,
-    initialBalance: Number,
-    commissionPerOrder: Number,
+const Order = {
+  parentId: Number,
+  // https://stackoverflow.com/a/15100043/1167223
+  type: {type: String},
+  symbol: String,
+  action: String,
+  shares: Number,
+  remaining: Number,
+  id: Number,
+  openedAt: Date,
+  state: String,
+  filledAt: Date,
+  avgFillPrice: Number,
+  executions: {
+    type: Schema.Types.Mixed,
+    default: {},
   },
-});
+  data: {},
+};
+
+const Backtest = new Schema<DbBacktest>(
+  {
+    createdAt: Date,
+    positions: [
+      {
+        symbol: String,
+        orders: [Order],
+        size: Number,
+        data: {},
+        closeReason: String,
+        isClosing: Boolean,
+        openedAt: Date,
+        closedAt: Date,
+      },
+    ],
+    profile: {
+      strategy: {
+        name: String,
+        source: String,
+      },
+      dates: {
+        from: Date,
+        to: Date,
+        dates: [Date],
+      },
+      symbols: [String],
+      extraSymbols: [String],
+      threads: Number,
+      initialBalance: Number,
+      commissionPerOrder: Number,
+    },
+  },
+  {minimize: false},
+);
 
 const TimeSeriesBar = new Schema<DbTimeSeriesBar>({
   symbol: String,
@@ -96,6 +108,33 @@ Instrument.index(
   },
 );
 
+const LivePosition = new Schema<DbLivePosition>(
+  {
+    symbol: String,
+    profileId: String,
+    externalId: String,
+    data: {},
+    openedAt: Date,
+    closedAt: Date,
+    closeReason: {
+      type: String,
+      default: null,
+    },
+    isClosing: {
+      type: Boolean,
+      default: false,
+    },
+    orders: [Order],
+  },
+  {minimize: false},
+);
+
+LivePosition.index({
+  profileId: 1,
+  externalId: 1,
+  'orders.id': 1,
+});
+
 export async function registerMongooseModels() {
   await model('Backtest', Backtest, 'backtests');
   await model('TimeSeriesBar', TimeSeriesBar, 'timeseries_bars');
@@ -105,4 +144,5 @@ export async function registerMongooseModels() {
     'timeseries_data_availability',
   );
   await model('Instrument', Instrument, 'instruments');
+  await model('LivePosition', LivePosition, 'live_positions');
 }

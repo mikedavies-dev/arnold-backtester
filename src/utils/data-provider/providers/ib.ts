@@ -1,4 +1,4 @@
-import {IBApiNext, ConnectionState, Contract, BarSizeSetting} from '@stoqey/ib';
+import {Contract, BarSizeSetting, Bar as IbBar} from '@stoqey/ib';
 import series from 'promise-series2';
 import {
   format,
@@ -8,10 +8,10 @@ import {
   addSeconds,
   addMinutes,
 } from 'date-fns';
-import {lastValueFrom} from 'rxjs';
 import numeral from 'numeral';
 
 import {acquireLock} from '../../lock';
+import {init as initIb, IbWrapper} from '../wrappers/ib-wrapper';
 
 const barSizeLookup: Record<TimeSeriesPeriod, BarSizeSetting> = {
   m1: BarSizeSetting.MINUTES_ONE,
@@ -32,11 +32,13 @@ import {
   DataProvider,
   Instrument,
   Bar,
-  Tick,
+  StoredTick,
   DownloadTickDataArgs,
   notEmpty,
   TickFileType,
   LoggerCallback,
+  SubscribeMarketUpdateArgs,
+  isTickType,
 } from '../../../core';
 
 import Env from '../../../utils/env';
@@ -49,10 +51,10 @@ export function formatIbRequestDate(date: Date) {
 }
 
 async function downloadBidAskTickData(
-  api: IBApiNext,
+  api: IbWrapper,
   instrument: Instrument,
   lastDataDate: Date,
-): Promise<Tick[]> {
+): Promise<StoredTick[]> {
   const contract: Contract = instrument.data as Contract;
 
   /*
@@ -66,19 +68,17 @@ async function downloadBidAskTickData(
   }
   */
 
-  const ibTicks = await lastValueFrom(
-    api.getHistoricalTicksBidAsk(
-      contract,
-      formatIbRequestDate(lastDataDate),
-      '',
-      1000,
-      1,
-      false,
-    ),
+  const ibTicks = await api.getHistoricalTicksBidAsk(
+    contract,
+    formatIbRequestDate(lastDataDate),
+    '',
+    1000,
+    1,
+    false,
   );
 
-  const ticks: Tick[] = ibTicks
-    .map<Tick[]>(tick => {
+  const ticks: StoredTick[] = ibTicks
+    .map<StoredTick[]>(tick => {
       if (
         !tick.time ||
         !tick.priceAsk ||
@@ -118,10 +118,10 @@ async function downloadBidAskTickData(
 }
 
 async function downloadTradeTickData(
-  api: IBApiNext,
+  api: IbWrapper,
   instrument: Instrument,
   lastDataDate: Date,
-): Promise<Tick[]> {
+): Promise<StoredTick[]> {
   const contract: Contract = instrument.data as Contract;
 
   /*
@@ -135,18 +135,16 @@ async function downloadTradeTickData(
   }
   */
 
-  const ibTicks = await lastValueFrom(
-    api.getHistoricalTicksLast(
-      contract,
-      formatIbRequestDate(lastDataDate),
-      '',
-      1000,
-      1,
-    ),
+  const ibTicks = await api.getHistoricalTicksLast(
+    contract,
+    formatIbRequestDate(lastDataDate),
+    '',
+    1000,
+    1,
   );
 
-  const ticks: Tick[] = ibTicks
-    .map<Tick | null>(tick => {
+  const ticks: StoredTick[] = ibTicks
+    .map<StoredTick | null>(tick => {
       if (!tick.time || !tick.price || !tick.size) {
         return null;
       }
@@ -172,67 +170,46 @@ async function downloadTradeTickData(
 type DownloadTickDataFn = typeof downloadBidAskTickData;
 
 export function create({log}: {log?: LoggerCallback} = {}): DataProvider {
-  const api = new IBApiNext({
-    reconnectInterval: 10000,
+  const api = initIb({
     host: Env.IB_HOST,
     port: Number(Env.IB_PORT),
   });
 
-  api.errorSubject.subscribe(err => {
-    log?.(`Error: ${err.error.message} (${err.code})`);
-  });
-
   async function init({workerIndex}: {workerIndex?: number} = {}) {
-    return new Promise<void>((resolve, reject) => {
-      // Set a timeout
-      const timeoutTimer = setTimeout(async () => {
-        log?.('Disconnecting because of timeout');
-        await api.disconnect();
-        reject(new Error('Timeout connecting to IB'));
-      }, 10000);
+    /*
+    Related to lock.ts, we're creating a new IB connection for each worker which isn't ideal
+    ideally we should have one connection on the main worker and send download messages there
+    so we don't risk:
 
-      api.connectionState.subscribe(async state => {
-        // log?.('State Changed', state, api.isConnected);
-        if (state === ConnectionState.Connected) {
-          // Set the logging level
-          // api.logLevel = LogLevel.INFO;
-          log?.('Connected to IB');
-          clearTimeout(timeoutTimer);
+    1. Hitting rate limits in IB
+    2. Having multiple connections to IB
+    */
 
-          // Wait a while to let IB sort it out
-          setTimeout(resolve, 200);
-        }
-      });
+    const offset = (workerIndex || 0) + 1;
+    const clientId = offset * 10 + currentApiClientId;
 
-      /*
-      Related to lock.ts, we're creating a new IB connection for each worker which isn't ideal
-      ideally we should have one connection on the main worker and send download messages there
-      so we don't risk:
+    // Increment the id
+    currentApiClientId += 1;
 
-      1. Hitting rate limits in IB
-      2. Having multiple connections to IB
-      */
-      const offset = (workerIndex || 0) + 1;
-      const clientId = offset * 10 + currentApiClientId;
-
-      api.connect(clientId);
-
-      // Increment the id
-      currentApiClientId += 1;
-    });
+    return api.connect(clientId);
   }
 
   async function shutdown() {
     log?.('Shutting down');
-    return new Promise<void>(resolve => {
-      api.connectionState.subscribe(state => {
-        if (state === ConnectionState.Disconnected) {
-          resolve();
-        }
-      });
+    return api.disconnect();
+  }
 
-      api.disconnect();
-    });
+  function parseIbBar(bar: IbBar, period: TimeSeriesPeriod) {
+    const parseFormat = barSizeParseLookup[period];
+    const time = parse(bar.time || '', parseFormat, new Date());
+    return {
+      time: format(time, 'yyyy-MM-dd HH:mm:ss'),
+      open: bar.open || 0,
+      high: bar.high || 0,
+      low: bar.low || 0,
+      close: bar.close || 0,
+      volume: (bar.volume || 0) * 100, // IB returns volume in 100s
+    };
   }
 
   async function getTimeSeries(
@@ -253,18 +230,7 @@ export function create({log}: {log?: LoggerCallback} = {}): DataProvider {
       1,
     );
 
-    return bars.map(bar => {
-      const parseFormat = barSizeParseLookup[period];
-      const time = parse(bar.time || '', parseFormat, new Date());
-      return {
-        time: format(time, 'yyyy-MM-dd HH:mm:ss'),
-        open: bar.open || 0,
-        high: bar.high || 0,
-        low: bar.low || 0,
-        close: bar.close || 0,
-        volume: (bar.volume || 0) * 100, // IB returns volume in 100s
-      };
-    });
+    return bars.map(bar => parseIbBar(bar, period));
   }
 
   async function instrumentLookup(searchTerm: string): Promise<Instrument[]> {
@@ -373,6 +339,112 @@ export function create({log}: {log?: LoggerCallback} = {}): DataProvider {
     }
   }
 
+  /*
+  function subscribePriceUpdates({
+    instrument,
+    onUpdate,
+  }: SubscribePriceUpdateArgs) {
+    const contract: Contract = instrument.data as Contract;
+
+    let lastBar: Bar | null = null;
+
+    const requestId = api.requestBarUpdates(
+      contract,
+      barSizeLookup['m1'],
+      'TRADES',
+      0,
+      1,
+      bar => {
+        const newBar = parseIbBar(bar, 'm1');
+
+        if (newBar.close < 0) {
+          // new bar, ignore
+          return;
+        }
+
+        if (!lastBar || newBar.time !== lastBar.time) {
+          onUpdate({
+            price: newBar.close,
+            volume: newBar.volume,
+          });
+          lastBar = newBar;
+          return;
+        }
+
+        const volumeDelta = Math.max(0, newBar.volume - lastBar.volume);
+
+        onUpdate({
+          price: newBar.close,
+          volume: volumeDelta,
+        });
+      },
+    );
+
+    return requestId;
+  }
+
+  function cancelPriceUpdates(requestId: number) {
+    api.cancelBarUpdates(requestId);
+  }
+  */
+
+  function subscribeMarketUpdates({
+    instrument,
+    onUpdate,
+  }: SubscribeMarketUpdateArgs) {
+    const contract: Contract = instrument.data as Contract;
+
+    let lastVolume: number | null = null;
+
+    const requestId = api.subscribeMarketData(contract, ({type, value}) => {
+      /*
+      IB returns different historic data to live data.. very frustrating! So we have
+      to calculate the delta using the first value we receive otherwise we get a large
+      spike in data.
+
+      This is still not 100% correct because it means our historic data is lower
+      than real-time updates.. the only solution at the moment is to consider using
+      something like Polygon.io and hope they are better.
+
+      "Note: IB's historical data feed is filtered for some types of trades which generally
+      occur away from the NBBO such as combos, block trades, and derivatives.
+      For that reason the historical data volume will be lower than an unfiltered
+      historical data feed."
+
+      https://interactivebrokers.github.io/tws-api/historical_bars.html
+      */
+
+      if (type === 'VOLUME') {
+        if (lastVolume === null) {
+          lastVolume = value;
+        } else {
+          onUpdate({
+            type: 'VOLUME_DELTA',
+            value: (value - lastVolume) * 100,
+          });
+        }
+        return;
+      }
+
+      const tick = isTickType(type)
+        ? {
+            type,
+            value,
+          }
+        : null;
+
+      if (tick) {
+        onUpdate(tick);
+      }
+    });
+
+    return requestId;
+  }
+
+  function cancelMarketUpdates(requestId: number) {
+    api.cancelMarketData(requestId);
+  }
+
   return {
     name: 'ib',
     init,
@@ -380,5 +452,9 @@ export function create({log}: {log?: LoggerCallback} = {}): DataProvider {
     getTimeSeries,
     instrumentLookup,
     downloadTickData,
+    // subscribePriceUpdates,
+    // cancelPriceUpdates,
+    subscribeMarketUpdates,
+    cancelMarketUpdates,
   };
 }

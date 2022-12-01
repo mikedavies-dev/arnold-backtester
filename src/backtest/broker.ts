@@ -9,19 +9,26 @@ So, against my better judgement I'm making functions that mutate on purpose :)
 
 import {differenceInMilliseconds} from 'date-fns';
 
-import {Tracker, Order, BrokerState, OrderSpecification} from '../core';
+import {
+  Tracker,
+  Order,
+  BrokerState,
+  OrderSpecification,
+  Position,
+} from '../core';
 import {getPositionPL, getPositionCommission} from '../utils/results-metrics';
+
+/*
+orderExecutionDelayMs?: number;
+  commissionPerOrder: number;
+*/
 
 export function initBroker({
   getMarketTime,
-  orderExecutionDelayMs,
   initialBalance,
-  commissionPerOrder,
 }: {
   getMarketTime: () => Date;
-  orderExecutionDelayMs?: number;
   initialBalance: number;
-  commissionPerOrder: number;
 }): BrokerState {
   return {
     getMarketTime,
@@ -30,14 +37,13 @@ export function initBroker({
     openOrders: {},
     positions: [],
     openPositions: {},
-    orderExecutionDelayMs: orderExecutionDelayMs || 1000,
     balance: initialBalance,
-    commissionPerOrder,
   };
 }
 
 export function placeOrder(
   state: BrokerState,
+  symbol: string,
   spec: OrderSpecification,
 ): number {
   // Get the next order id
@@ -47,12 +53,14 @@ export function placeOrder(
 
   const order: Order = {
     ...spec,
+    remaining: spec.shares,
     id: orderId,
+    symbol,
     openedAt: state.getMarketTime(),
     state: spec.parentId ? 'ACCEPTED' : 'PENDING',
+    executions: {},
   };
 
-  const {symbol} = spec;
   const {openPositions, positions, orders, openOrders} = state;
 
   // Add the orders
@@ -60,15 +68,19 @@ export function placeOrder(
   orders.push(order);
 
   // Check current position
-  if (!openPositions[spec.symbol]) {
-    openPositions[symbol] = openPositions[symbol] || {
+  if (!openPositions[symbol]) {
+    const newPosition: Position = {
       symbol,
       orders: [],
       size: 0,
       data: {},
       closeReason: null,
       isClosing: false,
+      openedAt: state.getMarketTime(),
+      closedAt: null,
     };
+
+    openPositions[symbol] = openPositions[symbol] || newPosition;
     positions.push(openPositions[symbol]);
   }
 
@@ -78,12 +90,18 @@ export function placeOrder(
   return orderId;
 }
 
+type BrokerOptions = {
+  orderExecutionDelayMs: number;
+  commissionPerOrder: number;
+};
+
 export function handleBrokerTick(
   state: BrokerState,
   symbol: string,
   tracker: Tracker,
+  options: BrokerOptions,
 ) {
-  const {openOrders, openPositions, orderExecutionDelayMs} = state;
+  const {openOrders, openPositions} = state;
 
   const {last, bid, ask} = tracker;
 
@@ -98,7 +116,7 @@ export function handleBrokerTick(
       // Make sure enough time has passed
       if (
         differenceInMilliseconds(state.getMarketTime(), order.openedAt) <
-        orderExecutionDelayMs
+        options.orderExecutionDelayMs
       ) {
         return false;
       }
@@ -157,7 +175,14 @@ export function handleBrokerTick(
       order.state = 'FILLED';
 
       // were we filled at the bid or the ask?
-      order.avgFillPrice = order.action === 'BUY' ? ask : bid;
+      const price = order.action === 'BUY' ? ask : bid;
+      order.avgFillPrice = price;
+
+      order.executions.exec1 = {
+        price,
+        shares: order.shares,
+        commission: options.commissionPerOrder,
+      };
 
       // update open positions
       const position = openPositions[symbol];
@@ -174,7 +199,7 @@ export function handleBrokerTick(
         // Update account balance
         state.balance +=
           getPositionPL(position) -
-          getPositionCommission(position, state.commissionPerOrder);
+          getPositionCommission(position, options.commissionPerOrder);
 
         delete openPositions[symbol];
       }
@@ -183,9 +208,13 @@ export function handleBrokerTick(
       const childOrders = Object.values(openOrders).filter(
         o => o.parentId === order.id,
       );
+
       childOrders.forEach(o => {
         o.state = 'PENDING';
       });
+
+      // Record when the position was closed
+      position.closedAt = state.getMarketTime();
 
       // delete the open order
       delete openOrders[order.id];
@@ -255,14 +284,14 @@ export function closePosition(
 
   // If we don't have any open shares then close the position
   if (position.size === 0) {
+    // Delete the position from memory
     delete state.openPositions[symbol];
     return;
   }
 
-  const orderId = placeOrder(state, {
+  const orderId = placeOrder(state, symbol, {
     type: 'MKT',
     action: position.size > 0 ? 'SELL' : 'BUY',
-    symbol,
     shares: Math.abs(position.size),
   });
 

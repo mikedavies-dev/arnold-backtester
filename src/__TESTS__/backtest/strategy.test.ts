@@ -1,5 +1,5 @@
 import {runBacktest} from '../../backtest/worker';
-import {loadProfile} from '../../utils/profile';
+import {loadBacktestProfile} from '../../utils/profile';
 import {
   createTimeAsDate,
   createTimeAsUnix,
@@ -12,7 +12,7 @@ import {loadStrategy} from '../../utils/module';
 
 import {loadTickForMinute} from '../../utils/tick-storage';
 
-import {Tick} from '../../core';
+import {StoredTick} from '../../core';
 
 jest.mock('../../utils/tick-storage');
 jest.mock('../../utils/module');
@@ -55,7 +55,7 @@ const testMarketData = [
     time: createTimeAsUnix('09:31'),
     dateTime: createTimeAsDate('09:31'),
   },
-] as Array<Tick>;
+] as Array<StoredTick>;
 
 describe('test worker module', () => {
   beforeAll(async () => {
@@ -75,15 +75,14 @@ describe('test worker module', () => {
   Skip for the moment until we rework the test runner
   */
   test.skip('placing a market order in the backtester', async () => {
-    const profile = await loadProfile('sample');
+    const profile = await loadBacktestProfile('sample');
 
     loadStrategyMock.mockResolvedValue({
       init: () => {},
       extraSymbols: [],
       handleTick: ({broker}) => {
         if (!broker.hasOpenOrders(symbol)) {
-          broker.placeOrder({
-            symbol,
+          broker.placeOrder(symbol, {
             type: 'MKT',
             shares: 100,
             action: 'BUY',

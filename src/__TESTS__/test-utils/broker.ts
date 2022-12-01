@@ -33,11 +33,13 @@ export function createTestPosition({
     symbol,
     action,
     shares,
+    remaining: shares,
     type: 'MKT',
     openedAt: openedAt,
     filledAt: openedAt,
     avgFillPrice: entryPrice,
     state: 'FILLED',
+    executions: {},
   };
 
   const closedAt = addMinutes(openedAt, length);
@@ -59,11 +61,13 @@ export function createTestPosition({
     symbol,
     action: action === 'BUY' ? 'SELL' : 'BUY',
     shares,
+    remaining: shares,
     type: 'MKT',
     openedAt: closedAt,
     filledAt: closedAt,
     avgFillPrice: exitPrice,
     state: 'FILLED',
+    executions: {},
   };
 
   return {
@@ -73,5 +77,7 @@ export function createTestPosition({
     data: null,
     closeReason: 'testing',
     isClosing: false,
+    openedAt,
+    closedAt,
   };
 }

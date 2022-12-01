@@ -3,23 +3,8 @@ import {parse, differenceInDays, startOfDay, add} from 'date-fns';
 
 import {Profile} from '../core';
 import Env from '../utils/env';
-
-async function loadStrategySource(path: string) {
-  try {
-    return await fs.readFile(path, 'utf-8');
-  } catch {
-    return null;
-  }
-}
-
-async function loadJsOrTsStrategySource(strategy: string) {
-  return (
-    (await loadStrategySource(
-      Env.getUserPath(`./strategies/${strategy}.js`),
-    )) ||
-    (await loadStrategySource(Env.getUserPath(`./strategies/${strategy}.ts`)))
-  );
-}
+import {loadSymbolLists} from '../utils/symbol-lists';
+import {loadBacktestStrategy} from './strategy';
 
 // Format stored on disk
 type RawProfile = {
@@ -32,11 +17,10 @@ type RawProfile = {
   threads: number;
   initialBalance: number;
   commissionPerOrder: number;
-  extraSymbols: string[];
 };
 
 export function getPath(name: string) {
-  return Env.getUserPath(`./profiles/${name}.json`);
+  return Env.getUserPath(`./test-profiles/${name}.json`);
 }
 
 export async function profileExists(name: string) {
@@ -48,7 +32,7 @@ export async function profileExists(name: string) {
   }
 }
 
-export async function loadProfile(name: string): Promise<Profile> {
+export async function loadBacktestProfile(name: string): Promise<Profile> {
   if (!(await profileExists(name))) {
     throw new Error('This profile does not exist');
   }
@@ -69,11 +53,15 @@ export async function loadProfile(name: string): Promise<Profile> {
       }),
     );
 
+  const strategy = await loadBacktestStrategy(profile.strategy);
+
   return {
     ...profile,
+    symbols: await loadSymbolLists(profile.symbols),
+    extraSymbols: strategy.extraSymbols,
     strategy: {
       name: profile.strategy,
-      source: await loadJsOrTsStrategySource(profile.strategy),
+      source: strategy.source,
     },
     dates: {
       from,

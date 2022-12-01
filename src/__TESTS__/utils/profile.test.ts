@@ -1,4 +1,4 @@
-import {loadProfile, profileExists} from '../../utils/profile';
+import {loadBacktestProfile, profileExists} from '../../utils/profile';
 
 test('that a valid profile exists', async () => {
   const exists = await profileExists('sample');
@@ -11,7 +11,7 @@ test('that an invalid profile does exists', async () => {
 });
 
 test('load a valid profile', async () => {
-  const profile = await loadProfile('sample');
+  const profile = await loadBacktestProfile('sample');
 
   expect(profile).toMatchInlineSnapshot(`
     Object {
@@ -25,14 +25,32 @@ test('load a valid profile', async () => {
         "from": 2021-12-01T05:00:00.000Z,
         "to": 2021-12-03T05:00:00.000Z,
       },
+      "extraSymbols": Array [
+        "SPY",
+      ],
       "initialBalance": 10000,
       "strategy": Object {
         "name": "sample",
-        "source": "import {HandleTickParameters} from '../../../core';
+        "source": "/*
+    Sample Backtest Strategy
+    */
+
+    import {HandleTickParameters, IsSetupParameters} from '../../../core';
 
     export const extraSymbols = ['SPY'];
 
     export function init() {}
+
+    export function isSetup({
+      // symbol,
+      // tracker,
+      // log,
+      marketTime,
+      marketOpen,
+    }: IsSetupParameters) {
+      // We are in a setup once the market is open
+      return marketTime > marketOpen;
+    }
 
     export function handleTick({tick, symbol, log}: HandleTickParameters) {
       log(symbol, tick);
@@ -48,6 +66,14 @@ test('load a valid profile', async () => {
 
 test('loading an invalid profile', async () => {
   await expect(() =>
-    loadProfile('invalid'),
+    loadBacktestProfile('invalid'),
   ).rejects.toThrowErrorMatchingInlineSnapshot(`"This profile does not exist"`);
+});
+
+test('loading an valid profile with invalid strategy', async () => {
+  await expect(() =>
+    loadBacktestProfile('valid-with-invalid-strategy'),
+  ).rejects.toThrowErrorMatchingInlineSnapshot(
+    `"Test strategy not found invalid"`,
+  );
 });

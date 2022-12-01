@@ -1,5 +1,7 @@
 import mongoose from 'mongoose';
 
+// mongoose.set('debug', true);
+
 import {
   isBefore,
   addDays,
@@ -7,6 +9,7 @@ import {
   isSameDay,
   isAfter,
   getUnixTime,
+  startOfDay,
 } from 'date-fns';
 
 // Register the models
@@ -21,12 +24,16 @@ import {
   DbTimeSeriesBar,
   DbTimeSeriesDataAvailability,
   DbInstrument,
+  DbLivePosition,
   TimeSeriesPeriodToPeriod,
   Bars,
+  Order,
+  OrderExecution,
 } from '../core';
 
 import Env from './env';
 import {BacktestResults} from '../backtest/controller';
+import {date} from 'fp-ts';
 
 export async function connect() {
   // Connect to the db
@@ -325,4 +332,111 @@ export async function loadTrackerBars(
     m5: await loadBars(symbol, 'm5', until, count),
     daily: await loadBars(symbol, 'daily', until, count),
   };
+}
+
+export async function loadOpenPositions() {
+  const Position = mongoose.model<DbLivePosition>('LivePosition');
+  return Position.find({
+    openedAt: {$gt: startOfDay(new Date())},
+    closedAt: null,
+  });
+}
+
+export async function createLivePosition(position: DbLivePosition) {
+  const LivePosition = mongoose.model<DbLivePosition>('LivePosition');
+  await LivePosition.create(position);
+}
+
+export async function updateLiveOrder(
+  externalId: string,
+  orderId: number,
+  updates: Partial<Order>,
+) {
+  const Position = mongoose.model<DbLivePosition>('LivePosition');
+
+  const set = Object.keys(updates).reduce((acc, key) => {
+    acc[`orders.$.${key}`] = updates[key as keyof Order];
+    return acc;
+  }, {} as Record<string, any>);
+
+  await Position.findOneAndUpdate(
+    {
+      externalId,
+      'orders.id': orderId,
+    },
+    {
+      $set: set,
+    },
+  );
+}
+
+export async function createLiveOrder(externalId: string, order: Order) {
+  const Position = mongoose.model<DbLivePosition>('LivePosition');
+
+  await Position.findOneAndUpdate(
+    {
+      externalId,
+    },
+    {
+      $push: {
+        orders: order,
+      },
+    },
+  );
+}
+
+export async function updateLiveOrderExecution(
+  externalId: string,
+  orderId: number,
+  execId: string,
+  execution: OrderExecution,
+) {
+  const Position = mongoose.model<DbLivePosition>('LivePosition');
+
+  await Position.updateOne(
+    {
+      externalId,
+      'orders.id': orderId,
+    },
+    {
+      $set: {
+        [`orders.$.executions.${execId}`]: execution,
+      },
+    },
+  );
+}
+
+export async function updatePositionClosing(
+  externalId: string,
+  reason: string | null,
+) {
+  const Position = mongoose.model<DbLivePosition>('LivePosition');
+
+  await Position.findOneAndUpdate(
+    {
+      externalId,
+    },
+    {
+      $set: {
+        isClosing: true,
+        closeReason: reason,
+      },
+    },
+  );
+}
+
+export async function closePosition(externalId: string, closedAt: Date) {
+  const Position = mongoose.model<DbLivePosition>('LivePosition');
+
+  await Position.findOneAndUpdate(
+    {
+      externalId,
+    },
+    {
+      $set: {
+        isClosing: false,
+        closedAt,
+      },
+    },
+  );
 }

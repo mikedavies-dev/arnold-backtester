@@ -1,0 +1,12 @@
+{
+  "profiles": [
+    {
+      "id": "d2f0d37d-569b-451e-9fe0-52bd4a1f29bf",
+      "name": "Sample Strategy",
+      "strategy": "sample",
+      "accountSize": 1000,
+      "symbols": ["@main"],
+      "enabled": true
+    }
+  ]
+}

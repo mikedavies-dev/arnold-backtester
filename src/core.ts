@@ -10,16 +10,35 @@ export type RawTick = {
   value: number;
 };
 
-export type TickType = 'TRADE' | 'BID' | 'ASK';
+export const TickTypes = [
+  'TRADE',
+  'BID',
+  'ASK',
+  'VOLUME_DELTA',
+  'HIGH',
+  'LOW',
+] as const;
+
+export type TickType = typeof TickTypes[number];
+
+export function isTickType(maybeTickType: unknown): maybeTickType is TickType {
+  return (
+    typeof maybeTickType === 'string' &&
+    TickTypes.includes(maybeTickType as any)
+  );
+}
 
 export type Tick = {
   time: number;
-  index: number;
-  dateTime: Date;
-  symbol: string;
   type: TickType;
   size: number;
   value: number;
+};
+
+export type StoredTick = Tick & {
+  index: number;
+  dateTime: Date;
+  symbol: string;
 };
 
 export type Bar = {
@@ -62,7 +81,7 @@ export enum TickFileType {
 
 export type WriteTickDataFn = (
   type: TickFileType,
-  ticks: Tick[],
+  ticks: StoredTick[],
 ) => Promise<void>;
 
 export type DownloadTickDataArgs = {
@@ -70,6 +89,53 @@ export type DownloadTickDataArgs = {
   minute: Date;
   write: WriteTickDataFn;
   merge: () => Promise<void>;
+};
+
+export type SubscribeMinuteUpdateArgs = {
+  instrument: Instrument;
+  onUpdate: (latestBar: Bar) => void;
+};
+
+export type SubscribePriceUpdateArgs = {
+  instrument: Instrument;
+  onUpdate: ({price, volume}: {price: number; volume: number}) => void;
+};
+
+/*
+const MarketUpdateTickTypes = [
+  'BID',
+  'BID_SIZE',
+  'ASK',
+  'ASK_SIZE',
+  'VOLUME',
+  'LAST',
+  'LAST_SIZE',
+] as const;
+
+export type MarketUpdateTickType = typeof MarketUpdateTickTypes[number];
+
+// Make sure that the market tick type is a type we want
+// https://stackoverflow.com/questions/36836011/checking-validity-of-string-literal-union-type-at-runtime
+
+export function isMarketUpdateTickType(
+  maybeMarketUpdateTickType: unknown,
+): maybeMarketUpdateTickType is MarketUpdateTickType {
+  return (
+    typeof maybeMarketUpdateTickType === 'string' &&
+    MarketUpdateTickTypes.includes(maybeMarketUpdateTickType as any)
+  );
+}
+*/
+
+export type SubscribeMarketUpdateArgs = {
+  instrument: Instrument;
+  onUpdate: ({type, value}: {type: TickType; value: number}) => void;
+};
+
+export type PlaceOrderArgs = {
+  profileId: string;
+  instrument: Instrument;
+  order: OrderSpecification;
 };
 
 export type DataProvider = {
@@ -84,6 +150,65 @@ export type DataProvider = {
   ): Promise<Bar[]>;
   downloadTickData(args: DownloadTickDataArgs): Promise<void>;
   instrumentLookup(searchTerm: string): Promise<Instrument[]>;
+  subscribeMarketUpdates(args: SubscribeMarketUpdateArgs): number;
+  cancelMarketUpdates: (requestId: number) => void;
+};
+
+export type BrokerProvider = {
+  name: string;
+  init(args?: {workerIndex: number}): Promise<void>;
+  shutdown(): Promise<void>;
+
+  // Load the current broker state for a particular system, this should check the
+  // db.. maybe this should just be a standard DB function?
+  loadState(profileId: string, balance: number): Promise<BrokerState>;
+
+  // Place an order for a profile
+  placeOrder: (args: PlaceOrderArgs) => number;
+
+  // See if a symbol/profile combo has any open orders
+  hasOpenOrders: (profileId: string, instrument: Instrument) => boolean;
+
+  // Get the current position size for an symbol/profile combo
+  getPositionSize: (profileId: string, instrument: Instrument) => number;
+
+  // Close an open position with a reason
+  closePosition: (
+    profileId: string,
+    instrument: Instrument,
+    reason: string | null,
+  ) => void;
+};
+
+export type PositionProvider = {
+  init: () => Promise<void>;
+  shutdown: () => Promise<void>;
+  writeDbUpdates: () => Promise<void>;
+  hasOpenOrders: (profileId: string, instrument: Instrument) => boolean;
+  hasOpenPosition: (profileId: string, instrument: Instrument) => boolean;
+  createOrder: (
+    profileId: string,
+    instrument: Instrument,
+    order: Order,
+  ) => void;
+  updateOrderExecution: (
+    orderId: number,
+    execId: string,
+    execution: Partial<OrderExecution>,
+  ) => void;
+  getOrderIdFromExecId: (execId: string) => number | null;
+  getPositionSize: (profileId: string, instrument: Instrument) => number;
+  setPositionClosing: (
+    profileId: string,
+    instrument: Instrument,
+    reason: string | null,
+  ) => void;
+  isClosing: (profileId: string, instrument: Instrument) => boolean;
+  getOpenPosition: (
+    profileId: string,
+    instrument: Instrument,
+  ) => LivePosition | null;
+  updateOrder: (orderId: number, updates: Partial<Order>) => void;
 };
 
 export type Tracker = {
@@ -102,12 +227,17 @@ export type Tracker = {
 
 export type OrderAction = 'BUY' | 'SELL';
 export type OrderType = 'MKT' | 'LMT' | 'STP' | 'TRAIL';
-export type OrderState = 'ACCEPTED' | 'PENDING' | 'FILLED' | 'CANCELLED';
+export type OrderState =
+  | 'ACCEPTED'
+  | 'PENDING'
+  | 'FILLED'
+  | 'CANCELLED'
+  | 'INACTIVE'
+  | 'UNKNOWN';
 
 export type BaseOrder = {
   type: OrderType;
   parentId?: number;
-  symbol: string;
   action: OrderAction;
   shares: number;
 };
@@ -119,13 +249,25 @@ export type OrderSpecification =
   | (BaseOrder & {type: 'LMT'; price: number})
   | (BaseOrder & {type: 'TRAIL'; price: number; triggerPrice?: number});
 
+export type OrderExecution = {
+  shares: number;
+  commission: number;
+  price: number;
+  realizedPnL?: number;
+  data?: any;
+};
+
 // Define the full order
 export type Order = OrderSpecification & {
   id: number;
+  symbol: string;
   openedAt: Date;
   state: OrderState;
   filledAt?: Date;
+  remaining: number;
   avgFillPrice?: number;
+  executions: Record<string, OrderExecution>;
+  data?: any;
 };
 
 export type Position = {
@@ -133,8 +275,16 @@ export type Position = {
   orders: Array<Order>;
   size: number;
   data: any;
+  openedAt: Date;
+  closedAt: Date | null;
   closeReason: string | null;
+  // Used to record when the position has been closed by closePosition
+  // so that we don't create multiple close orders
   isClosing: boolean;
+};
+
+export type LivePosition = Position & {
+  externalId: string;
 };
 
 export type PositionDirection = 'LONG' | 'SHORT' | 'UNKNOWN';
@@ -146,17 +296,17 @@ export type BrokerState = {
   openOrders: Record<number, Order>;
   positions: Array<Position>;
   openPositions: Record<string, Position>;
-  orderExecutionDelayMs: number;
   balance: number;
-  commissionPerOrder: number;
+};
+
+export type StrategyDefinition = {
+  name: string;
+  source: string | null;
 };
 
 // Parsed format
 export type Profile = {
-  strategy: {
-    name: string;
-    source: string | null;
-  };
+  strategy: StrategyDefinition;
   dates: {
     from: Date;
     to: Date;
@@ -210,6 +360,21 @@ export type DbInstrument = {
   data?: any;
 };
 
+export type DbLivePosition = {
+  _id?: MongoObjectId;
+  externalId: string;
+  symbol: string;
+  profileId: string;
+  data: any;
+  openedAt: Date;
+  closedAt: Date | null;
+  closeReason: string | null;
+  // Used to record when the position has been closed by closePosition
+  // so that we don't create multiple close orders
+  isClosing: boolean;
+  orders: Array<Order>;
+};
+
 export type MarketStatus = 'CLOSED' | 'PREMARKET' | 'OPEN';
 
 export type HandleTickParameters = {
@@ -221,9 +386,10 @@ export type HandleTickParameters = {
   marketState: MarketStatus;
   broker: {
     state: BrokerState;
-    placeOrder: (spec: OrderSpecification) => number;
+    placeOrder: (symbol: string, spec: OrderSpecification) => number;
     hasOpenOrders: (symbol: string) => boolean;
     getPositionSize: (symbol: string) => number;
+    closePosition: (symbol: string, reason: string) => void;
   };
 };
 
@@ -266,7 +432,6 @@ Useful for things like:
 
   const array: (string | null)[] = ['foo', 'bar', null, 'zoo', null];
   const filteredArray: string[] = array.filter(notEmpty);
-
 */
 
 export function notEmpty<TValue>(
@@ -289,4 +454,18 @@ export const TimeSeriesPeriodToPeriod: Record<TimeSeriesPeriod, number> = {
   m1: Periods.m1,
   m5: Periods.m5,
   m60: Periods.m60,
+};
+
+export type LiveTradingProfile = {
+  id: string;
+  name: string;
+  strategy: StrategyDefinition;
+  accountSize: number;
+  symbols: string[];
+  extraSymbols: string[];
+  enabled: boolean;
+};
+
+export type LiveTradingConfig = {
+  profiles: LiveTradingProfile[];
 };

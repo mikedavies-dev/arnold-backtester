@@ -5,8 +5,8 @@ import {
   Instrument,
   DownloadTickDataArgs,
   TickFileType,
-  Tick,
   TimeSeriesPeriods,
+  StoredTick,
 } from '../../core';
 import {ensureBarDataIsAvailable} from '../../utils/data-storage';
 import {
@@ -60,7 +60,7 @@ describe('mongo db tests', () => {
   const startTime = testDate.getTime() / 1000;
   const symbol = 'ZZZZ';
 
-  const tradeTickData: Tick[] = [
+  const tradeTickData: StoredTick[] = [
     {
       symbol,
       dateTime: testDate,
@@ -81,7 +81,7 @@ describe('mongo db tests', () => {
     },
   ];
 
-  const bidAskTickData: Tick[] = [
+  const bidAskTickData: StoredTick[] = [
     {
       symbol,
       dateTime: testDate,
@@ -130,6 +130,8 @@ describe('mongo db tests', () => {
       }),
       instrumentLookup: async () => [],
       downloadTickData: async () => {},
+      subscribeMarketUpdates: () => 0,
+      cancelMarketUpdates: () => {},
     };
     createDataProviderMock.mockReturnValue(mockProvider);
 
@@ -210,6 +212,8 @@ describe('mongo db tests', () => {
   });
 
   test('ensure tick data is available', async () => {
+    const symbol = 'ZZZZ';
+
     const mockProvider = {
       name: 'test',
       init: jest.fn(async () => {}),
@@ -218,6 +222,8 @@ describe('mongo db tests', () => {
         return [];
       }),
       instrumentLookup: async () => [],
+      subscribeMarketUpdates: () => 0,
+      cancelMarketUpdates: () => {},
       downloadTickData: jest.fn(
         async ({write, merge}: DownloadTickDataArgs) => {
           // Load/write bid/ask data from remove service
@@ -233,13 +239,13 @@ describe('mongo db tests', () => {
     };
     createDataProviderMock.mockReturnValue(mockProvider);
 
-    expect(await hasTickForMinute('ZZZZ', getTestDate())).toBeFalsy();
+    expect(await hasTickForMinute(symbol, getTestDate())).toBeFalsy();
 
     const dataProvider = createDataProvider();
 
     await ensureTickDataIsAvailable({
       dataProvider,
-      symbols: ['ZZZZ'],
+      symbols: [symbol],
       log: () => {},
       minute: getTestDate(),
     });
@@ -248,14 +254,14 @@ describe('mongo db tests', () => {
     expect(mockProvider.downloadTickData).toBeCalledTimes(1);
 
     // Now we have data
-    expect(await hasTickForMinute('ZZZZ', getTestDate())).toBeTruthy();
+    expect(await hasTickForMinute(symbol, getTestDate())).toBeTruthy();
 
     mockProvider.downloadTickData.mockReset();
 
     // If we make the call again we should not download data
     await ensureTickDataIsAvailable({
       dataProvider,
-      symbols: ['ZZZZ'],
+      symbols: [symbol],
       log: () => {},
       minute: getTestDate(),
     });
@@ -276,7 +282,7 @@ describe('mongo db tests', () => {
           "dateTime": 2022-01-01T05:00:00.000Z,
           "index": 0,
           "size": 1,
-          "symbol": "ZZZZ",
+          "symbol": "${symbol}",
           "time": 1641013200,
           "type": "BID",
           "value": 99,
@@ -285,7 +291,7 @@ describe('mongo db tests', () => {
           "dateTime": 2022-01-01T05:00:00.000Z,
           "index": 0,
           "size": 1,
-          "symbol": "ZZZZ",
+          "symbol": "${symbol}",
           "time": 1641013200,
           "type": "TRADE",
           "value": 100,
@@ -294,7 +300,7 @@ describe('mongo db tests', () => {
           "dateTime": 2022-01-01T05:00:01.000Z,
           "index": 0,
           "size": 1,
-          "symbol": "ZZZZ",
+          "symbol": "${symbol}",
           "time": 1641013201,
           "type": "BID",
           "value": 100,
@@ -303,7 +309,7 @@ describe('mongo db tests', () => {
           "dateTime": 2022-01-01T05:00:02.000Z,
           "index": 0,
           "size": 1,
-          "symbol": "ZZZZ",
+          "symbol": "${symbol}",
           "time": 1641013202,
           "type": "TRADE",
           "value": 101,
@@ -312,7 +318,7 @@ describe('mongo db tests', () => {
           "dateTime": 2022-01-01T05:00:03.000Z,
           "index": 0,
           "size": 1,
-          "symbol": "ZZZZ",
+          "symbol": "${symbol}",
           "time": 1641013203,
           "type": "ASK",
           "value": 101,
@@ -330,6 +336,8 @@ describe('mongo db tests', () => {
         return [];
       }),
       instrumentLookup: async () => [],
+      subscribeMarketUpdates: () => 0,
+      cancelMarketUpdates: () => {},
       downloadTickData: jest.fn(async ({write}: DownloadTickDataArgs) => {
         // Load/write bid/ask data from remove service
         await write(TickFileType.BidAsk, bidAskTickData);
@@ -367,6 +375,8 @@ describe('mongo db tests', () => {
         return [];
       }),
       instrumentLookup: async () => [],
+      subscribeMarketUpdates: () => 0,
+      cancelMarketUpdates: () => {},
       downloadTickData: jest.fn(async ({merge}: DownloadTickDataArgs) => {
         // Merge without writing first should create an empty merged file
         // so that next time we don't try downloading it

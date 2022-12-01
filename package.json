@@ -17,7 +17,8 @@
     "proper-lockfile": "^4.1.2",
     "react-syntax-highlighter": "^15.5.0",
     "ts-node": "^10.9.1",
-    "typescript": "^4.8.4"
+    "typescript": "^4.8.4",
+    "uuid": "^9.0.0"
   },
   "name": "arnold-backtester",
   "version": "1.0.0",
@@ -45,6 +46,7 @@
     "@types/react-dom": "^16.9.14",
     "@types/react-syntax-highlighter": "^13.5.2",
     "@types/styled-components": "^5.1.24",
+    "@types/uuid": "^8.3.4",
     "@typescript-eslint/eslint-plugin": "^5.13.0",
     "assert": "^2.0.0",
     "classnames": "^2.3.1",
@@ -78,9 +80,10 @@
   "scripts": {
     "backtest": "TZ=America/New_York ts-node -T src/bin/backtest.ts",
     "ensure-data": "TZ=America/New_York ts-node -T src/bin/ensure-data.ts",
-    "test": "is-ci-cli test:coverage test:watch",
-    "test:coverage": "TZ=America/New_York NODE_ENV=test_ci jest --coverage",
-    "test:watch": "TZ=America/New_York jest --watch",
+    "trader": "TZ=America/New_York ts-node -T src/bin/trader.ts",
+    "test": "is-ci-cli test:coverage test:watch --runInBand",
+    "test:coverage": "TZ=America/New_York NODE_ENV=test_ci jest --coverage --runInBand",
+    "test:watch": "TZ=America/New_York jest --watch --runInBand",
     "test:ci": "TZ=America/New_York NODE_ENV=test_ci jest --coverage",
     "check": "tsc --noEmit",
     "check:watch": "tsc --noEmit --watch",
