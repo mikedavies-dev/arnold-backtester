@@ -18,3 +18,5 @@ user/
 
 # Parcel output folder
 dist/
+
+src/bin/test*
