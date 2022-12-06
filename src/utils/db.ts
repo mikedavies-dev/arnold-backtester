@@ -344,7 +344,12 @@ export async function loadOpenPositions() {
 
 export async function createLivePosition(position: DbLivePosition) {
   const LivePosition = mongoose.model<DbLivePosition>('LivePosition');
-  await LivePosition.create(position);
+  await LivePosition.create({
+    ...position,
+    // don't add orders because it can cause duplicates, we should only
+    // add orders via createLiveOrder
+    orders: [],
+  });
 }
 
 export async function updateLiveOrder(

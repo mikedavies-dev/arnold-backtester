@@ -17,6 +17,7 @@ export const TickTypes = [
   'VOLUME_DELTA',
   'HIGH',
   'LOW',
+  'LAST',
 ] as const;
 
 export type TickType = typeof TickTypes[number];
@@ -240,6 +241,7 @@ export type BaseOrder = {
   parentId?: number;
   action: OrderAction;
   shares: number;
+  transmit?: boolean;
 };
 
 // Order specification using TypeScript magic..
@@ -401,6 +403,7 @@ export type IsSetupParameters = {
   marketTime: number;
   marketOpen: number;
   marketClose: number;
+  marketState: MarketStatus;
 };
 
 export type MetricsByPeriod = {

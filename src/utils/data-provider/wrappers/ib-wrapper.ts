@@ -102,9 +102,9 @@ export function init({
   const globalHandlers: Record<string, Partial<IbEventHandler>> = {};
 
   // IB Message handlers
-  // api.on(EventName.all, (event, args) => {
-  //   console.log('IB', event, args);
-  // });
+  api.on(EventName.error, (err, code, reqId) => {
+    console.log('ERROR', err, code, reqId);
+  });
 
   api.on(EventName.nextValidId, orderId => {
     nextValidOrderId = orderId;

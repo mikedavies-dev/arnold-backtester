@@ -209,6 +209,12 @@ export async function runBacktest({
         marketTime,
         marketOpen,
         marketClose,
+        marketState: getMarketState(
+          marketTime,
+          preMarketOpen,
+          marketOpen,
+          marketClose,
+        ),
       }) ||
       hasOpenOrders(brokerState, symbol)
     ) {

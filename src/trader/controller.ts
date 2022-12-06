@@ -325,6 +325,15 @@ export async function runLiveController({log}: {log: LoggerCallback}) {
       const nextMinute = getMinutes(new Date());
 
       if (nextMinute !== currentMinute) {
+        const marketTime = getUnixTime(new Date());
+
+        const marketState = getMarketState(
+          marketTime,
+          preMarketOpen,
+          marketOpen,
+          marketClose,
+        );
+
         instruments.forEach(({symbol, profiles}) => {
           profiles.forEach(profile => {
             const inSetup = profile.strategy.isSetup({
@@ -332,9 +341,10 @@ export async function runLiveController({log}: {log: LoggerCallback}) {
               tracker: trackers[symbol],
               trackers,
               log,
-              marketTime: getUnixTime(new Date()),
+              marketTime,
               marketOpen,
               marketClose,
+              marketState,
             });
 
             // Update the UI

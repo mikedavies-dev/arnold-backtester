@@ -44,6 +44,7 @@ import {
 } from '../../../core';
 
 import Env from '../../../utils/env';
+import {isBoolean} from 'fp-ts/lib/boolean';
 
 const brokerClientIdOffset = 100;
 let currentApiClientId = Number(Env.IB_BASE_CLIENT_ID) + brokerClientIdOffset;
@@ -232,6 +233,7 @@ export function create({
         totalQuantity: order.shares,
         parentId: order.parentId,
         tif: 'DAY',
+        transmit: isBoolean(order.transmit) ? order.transmit : true,
       },
     });
 

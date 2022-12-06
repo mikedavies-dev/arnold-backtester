@@ -215,6 +215,10 @@ export function create({log}: {log?: LoggerCallback} = {}): PositionProvider {
         }),
       );
 
+      dbUpdates.queue.push(() =>
+        createLiveOrder(newPosition.externalId, order),
+      );
+
       updatePositionSize(newPosition);
     } else {
       const position = getOpenPosition(profileId, instrument) as LivePosition;
