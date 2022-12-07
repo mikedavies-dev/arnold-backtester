@@ -182,19 +182,6 @@ export function create({
     return api.disconnect();
   }
 
-  async function loadState(profileId: string, balance: number) {
-    // TODO Load data from DB for this profile via positions
-    return {
-      getMarketTime: () => new Date(),
-      nextOrderId: 1,
-      orders: [],
-      openOrders: {},
-      positions: [],
-      openPositions: {},
-      balance,
-    };
-  }
-
   function placeOrder({profileId, instrument, order}: PlaceOrderArgs) {
     function getOrderType(): Order {
       switch (order.type) {
@@ -258,6 +245,10 @@ export function create({
     return positions.getPositionSize(profileId, instrument);
   }
 
+  function hasOpenPosition(profileId: string, instrument: Instrument) {
+    return positions.hasOpenPosition(profileId, instrument);
+  }
+
   function closePosition(
     profileId: string,
     instrument: Instrument,
@@ -296,10 +287,10 @@ export function create({
     name: 'ib',
     init,
     shutdown,
-    loadState,
     placeOrder,
     hasOpenOrders,
     getPositionSize,
     closePosition,
+    hasOpenPosition,
   };
 }

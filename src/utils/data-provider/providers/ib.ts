@@ -47,7 +47,8 @@ import {formatDateTime} from '../../dates';
 let currentApiClientId = Number(Env.IB_BASE_CLIENT_ID);
 
 export function formatIbRequestDate(date: Date) {
-  return format(date, 'yyyyMMdd HH:mm:ss');
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  return `${format(date, 'yyyyMMdd HH:mm:ss')} ${timezone}`;
 }
 
 async function downloadBidAskTickData(

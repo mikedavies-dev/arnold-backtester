@@ -342,6 +342,10 @@ export function create({log}: {log?: LoggerCallback} = {}): PositionProvider {
     return position.isClosing;
   }
 
+  // function getLastClosedPosition(profileId: string, instrument: Instrument) {
+  //   positions.findLast();
+  // }
+
   return {
     init,
     shutdown,

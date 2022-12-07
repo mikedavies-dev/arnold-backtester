@@ -41,6 +41,7 @@ import {
   placeOrder,
   handleBrokerTick,
   hasOpenOrders,
+  hasOpenPosition,
   getPositionSize,
   closePosition,
 } from './broker';
@@ -272,12 +273,12 @@ export async function runBacktest({
           strategy.handleTick({
             log,
             marketState,
+            marketTime,
             tick,
             symbol,
             tracker,
             trackers,
             broker: {
-              state: brokerState,
               placeOrder: (symbol: string, spec: OrderSpecification) =>
                 placeOrder(brokerState, symbol, spec),
               hasOpenOrders: (symbol: string) =>
@@ -286,6 +287,8 @@ export async function runBacktest({
                 getPositionSize(brokerState, symbol),
               closePosition: (symbol: string, reason: string | null) =>
                 closePosition(brokerState, symbol, reason),
+              hasOpenPosition: (symbol: string) =>
+                hasOpenPosition(brokerState, symbol),
             },
           });
         }

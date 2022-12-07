@@ -101,7 +101,6 @@ async function initProfiles(
         name: name,
         symbols,
         strategy,
-        brokerState: await broker.loadState(id, accountSize),
       };
     },
     false,
@@ -184,7 +183,10 @@ export async function runLiveController({log}: {log: LoggerCallback}) {
         symbol: instrument.symbol,
         profiles: activeProfiles
           .filter(p => p.symbols.find(s => s === instrument.symbol))
-          .map(p => ({...p, currentlyInSetup: false})),
+          .map(p => ({
+            ...p,
+            currentlyInSetup: false,
+          })),
       };
     });
 
@@ -237,16 +239,16 @@ export async function runLiveController({log}: {log: LoggerCallback}) {
 
             profiles
               .filter(p => p.currentlyInSetup)
-              .forEach(({id: profileId, brokerState, strategy}) => {
+              .forEach(({id: profileId, strategy}) => {
                 strategy.handleTick({
                   log,
                   marketState,
+                  marketTime,
                   tick,
                   symbol,
                   tracker: trackers[symbol],
                   trackers,
                   broker: {
-                    state: brokerState,
                     placeOrder: (symbol: string, order: OrderSpecification) => {
                       const match = instruments.find(i => i.symbol === symbol);
 
@@ -292,6 +294,18 @@ export async function runLiveController({log}: {log: LoggerCallback}) {
                         profileId,
                         match.instrument,
                         reason,
+                      );
+                    },
+                    hasOpenPosition: symbol => {
+                      const match = instruments.find(i => i.symbol === symbol);
+
+                      if (!match) {
+                        return false;
+                      }
+
+                      return broker.hasOpenPosition(
+                        profileId,
+                        match.instrument,
                       );
                     },
                   },

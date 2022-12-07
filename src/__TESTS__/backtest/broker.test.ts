@@ -13,6 +13,7 @@ import {
   closePosition,
   closeOrder,
   closeOpenOrders,
+  hasOpenPosition,
 } from '../../backtest/broker';
 
 test('init positions function returns an empty positions ds', () => {
@@ -68,6 +69,8 @@ test('placing market buy order and wait for it to be filled at the ask', () => {
 
   const market = createMarket([['09:30:00', 1, 1.2, 1.1, 0]]);
 
+  expect(hasOpenPosition(market.broker, market.symbol)).toBe(false);
+
   placeOrder(market.broker, market.symbol, {
     type: 'MKT',
     action: 'BUY',
@@ -78,6 +81,7 @@ test('placing market buy order and wait for it to be filled at the ask', () => {
 
   // Make sure we have open orders
   expect(hasOpenOrders(market.broker, market.symbol)).toBe(true);
+  expect(hasOpenPosition(market.broker, market.symbol)).toBe(true);
 
   // Move the market along
   updateMarketDataAndBroker(market, [['09:30:02', 1.1, 1.3, 1.2, 0]]);

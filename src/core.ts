@@ -160,15 +160,14 @@ export type BrokerProvider = {
   init(args?: {workerIndex: number}): Promise<void>;
   shutdown(): Promise<void>;
 
-  // Load the current broker state for a particular system, this should check the
-  // db.. maybe this should just be a standard DB function?
-  loadState(profileId: string, balance: number): Promise<BrokerState>;
-
   // Place an order for a profile
   placeOrder: (args: PlaceOrderArgs) => number;
 
   // See if a symbol/profile combo has any open orders
   hasOpenOrders: (profileId: string, instrument: Instrument) => boolean;
+
+  // see if a symbol/profile combo has an open position
+  hasOpenPosition: (profileId: string, instrument: Instrument) => boolean;
 
   // Get the current position size for an symbol/profile combo
   getPositionSize: (profileId: string, instrument: Instrument) => number;
@@ -386,11 +385,12 @@ export type HandleTickParameters = {
   tracker: Tracker;
   trackers: Record<string, Tracker>;
   marketState: MarketStatus;
+  marketTime: number;
   broker: {
-    state: BrokerState;
     placeOrder: (symbol: string, spec: OrderSpecification) => number;
     hasOpenOrders: (symbol: string) => boolean;
     getPositionSize: (symbol: string) => number;
+    hasOpenPosition: (symbol: string) => boolean;
     closePosition: (symbol: string, reason: string) => void;
   };
 };
