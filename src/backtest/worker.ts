@@ -289,6 +289,8 @@ export async function runBacktest({
                 closePosition(brokerState, symbol, reason),
               hasOpenPosition: (symbol: string) =>
                 hasOpenPosition(brokerState, symbol),
+              orders: brokerState.orders,
+              positions: brokerState.positions,
             },
           });
         }

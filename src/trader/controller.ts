@@ -249,6 +249,8 @@ export async function runLiveController({log}: {log: LoggerCallback}) {
                   tracker: trackers[symbol],
                   trackers,
                   broker: {
+                    orders: positions.getOrders(profileId),
+                    positions: positions.getPositions(profileId),
                     placeOrder: (symbol: string, order: OrderSpecification) => {
                       const match = instruments.find(i => i.symbol === symbol);
 

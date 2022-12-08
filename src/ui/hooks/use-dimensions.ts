@@ -33,10 +33,14 @@ function getDimensionObject(node: HTMLElement): DimensionObject {
   return {
     width: rect.width,
     height: rect.height,
-    top: 'x' in rect ? rect.x : rect.top,
-    left: 'y' in rect ? rect.y : rect.left,
-    x: 'x' in rect ? rect.x : rect.left,
-    y: 'y' in rect ? rect.y : rect.top,
+    // top: 'x' in rect ? rect.x : rect.top,
+    // left: 'y' in rect ? rect.y : rect.left,
+    // x: 'x' in rect ? rect.x : rect.left,
+    // y: 'y' in rect ? rect.y : rect.top,
+    top: rect.x,
+    left: rect.y,
+    x: rect.x,
+    y: rect.y,
     right: rect.right,
     bottom: rect.bottom,
   };

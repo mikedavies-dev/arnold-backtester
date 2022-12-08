@@ -209,6 +209,8 @@ export type PositionProvider = {
     instrument: Instrument,
   ) => LivePosition | null;
   updateOrder: (orderId: number, updates: Partial<Order>) => void;
+  getOrders: (profileId: string) => Array<Order>;
+  getPositions: (profileId: string) => Array<Position>;
 };
 
 export type Tracker = {
@@ -392,6 +394,8 @@ export type HandleTickParameters = {
     getPositionSize: (symbol: string) => number;
     hasOpenPosition: (symbol: string) => boolean;
     closePosition: (symbol: string, reason: string) => void;
+    orders: Array<Order>;
+    positions: Array<Position>;
   };
 };
 

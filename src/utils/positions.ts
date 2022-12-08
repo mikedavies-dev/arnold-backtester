@@ -49,6 +49,19 @@ export function create({log}: {log?: LoggerCallback} = {}): PositionProvider {
     position: LivePosition;
   }> = [];
 
+  const profileIdToOrders: Record<string, Array<Order>> = {};
+  const profileIdToPositions: Record<string, Array<LivePosition>> = {};
+
+  function addProfileOrders(profileId: string, toAdd: Array<Order>) {
+    profileIdToOrders[profileId] = profileIdToOrders[profileId] || [];
+    profileIdToOrders[profileId].push(...toAdd);
+  }
+
+  function addProfilePosition(profileId: string, toAdd: LivePosition) {
+    profileIdToPositions[profileId] = profileIdToPositions[profileId] || [];
+    profileIdToPositions[profileId].push(toAdd);
+  }
+
   async function writeDbUpdates() {
     if (dbUpdates.queue.length) {
       log?.(`Writing ${dbUpdates.queue.length} updates to the database`);
@@ -95,6 +108,9 @@ export function create({log}: {log?: LoggerCallback} = {}): PositionProvider {
         profileId,
         position,
       });
+
+      addProfilePosition(profileId, position);
+      addProfileOrders(profileId, position.orders);
     });
   }
 
@@ -191,10 +207,12 @@ export function create({log}: {log?: LoggerCallback} = {}): PositionProvider {
     if (!hasOpenPosition(profileId, instrument)) {
       log?.(`Creating new position for ${instrument.symbol}`);
 
+      const orders = [order];
+
       const newPosition = {
         externalId: uuidv4(),
         symbol: instrument.symbol,
-        orders: [order],
+        orders,
         size: 0,
         data: null,
         closeReason: null,
@@ -220,6 +238,8 @@ export function create({log}: {log?: LoggerCallback} = {}): PositionProvider {
       );
 
       updatePositionSize(newPosition);
+
+      addProfilePosition(profileId, newPosition);
     } else {
       const position = getOpenPosition(profileId, instrument) as LivePosition;
 
@@ -234,6 +254,8 @@ export function create({log}: {log?: LoggerCallback} = {}): PositionProvider {
       // queue the db update
       dbUpdates.queue.push(() => createLiveOrder(position.externalId, order));
     }
+
+    addProfileOrders(profileId, [order]);
   }
 
   function updateOrder(orderId: number, updates: Partial<Order>) {
@@ -342,9 +364,13 @@ export function create({log}: {log?: LoggerCallback} = {}): PositionProvider {
     return position.isClosing;
   }
 
-  // function getLastClosedPosition(profileId: string, instrument: Instrument) {
-  //   positions.findLast();
-  // }
+  function getOrders(profileId: string) {
+    return profileIdToOrders[profileId] || [];
+  }
+
+  function getPositions(profileId: string): Array<LivePosition> {
+    return profileIdToPositions[profileId] || [];
+  }
 
   return {
     init,
@@ -360,5 +386,7 @@ export function create({log}: {log?: LoggerCallback} = {}): PositionProvider {
     getOrderIdFromExecId,
     updateOrder,
     isClosing,
+    getOrders,
+    getPositions,
   };
 }

@@ -92,7 +92,8 @@
     "server": "TZ=America/New_York ts-node -T ./src/bin/server.ts",
     "server:dev": "TZ=America/New_York ts-node -T ./src/bin/server.ts",
     "build": "rm -rf ./dist && npx parcel build",
-    "build:watch": "npx parcel watch"
+    "build:watch": "npx parcel watch",
+    "before-push": "npm run check && npm run test:coverage"
   },
   "author": "",
   "license": "ISC",

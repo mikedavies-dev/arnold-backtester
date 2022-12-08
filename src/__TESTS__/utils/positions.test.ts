@@ -818,4 +818,83 @@ describe('test the order position/storage module', () => {
 
     expect(positions2.isClosing(profileId, instrumentA)).toBe(true);
   });
+
+  test('get positions by profile id', async () => {
+    const positions1 = create();
+    await positions1.init();
+
+    const profileId = 'test-get-positions-by-profile-id';
+    const orderId1 = getNextOrderId();
+
+    expect(positions1.getPositions(profileId).length).toBe(0);
+
+    positions1.createOrder(profileId, instrumentA, {
+      type: 'MKT',
+      shares: 100,
+      remaining: 100,
+      id: orderId1,
+      action: 'BUY',
+      state: 'PENDING',
+      openedAt: new Date(),
+      symbol: instrumentA.symbol,
+      executions: {},
+    });
+
+    expect(positions1.getPositions(profileId).length).toBe(1);
+  });
+
+  test('get orders by profile id', async () => {
+    const positions1 = create();
+    await positions1.init();
+
+    const profileId = 'test-get-orders-by-profile-id';
+    const orderId1 = getNextOrderId();
+
+    expect(positions1.getOrders(profileId).length).toBe(0);
+
+    positions1.createOrder(profileId, instrumentA, {
+      type: 'MKT',
+      shares: 100,
+      remaining: 100,
+      id: orderId1,
+      action: 'BUY',
+      state: 'PENDING',
+      openedAt: new Date(),
+      symbol: instrumentA.symbol,
+      executions: {},
+    });
+
+    expect(positions1.getOrders(profileId).length).toBe(1);
+  });
+
+  test('test that an order status update is reflected in the getOrders function', async () => {
+    const positions1 = create();
+    await positions1.init();
+
+    const profileId = 'test-update-status-check-orders';
+    const orderId1 = getNextOrderId();
+
+    expect(positions1.getOrders(profileId).length).toBe(0);
+
+    positions1.createOrder(profileId, instrumentA, {
+      type: 'MKT',
+      shares: 100,
+      remaining: 100,
+      id: orderId1,
+      action: 'BUY',
+      state: 'PENDING',
+      openedAt: new Date(),
+      symbol: instrumentA.symbol,
+      executions: {},
+    });
+
+    expect(positions1.getOrders(profileId).length).toBe(1);
+    expect(positions1.getOrders(profileId)[0].state).toBe('PENDING');
+
+    positions1.updateOrder(orderId1, {
+      state: 'FILLED',
+    });
+
+    expect(positions1.getOrders(profileId)[0].state).toBe('FILLED');
+  });
 });
