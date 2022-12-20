@@ -34,7 +34,7 @@ export default function BacktestResultsPicker({
         <Table bordered striped condensed interactive>
           <thead>
             <tr>
-              <th>Backtest ID</th>
+              <th>ID</th>
               <th>Started At</th>
               <th>Strategy</th>
               <th>Symbols</th>

@@ -131,7 +131,7 @@ export default function PositionDetails({onClose}: {onClose: () => void}) {
         </FrameContents>
       </Frame>
       <Frame key="summary">
-        <FrameContents />
+        <FrameContents>Summary goes here</FrameContents>
       </Frame>
     </FrameManager>
   );
