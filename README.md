@@ -1,7 +1,5 @@
 # Arnold 💪 - Stock Backtesting and Trading Platform
 
-[![codecov](https://codecov.io/gh/ant-fx/arnold-backtester/branch/main/graph/badge.svg?token=1CF7QD9N5O)](https://codecov.io/gh/ant-fx/arnold-backtester)
-
 The ethos behind Arnold is to allow for advanced backtesting of stocks using
 tick and bid/ask data and provide a different order types like:
 
@@ -15,6 +13,8 @@ could check the `SPY` while trading `MSFT`.
 
 It should let you graphically analyse each trade in context to better help
 understand the strategy.
+
+[Planning Document](https://docs.google.com/spreadsheets/d/1N1seB3mAqIg3ROXPpYTKMNUkTqltKU_lK6Pl7latbxY/edit#gid=660763236)
 
 ## Sample Profile
 
