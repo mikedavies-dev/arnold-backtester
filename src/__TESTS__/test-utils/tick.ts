@@ -1,10 +1,24 @@
 import {fromUnixTime, parse, getUnixTime, format, addSeconds} from 'date-fns';
+
 import {TickType, Tracker, BrokerState, StoredTick} from '../../core';
 import {flow} from 'fp-ts/lib/function';
+
+import {
+  createTimeAsDate as createTimeAsDateBase,
+  createTimeAsUnix as createTimeAsUnixBase,
+} from '../../utils/dates';
 
 import {handleTrackerTick, initTracker} from '../../utils/tracker';
 import {getMarketOpen, getMarketClose} from '../../utils/market';
 import {handleBrokerTick, initBroker} from '../../backtest/broker';
+
+export function createTimeAsUnix(time: string) {
+  return createTimeAsUnixBase(time, getTestDate());
+}
+
+export function createTimeAsDate(time: string, date = '2022-01-01') {
+  return createTimeAsDateBase(time, date, getTestDate());
+}
 
 export function createTick({
   type,
@@ -30,14 +44,6 @@ export function createTick({
 
 export function getTestDate() {
   return parse('2022-01-01', 'yyyy-MM-dd', new Date());
-}
-
-export function createTimeAsUnix(time: string) {
-  return flow(parse, getUnixTime)(time, 'HH:mm', getTestDate());
-}
-
-export function createTimeAsDate(time: string, date = '2022-01-01') {
-  return flow(parse)(time, 'HH:mm', parse(date, 'yyyy-MM-dd', new Date()));
 }
 
 export type TestTickData = [string, number, number, number, number];

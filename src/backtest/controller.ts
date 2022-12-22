@@ -97,9 +97,6 @@ export async function runBacktestController({
     to: runProfile.dates.to,
   });
 
-  // We don't need the data provider anymore
-  await dataProvider.shutdown();
-
   const start = Date.now();
 
   const dateSymbolCombos = runProfile.dates.dates

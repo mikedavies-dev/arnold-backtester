@@ -9,6 +9,7 @@ import {
 import {loadStrategy} from '../utils/module';
 import {mergeSortedArrays} from '../utils/data-structures';
 import {createDataProvider} from '../utils/data-provider';
+import {getTimes} from '../utils/dates';
 
 import {
   initTracker,
@@ -207,9 +208,9 @@ export async function runBacktest({
         tracker: trackers[symbol],
         trackers,
         log,
-        marketTime,
-        marketOpen,
-        marketClose,
+        marketTime: getTimes(marketTime),
+        marketOpen: getTimes(marketOpen),
+        marketClose: getTimes(marketClose),
         marketState: getMarketState(
           marketTime,
           preMarketOpen,
@@ -273,7 +274,7 @@ export async function runBacktest({
           strategy.handleTick({
             log,
             marketState,
-            marketTime,
+            marketTime: getTimes(marketTime),
             tick,
             symbol,
             tracker,

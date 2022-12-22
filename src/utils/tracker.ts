@@ -179,6 +179,7 @@ export function handleTrackerMinuteBar({
   }
 
   data.volume += bar.volume;
+  data.last = bar.close;
 
   periods.forEach(period =>
     updateBarFromMinuteBar({

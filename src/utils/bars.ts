@@ -117,3 +117,23 @@ export const updateBarFromMinuteBar = ({
     toUpdate.low = bar.low;
   }
 };
+
+export function getRetraceFromHigh(bars: Bar[], high: number) {
+  let currentRetrace = 0;
+
+  for (let index = bars.length - 1; index > 0; index -= 1) {
+    const bar = bars[index];
+
+    if (bar.high >= high) {
+      return currentRetrace;
+    }
+
+    currentRetrace = Math.max(currentRetrace, high - bar.low);
+  }
+
+  return currentRetrace;
+}
+
+export function getHigh(bars: Bar[]) {
+  return bars.reduce((high, bar) => Math.max(high, bar.high), 0);
+}

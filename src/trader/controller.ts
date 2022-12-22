@@ -7,6 +7,7 @@ import {
   isAfter,
   parse,
   startOfDay,
+  format,
 } from 'date-fns';
 
 import {
@@ -24,6 +25,7 @@ import {create as createPositions} from '../utils/positions';
 import {createDataProvider, createBroker} from '../utils/data-provider';
 import {getLiveConfig} from '../utils/live-config';
 import Env from '../utils/env';
+import {getTimes} from '../utils/dates';
 
 import {
   ensureBarDataIsAvailable,
@@ -243,7 +245,7 @@ export async function runLiveController({log}: {log: LoggerCallback}) {
                 strategy.handleTick({
                   log,
                   marketState,
-                  marketTime,
+                  marketTime: getTimes(marketTime),
                   tick,
                   symbol,
                   tracker: trackers[symbol],
@@ -357,9 +359,9 @@ export async function runLiveController({log}: {log: LoggerCallback}) {
               tracker: trackers[symbol],
               trackers,
               log,
-              marketTime,
-              marketOpen,
-              marketClose,
+              marketTime: getTimes(marketTime),
+              marketOpen: getTimes(marketOpen),
+              marketClose: getTimes(marketClose),
               marketState,
             });
 

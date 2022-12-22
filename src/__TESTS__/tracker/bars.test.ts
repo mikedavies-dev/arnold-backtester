@@ -803,4 +803,46 @@ describe('test updating bar data', () => {
     expect(tracker.bars.m5[0].volume).toEqual(10);
     expect(tracker.bars.daily[0].volume).toEqual(10);
   });
+
+  test('set last from bar data', () => {
+    const tracker = initTracker();
+
+    const marketOpen = getMarketOpen(getTestDate());
+    const marketClose = getMarketClose(getTestDate());
+
+    // Update a bar
+    handleTrackerMinuteBar({
+      data: tracker,
+      bar: {
+        open: 1,
+        high: 2,
+        low: 1,
+        close: 2,
+        volume: 1,
+        time: formatBarTime(Periods.m1, createTimeAsUnix('10:00')),
+      },
+      marketTime: createTimeAsUnix('10:00'),
+      marketOpen,
+      marketClose,
+    });
+
+    expect(tracker.last).toEqual(2);
+
+    handleTrackerMinuteBar({
+      data: tracker,
+      bar: {
+        open: 1,
+        high: 2,
+        low: 1,
+        close: 1,
+        volume: 1,
+        time: formatBarTime(Periods.m1, createTimeAsUnix('10:01')),
+      },
+      marketTime: createTimeAsUnix('10:01'),
+      marketOpen,
+      marketClose,
+    });
+
+    expect(tracker.last).toEqual(1);
+  });
 });

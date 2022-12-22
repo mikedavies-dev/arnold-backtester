@@ -387,7 +387,7 @@ export type HandleTickParameters = {
   tracker: Tracker;
   trackers: Record<string, Tracker>;
   marketState: MarketStatus;
-  marketTime: number;
+  marketTime: Times;
   broker: {
     placeOrder: (symbol: string, spec: OrderSpecification) => number;
     hasOpenOrders: (symbol: string) => boolean;
@@ -404,9 +404,9 @@ export type IsSetupParameters = {
   log: LoggerCallback;
   tracker: Tracker;
   trackers: Record<string, Tracker>;
-  marketTime: number;
-  marketOpen: number;
-  marketClose: number;
+  marketTime: Times;
+  marketOpen: Times;
+  marketClose: Times;
   marketState: MarketStatus;
 };
 
@@ -475,4 +475,10 @@ export type LiveTradingProfile = {
 
 export type LiveTradingConfig = {
   profiles: LiveTradingProfile[];
+};
+
+export type Times = {
+  unix: number;
+  date: Date;
+  time: string;
 };

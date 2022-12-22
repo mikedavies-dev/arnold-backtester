@@ -302,7 +302,7 @@ export function create({log}: {log?: LoggerCallback} = {}): DataProvider {
           }
 
           log?.(
-            `Downloaded ${numeral(ticks.length).format(
+            `> Fetched ${numeral(ticks.length).format(
               '0,0',
             )} ${type} ticks for ${instrument.symbol} from ${formatDateTime(
               currentTime,
