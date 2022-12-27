@@ -1,3 +1,5 @@
+import Commander from 'commander';
+
 import Logger from '../utils/logger';
 import {
   runBacktestController,
@@ -6,26 +8,37 @@ import {
 
 import {connect, storeBacktestResults, disconnect} from '../utils/db';
 
+const {program} = Commander;
+
+program
+  .description('Run a backtest profile')
+  .usage('[OPTIONS]...')
+  .requiredOption('-p, --profile <profile>', 'the name of the profile to run')
+  .option(
+    '-f, --fetchOnly',
+    'download data without running the backtest',
+    false,
+  )
+  .parse();
+
+const options = program.opts<{profile: string; fetchOnly: boolean}>();
+
 const log = Logger('backtest');
 
 async function run() {
-  const args = process.argv.slice(2);
-
-  if (!args.length) {
-    log('Please specify a profile');
-    return;
-  }
-
   try {
     log('Connecting to database');
     await connect();
 
     const results = await runBacktestController({
       log,
-      profile: args[0],
+      profile: options.profile,
+      fetchOnly: options.fetchOnly,
     });
 
-    await storeBacktestResults(results);
+    if (!options.fetchOnly) {
+      await storeBacktestResults(results);
+    }
   } catch (err) {
     const errorCode =
       err instanceof BacktestControllerError ? err.code : 'unknown';

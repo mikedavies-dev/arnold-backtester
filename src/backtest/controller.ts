@@ -42,9 +42,11 @@ export class BacktestControllerError extends Error {
 export async function runBacktestController({
   log,
   profile,
+  fetchOnly,
 }: {
   log: LoggerCallback;
   profile: string;
+  fetchOnly: boolean;
 }): Promise<BacktestResults> {
   log(`Loading profile '${profile}'`);
 
@@ -67,7 +69,7 @@ export async function runBacktestController({
   log(`Starting ${runProfile.threads} threads`);
 
   const pool = new StaticPool({
-    size: runProfile.threads | 1,
+    size: fetchOnly ? 1 : runProfile.threads | 1,
     task: filePath,
     workerData: {
       profile: runProfile,
@@ -116,6 +118,7 @@ export async function runBacktestController({
       const result = (await pool.exec({
         symbol,
         date,
+        fetchOnly,
       })) as WorkerResult;
 
       switch (result.error) {

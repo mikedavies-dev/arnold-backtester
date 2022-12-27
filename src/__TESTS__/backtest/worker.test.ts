@@ -42,6 +42,7 @@ describe.skip('test worker module', () => {
           date: getTestDate(),
           log: () => {},
           workerIndex: 0,
+          fetchOnly: false,
         }),
     ).rejects.toThrowErrorMatchingInlineSnapshot(`"no-symbol-data"`);
   });
@@ -87,6 +88,7 @@ describe.skip('test worker module', () => {
       date: getTestDate(),
       log: () => {},
       workerIndex: 0,
+      fetchOnly: false,
     });
 
     expect(data).toMatchInlineSnapshot(`Array []`);
@@ -136,6 +138,7 @@ describe.skip('test worker module', () => {
           date: getTestDate(),
           log: () => {},
           workerIndex: 0,
+          fetchOnly: false,
         }),
     ).rejects.toThrowErrorMatchingInlineSnapshot(`"invalid-symbol-data"`);
   });
@@ -157,6 +160,7 @@ describe.skip('test worker module', () => {
           date: getTestDate(),
           log: () => {},
           workerIndex: 0,
+          fetchOnly: false,
         }),
     ).rejects.toThrowErrorMatchingInlineSnapshot(`"strategy-not-found"`);
   });
