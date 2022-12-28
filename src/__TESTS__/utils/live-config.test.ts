@@ -4,55 +4,11 @@ import {getLiveConfig} from '../../utils/live-config';
 describe('live config tests', () => {
   test('get live config', async () => {
     const config = await getLiveConfig();
-    expect(config).toMatchInlineSnapshot(`
-      Object {
-        "profiles": Array [
-          Object {
-            "accountSize": 1000,
-            "enabled": true,
-            "extraSymbols": Array [
-              "SPY",
-            ],
-            "id": "d2f0d37d-569b-451e-9fe0-52bd4a1f29bf",
-            "name": "Sample Strategy",
-            "strategy": Object {
-              "name": "sample",
-              "source": "/*
-      Sample Live Strategy
-      */
 
-      import {HandleTickParameters, IsSetupParameters} from '../../../core';
-
-      export const extraSymbols = ['SPY'];
-
-      export function init() {}
-
-      export function isSetup({
-        // symbol,
-        // tracker,
-        // log,
-        marketTime,
-        marketOpen,
-      }: IsSetupParameters) {
-        // We are in a setup once the market is open
-        return marketTime > marketOpen;
-      }
-
-      export function handleTick({tick, symbol, log}: HandleTickParameters) {
-        log(symbol, tick);
-      }
-      ",
-            },
-            "symbols": Array [
-              "AAPL",
-              "MSFT",
-              "TEST1",
-              "TEST2",
-            ],
-          },
-        ],
-      }
-    `);
+    expect(config.profiles.length).toBeGreaterThan(0);
+    expect(config.profiles[0].accountSize).toBe(1000);
+    expect(config.profiles[0].enabled).toBe(true);
+    expect(config.profiles[0].name).toBe('Sample Strategy');
   });
 
   test('empty config file fails', async () => {

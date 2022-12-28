@@ -44,7 +44,6 @@ export const backtestResults: Array<DbBacktest> = [
         dates: [getTestDate()],
       },
       symbols: ['ZZZZ'],
-      extraSymbols: [],
       threads: 4,
       initialBalance: 10000,
       commissionPerOrder: 1,

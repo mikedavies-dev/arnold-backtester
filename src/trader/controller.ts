@@ -7,7 +7,6 @@ import {
   isAfter,
   parse,
   startOfDay,
-  format,
 } from 'date-fns';
 
 import {
@@ -18,14 +17,13 @@ import {
   Tick,
   DataProvider,
   LiveTradingConfig,
-  BrokerProvider,
 } from '../core';
+
 import {create as createPositions} from '../utils/positions';
 
 import {createDataProvider, createBroker} from '../utils/data-provider';
 import {getLiveConfig} from '../utils/live-config';
 import Env from '../utils/env';
-import {getTimes} from '../utils/dates';
 
 import {
   ensureBarDataIsAvailable,
@@ -44,7 +42,7 @@ import {
   getMarketOpen,
   getMarketClose,
   getPreMarketOpen,
-  getMarketState,
+  initMarket,
 } from '../utils/market';
 
 import {loadStrategy} from '../utils/module';
@@ -55,7 +53,6 @@ const sleep = (time: number) =>
 
 async function initProfiles(
   dataProvider: DataProvider,
-  broker: BrokerProvider,
   log: LoggerCallback,
   today: Date,
   liveConfig: LiveTradingConfig,
@@ -65,12 +62,19 @@ async function initProfiles(
       id,
       name,
       symbols,
-      extraSymbols,
       strategy: strategyDef,
-      accountSize,
+      // accountSize,
     }) => {
+      const strategy = await loadStrategy(
+        Env.getUserPath(`./live-strategies/${strategyDef.name}.ts`),
+      );
+
+      if (!strategy) {
+        throw new Error('strategy-not-found');
+      }
+
       const symbolsThatRequireData = Array.from(
-        new Set([...symbols, ...extraSymbols]),
+        new Set([...symbols, ...strategy.extraSymbols]),
       );
 
       // Make sure we have symbols in our db
@@ -88,21 +92,14 @@ async function initProfiles(
         to: today,
       });
 
-      const strategy = await loadStrategy(
-        Env.getUserPath(`./live-strategies/${strategyDef.name}.ts`),
-      );
-
-      if (!strategy) {
-        throw new Error('strategy-not-found');
-      }
-
       log(`> Loaded ${name}`);
 
       return {
         id,
         name: name,
         symbols,
-        strategy,
+        factory: strategy.factory,
+        extraSymbols: strategy.extraSymbols,
       };
     },
     false,
@@ -139,7 +136,6 @@ export async function runLiveController({log}: {log: LoggerCallback}) {
     // Make sure we have data for all these symbols
     const activeProfiles = await initProfiles(
       dataProvider,
-      broker,
       log,
       today,
       liveConfig,
@@ -147,7 +143,7 @@ export async function runLiveController({log}: {log: LoggerCallback}) {
 
     const symbols = Array.from(
       new Set(
-        liveConfig.profiles
+        activeProfiles
           .map(profile => [...profile.symbols, ...profile.extraSymbols])
           .flat(),
       ),
@@ -172,6 +168,12 @@ export async function runLiveController({log}: {log: LoggerCallback}) {
         );
       }),
     );
+    const market = initMarket(
+      new Date(),
+      preMarketOpen,
+      marketOpen,
+      marketClose,
+    );
 
     // Request all minute data until today
     const instruments = (
@@ -185,10 +187,41 @@ export async function runLiveController({log}: {log: LoggerCallback}) {
         symbol: instrument.symbol,
         profiles: activeProfiles
           .filter(p => p.symbols.find(s => s === instrument.symbol))
-          .map(p => ({
-            ...p,
-            currentlyInSetup: false,
-          })),
+          .map(p => {
+            const profileId = p.id;
+
+            return {
+              ...p,
+              currentlyInSetup: false,
+              id: p.id,
+              name: p.name,
+              strategy: p.factory({
+                symbol: instrument.symbol,
+                log,
+                market,
+                trackers,
+                tracker: trackers[instrument.symbol],
+                broker: {
+                  orders: positions.getOrders(profileId),
+                  positions: positions.getPositions(profileId),
+                  placeOrder: (order: OrderSpecification) =>
+                    broker.placeOrder({
+                      profileId,
+                      instrument: instrument,
+                      order,
+                    }),
+                  hasOpenOrders: () =>
+                    broker.hasOpenOrders(profileId, instrument),
+                  getPositionSize: () =>
+                    broker.getPositionSize(profileId, instrument),
+                  closePosition: (reason: string | null) =>
+                    broker.closePosition(profileId, instrument, reason),
+                  hasOpenPosition: () =>
+                    broker.hasOpenPosition(profileId, instrument),
+                },
+              }),
+            };
+          }),
       };
     });
 
@@ -212,23 +245,26 @@ export async function runLiveController({log}: {log: LoggerCallback}) {
           });
         });
 
+        // init the strategies after loading the initial data
+        profiles.forEach(({strategy}) => {
+          strategy.init({
+            symbol,
+            tracker: trackers[symbol],
+            trackers,
+          });
+        });
+
         await dataProvider.subscribeMarketUpdates({
           instrument,
           onUpdate: ({type, value}) => {
-            const marketTime = getUnixTime(new Date());
-
-            const marketState = getMarketState(
-              marketTime,
-              preMarketOpen,
-              marketOpen,
-              marketClose,
-            );
+            // set the current market time
+            market.update(new Date());
 
             const tick: Tick = {
               type,
               size: 0, // TODO, We don't worry about size updates because we don't store BID_SIZE or ASK_SIZE
               value: value,
-              time: marketTime,
+              time: market.time.unix,
             };
 
             // Update the tracker
@@ -241,80 +277,7 @@ export async function runLiveController({log}: {log: LoggerCallback}) {
 
             profiles
               .filter(p => p.currentlyInSetup)
-              .forEach(({id: profileId, strategy}) => {
-                strategy.handleTick({
-                  log,
-                  marketState,
-                  marketTime: getTimes(marketTime),
-                  tick,
-                  symbol,
-                  tracker: trackers[symbol],
-                  trackers,
-                  broker: {
-                    orders: positions.getOrders(profileId),
-                    positions: positions.getPositions(profileId),
-                    placeOrder: (symbol: string, order: OrderSpecification) => {
-                      const match = instruments.find(i => i.symbol === symbol);
-
-                      if (!match) {
-                        return -1;
-                      }
-
-                      return broker.placeOrder({
-                        profileId,
-                        instrument: match.instrument,
-                        order,
-                      });
-                    },
-                    hasOpenOrders: (symbol: string) => {
-                      const match = instruments.find(i => i.symbol === symbol);
-
-                      if (!match) {
-                        return false;
-                      }
-
-                      return broker.hasOpenOrders(profileId, match.instrument);
-                    },
-                    getPositionSize: (symbol: string) => {
-                      const match = instruments.find(i => i.symbol === symbol);
-
-                      if (!match) {
-                        return 0;
-                      }
-
-                      return broker.getPositionSize(
-                        profileId,
-                        match.instrument,
-                      );
-                    },
-                    closePosition: (symbol: string, reason: string | null) => {
-                      const match = instruments.find(i => i.symbol === symbol);
-
-                      if (!match) {
-                        return -1;
-                      }
-
-                      return broker.closePosition(
-                        profileId,
-                        match.instrument,
-                        reason,
-                      );
-                    },
-                    hasOpenPosition: symbol => {
-                      const match = instruments.find(i => i.symbol === symbol);
-
-                      if (!match) {
-                        return false;
-                      }
-
-                      return broker.hasOpenPosition(
-                        profileId,
-                        match.instrument,
-                      );
-                    },
-                  },
-                });
-              });
+              .forEach(({strategy}) => strategy.handleTick(tick));
           },
         });
       }),
@@ -343,27 +306,9 @@ export async function runLiveController({log}: {log: LoggerCallback}) {
       const nextMinute = getMinutes(new Date());
 
       if (nextMinute !== currentMinute) {
-        const marketTime = getUnixTime(new Date());
-
-        const marketState = getMarketState(
-          marketTime,
-          preMarketOpen,
-          marketOpen,
-          marketClose,
-        );
-
         instruments.forEach(({symbol, profiles}) => {
           profiles.forEach(profile => {
-            const inSetup = profile.strategy.isSetup({
-              symbol,
-              tracker: trackers[symbol],
-              trackers,
-              log,
-              marketTime: getTimes(marketTime),
-              marketOpen: getTimes(marketOpen),
-              marketClose: getTimes(marketClose),
-              marketState,
-            });
+            const inSetup = profile.strategy.isSetup({});
 
             // Update the UI
             if (profile.currentlyInSetup !== inSetup) {

@@ -45,7 +45,7 @@ export function handleTick({
   log,
   broker,
 }: // accountSize - used to calculate share size
-HandleTickParameters) {
+StrategyHandleTickParameters) {
   switch (tick.type) {
     case 'TRADE': {
       // Not a new high

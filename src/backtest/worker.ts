@@ -23,6 +23,7 @@ import {
   getMarketOpen,
   getMarketClose,
   getMarketState,
+  initMarket,
 } from '../utils/market';
 
 import {
@@ -99,15 +100,15 @@ export async function runBacktest({
   });
 
   // Make sure the module exists
-  const strategy = await loadStrategy(
+  const Strategy = await loadStrategy(
     Env.getUserPath(`./test-strategies/${profile.strategy.name}.ts`),
   );
 
-  if (!strategy) {
+  if (!Strategy) {
     throw new BacktestWorkerError('strategy-not-found');
   }
 
-  const symbols = Array.from(new Set([symbol, ...strategy.extraSymbols]));
+  const symbols = Array.from(new Set([symbol, ...Strategy.extraSymbols]));
 
   const start = Date.now();
 
@@ -122,15 +123,11 @@ export async function runBacktest({
     )}`,
   );
 
-  const currentMarketTime: {
-    current: Date;
-  } = {
-    current: date,
-  };
+  const market = initMarket(date, preMarketOpen, marketOpen, marketClose);
 
   const brokerState = initBroker({
     getMarketTime: () => {
-      return currentMarketTime.current;
+      return market.time.date;
     },
     initialBalance: profile.initialBalance,
   });
@@ -169,13 +166,32 @@ export async function runBacktest({
     return acc;
   }, {} as Record<string, {[time: string]: Bar}>);
 
+  const strategy = Strategy.factory({
+    symbol,
+    log,
+    trackers,
+    tracker: trackers[symbol],
+    market,
+    broker: {
+      placeOrder: (spec: OrderSpecification) =>
+        placeOrder(brokerState, symbol, spec),
+      hasOpenOrders: () => hasOpenOrders(brokerState, symbol),
+      getPositionSize: () => getPositionSize(brokerState, symbol),
+      closePosition: (reason: string | null) =>
+        closePosition(brokerState, symbol, reason),
+      hasOpenPosition: () => hasOpenPosition(brokerState, symbol),
+      orders: brokerState.orders,
+      positions: brokerState.positions,
+    },
+  });
+
   // Process the bar data
   for (
     let marketTime = getPreMarketOpen(date);
     marketTime <= marketClose;
     marketTime += 60
   ) {
-    currentMarketTime.current = fromUnixTime(marketTime);
+    market.update(fromUnixTime(marketTime));
 
     const time = formatBarTime(Periods.m1, marketTime);
 
@@ -262,42 +278,13 @@ export async function runBacktest({
             throw new BacktestWorkerError('invalid-symbol-data');
           }
 
-          currentMarketTime.current = tick.dateTime;
+          market.update(tick.dateTime);
 
           const tracker = trackers[tick.symbol];
 
-          const marketState = getMarketState(
-            tick.time,
-            preMarketOpen,
-            marketOpen,
-            marketClose,
-          );
-
           // If this is an update for our symbol then call the strategy
           if (tick.symbol === symbol) {
-            strategy.handleTick({
-              log,
-              marketState,
-              marketTime: getTimes(marketTime),
-              tick,
-              symbol,
-              tracker,
-              trackers,
-              broker: {
-                placeOrder: (symbol: string, spec: OrderSpecification) =>
-                  placeOrder(brokerState, symbol, spec),
-                hasOpenOrders: (symbol: string) =>
-                  hasOpenOrders(brokerState, symbol),
-                getPositionSize: (symbol: string) =>
-                  getPositionSize(brokerState, symbol),
-                closePosition: (symbol: string, reason: string | null) =>
-                  closePosition(brokerState, symbol, reason),
-                hasOpenPosition: (symbol: string) =>
-                  hasOpenPosition(brokerState, symbol),
-                orders: brokerState.orders,
-                positions: brokerState.positions,
-              },
-            });
+            strategy.handleTick(tick);
           }
 
           // Update the tracker data

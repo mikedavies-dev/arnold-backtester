@@ -98,7 +98,6 @@ describe('mongo db tests', () => {
           dates: [getTestDate()],
         },
         symbols: ['MSFT'],
-        extraSymbols: [],
         initialBalance: 1000,
         commissionPerOrder: 1,
       },

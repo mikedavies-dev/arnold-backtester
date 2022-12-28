@@ -36,7 +36,6 @@ export async function getLiveConfig(): Promise<LiveTradingConfig> {
             source: strategy.source,
           },
           symbols: await loadSymbolLists(profile.symbols),
-          extraSymbols: strategy.extraSymbols,
         };
       }),
   );

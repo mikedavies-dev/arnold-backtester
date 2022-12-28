@@ -1,19 +1,14 @@
 /*
-Sample Live Strategy
+Sample Backtest Strategy
 */
 
 import {Strategy, StrategySetupParameters, Tick} from '../../../core';
 
-export const extraSymbols = ['SPY'];
-
 export default function ({
   symbol,
   log,
-  // tracker,
-  // trackers,
   market,
-}: // broker,
-StrategySetupParameters): Strategy {
+}: StrategySetupParameters): Strategy {
   function init() {}
 
   function isSetup(): boolean {

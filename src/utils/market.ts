@@ -1,11 +1,12 @@
 import {setHours, setMinutes, getUnixTime} from 'date-fns/fp';
 import {flow} from 'fp-ts/lib/function';
+import {getTimes} from './dates';
 
 const createMarketOpen = flow(setHours(9), setMinutes(30), getUnixTime);
 const createMarketClose = flow(setHours(16), setMinutes(0), getUnixTime);
 const createPreMarketOpen = flow(setHours(4), setMinutes(0), getUnixTime);
 
-import {MarketStatus} from '../core';
+import {Market, MarketStatus} from '../core';
 
 export function getMarketOpen(date: Date) {
   return createMarketOpen(date);
@@ -21,7 +22,7 @@ export function getPreMarketOpen(date: Date) {
 
 export function getMarketState(
   time: number,
-  parMarketOpen: number,
+  preMarketOpen: number,
   marketOpen: number,
   marketClose: number,
 ): MarketStatus {
@@ -29,9 +30,38 @@ export function getMarketState(
     return 'OPEN';
   }
 
-  if (time >= parMarketOpen && time < marketOpen) {
+  if (time >= preMarketOpen && time < marketOpen) {
     return 'PREMARKET';
   }
 
   return 'CLOSED';
+}
+
+export function initMarket(
+  date: Date,
+  preMarketOpen: number,
+  marketOpen: number,
+  marketClose: number,
+) {
+  const result: Market = {
+    status: getMarketState(
+      getUnixTime(date),
+      preMarketOpen,
+      marketOpen,
+      marketClose,
+    ),
+    time: getTimes(getUnixTime(date)),
+    open: getTimes(marketOpen),
+    close: getTimes(marketClose),
+    update: (date: Date) => {
+      result.time = getTimes(getUnixTime(date));
+      result.status = getMarketState(
+        getUnixTime(date),
+        preMarketOpen,
+        marketOpen,
+        marketClose,
+      );
+    },
+  };
+  return result;
 }

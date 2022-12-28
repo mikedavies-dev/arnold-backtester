@@ -2,23 +2,29 @@
 Sample Backtest Strategy
 */
 
-import {HandleTickParameters, IsSetupParameters} from '../../../core';
+import {Strategy, StrategySetupParameters, Tick} from '../../../core';
 
 export const extraSymbols = ['SPY'];
 
-export function init() {}
+export default function ({
+  symbol,
+  log,
+  market,
+}: StrategySetupParameters): Strategy {
+  function init() {}
 
-export function isSetup({
-  // symbol,
-  // tracker,
-  // log,
-  marketTime,
-  marketOpen,
-}: IsSetupParameters) {
-  // We are in a setup once the market is open
-  return marketTime > marketOpen;
-}
+  function isSetup(): boolean {
+    return market.time.unix > market.open.unix;
+  }
 
-export function handleTick({tick, symbol, log}: HandleTickParameters) {
-  log(symbol, tick);
+  function handleTick(tick: Tick) {
+    log(symbol, tick);
+  }
+
+  return {
+    init,
+    isSetup,
+    handleTick,
+    indicators: [],
+  };
 }
