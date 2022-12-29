@@ -6,6 +6,7 @@ import {
   getMarketClose,
   initMarket,
   getPreMarketOpen,
+  updateMarket,
 } from '../../utils/market';
 
 import {getTestDate} from '../test-utils/tick';
@@ -77,7 +78,7 @@ test('init market time', () => {
     }
   `);
 
-  market.update(addHours(market.time.date, 10));
+  updateMarket(market, addHours(market.time.date, 10));
 
   expect(market.status).toBe('OPEN');
 
@@ -103,7 +104,7 @@ test('init market time', () => {
     }
   `);
 
-  market.update(addHours(market.time.date, 10));
+  updateMarket(market, addHours(market.time.date, 10));
 
   expect(market.status).toBe('CLOSED');
 

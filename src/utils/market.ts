@@ -53,15 +53,18 @@ export function initMarket(
     time: getTimes(getUnixTime(date)),
     open: getTimes(marketOpen),
     close: getTimes(marketClose),
-    update: (date: Date) => {
-      result.time = getTimes(getUnixTime(date));
-      result.status = getMarketState(
-        getUnixTime(date),
-        preMarketOpen,
-        marketOpen,
-        marketClose,
-      );
-    },
+    preMarketOpen: getTimes(preMarketOpen),
   };
   return result;
+}
+
+export function updateMarket(market: Market, date: Date) {
+  market.time = getTimes(getUnixTime(date));
+
+  market.status = getMarketState(
+    getUnixTime(date),
+    market.preMarketOpen.unix,
+    market.open.unix,
+    market.close.unix,
+  );
 }

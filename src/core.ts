@@ -382,12 +382,12 @@ export type MarketStatus = 'CLOSED' | 'PREMARKET' | 'OPEN';
 export type Market = {
   status: MarketStatus;
   time: Times;
+  preMarketOpen: Times;
   open: Times;
   close: Times;
-  update: (dt: Date) => void;
 };
 
-export type StrategySetupParameters = {
+export type StrategyParameters = {
   symbol: string;
   log: LoggerCallback;
   tracker: Tracker;
@@ -409,10 +409,6 @@ export type Indicator = {
   update: (bars: Bar[]) => void;
 };
 
-export type StrategyInitParameters = {
-  // extra params
-};
-
 export type IsSetupParameters = {
   // extra params
 };
@@ -422,7 +418,6 @@ export type HandleTickParameters = {
 };
 
 export type Strategy = {
-  init: (params: StrategyInitParameters) => void;
   isSetup: (params: IsSetupParameters) => boolean;
   handleTick: (tick: Tick) => void;
   indicators: Indicator[];

@@ -1,7 +1,7 @@
 import {
   HandleTickParameters,
   IsSetupParameters,
-  StrategySetupParameters,
+  StrategyParameters,
   Strategy,
 } from '../core';
 
@@ -13,7 +13,7 @@ export async function loadStrategy(path: string) {
     const strategy = await import(path);
 
     const factory = strategy.default as (
-      params: StrategySetupParameters,
+      params: StrategyParameters,
     ) => Strategy;
 
     return {

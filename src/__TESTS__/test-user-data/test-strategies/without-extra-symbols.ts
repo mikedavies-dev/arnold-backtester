@@ -2,15 +2,9 @@
 Sample Backtest Strategy
 */
 
-import {Strategy, StrategySetupParameters, Tick} from '../../../core';
+import {Strategy, StrategyParameters, Tick} from '../../../core';
 
-export default function ({
-  symbol,
-  log,
-  market,
-}: StrategySetupParameters): Strategy {
-  function init() {}
-
+export default function ({symbol, log, market}: StrategyParameters): Strategy {
   function isSetup(): boolean {
     return market.time.unix > market.open.unix;
   }
@@ -20,7 +14,6 @@ export default function ({
   }
 
   return {
-    init,
     isSetup,
     handleTick,
     indicators: [],

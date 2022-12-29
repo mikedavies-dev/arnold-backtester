@@ -2,7 +2,7 @@
 Sample Live Strategy
 */
 
-import {Strategy, StrategySetupParameters, Tick} from '../../../core';
+import {Strategy, StrategyParameters, Tick} from '../../../core';
 
 export const extraSymbols = ['SPY'];
 
@@ -13,19 +13,16 @@ export default function ({
   // trackers,
   market,
 }: // broker,
-StrategySetupParameters): Strategy {
-  function init() {}
-
-  function isSetup(): boolean {
+StrategyParameters): Strategy {
+  const isSetup = () => {
     return market.time.unix > market.open.unix;
-  }
+  };
 
-  function handleTick(tick: Tick) {
+  const handleTick = (tick: Tick) => {
     log(symbol, tick);
-  }
+  };
 
   return {
-    init,
     isSetup,
     handleTick,
     indicators: [],

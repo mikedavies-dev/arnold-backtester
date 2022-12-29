@@ -6,6 +6,7 @@ import {
   loadTickForMinute,
   ensureTickDataIsAvailable,
 } from '../utils/tick-storage';
+
 import {loadStrategy} from '../utils/module';
 import {mergeSortedArrays} from '../utils/data-structures';
 import {createDataProvider} from '../utils/data-provider';
@@ -24,6 +25,7 @@ import {
   getMarketClose,
   getMarketState,
   initMarket,
+  updateMarket,
 } from '../utils/market';
 
 import {
@@ -191,7 +193,7 @@ export async function runBacktest({
     marketTime <= marketClose;
     marketTime += 60
   ) {
-    market.update(fromUnixTime(marketTime));
+    updateMarket(market, fromUnixTime(marketTime));
 
     const time = formatBarTime(Periods.m1, marketTime);
 
@@ -241,7 +243,7 @@ export async function runBacktest({
       // Make sure we have data for this minute
       await ensureTickDataIsAvailable({
         symbols,
-        minute: fromUnixTime(marketTime),
+        minute: market.time.date,
         log,
         dataProvider,
       });
@@ -261,7 +263,7 @@ export async function runBacktest({
             async symbol =>
               await loadTickForMinute(
                 symbol,
-                fromUnixTime(marketTime),
+                market.time.date,
                 TickFileType.Merged,
               ),
           ),
@@ -278,7 +280,7 @@ export async function runBacktest({
             throw new BacktestWorkerError('invalid-symbol-data');
           }
 
-          market.update(tick.dateTime);
+          updateMarket(market, tick.dateTime);
 
           const tracker = trackers[tick.symbol];
 
@@ -305,6 +307,9 @@ export async function runBacktest({
 
       // Increment the market time 60 seconds (next minute bar)
       marketTime += 60;
+
+      // set the current time
+      updateMarket(market, fromUnixTime(marketTime));
     }
   }
 

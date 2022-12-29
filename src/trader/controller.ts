@@ -43,6 +43,7 @@ import {
   getMarketClose,
   getPreMarketOpen,
   initMarket,
+  updateMarket,
 } from '../utils/market';
 
 import {loadStrategy} from '../utils/module';
@@ -245,20 +246,11 @@ export async function runLiveController({log}: {log: LoggerCallback}) {
           });
         });
 
-        // init the strategies after loading the initial data
-        profiles.forEach(({strategy}) => {
-          strategy.init({
-            symbol,
-            tracker: trackers[symbol],
-            trackers,
-          });
-        });
-
         await dataProvider.subscribeMarketUpdates({
           instrument,
           onUpdate: ({type, value}) => {
             // set the current market time
-            market.update(new Date());
+            updateMarket(market, new Date());
 
             const tick: Tick = {
               type,
