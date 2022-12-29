@@ -30,5 +30,5 @@ test('get times in various formats', () => {
 
   expect(times.time).toBe('10:12:00');
   expect(times.unix).toBe(source);
-  expect(times.date).toMatchInlineSnapshot(`2022-01-01T15:12:00.000Z`);
+  expect(times.dt).toMatchInlineSnapshot(`2022-01-01T15:12:00.000Z`);
 });

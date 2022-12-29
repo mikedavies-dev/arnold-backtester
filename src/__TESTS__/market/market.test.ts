@@ -58,73 +58,73 @@ test('init market time', () => {
 
   expect(market.open).toMatchInlineSnapshot(`
     Object {
-      "date": 2022-01-01T14:30:00.000Z,
+      "dt": 2022-01-01T14:30:00.000Z,
       "time": "09:30:00",
       "unix": 1641047400,
     }
   `);
   expect(market.close).toMatchInlineSnapshot(`
     Object {
-      "date": 2022-01-01T21:00:00.000Z,
+      "dt": 2022-01-01T21:00:00.000Z,
       "time": "16:00:00",
       "unix": 1641070800,
     }
   `);
-  expect(market.time).toMatchInlineSnapshot(`
+  expect(market.current).toMatchInlineSnapshot(`
     Object {
-      "date": 2022-01-01T05:00:00.000Z,
+      "dt": 2022-01-01T05:00:00.000Z,
       "time": "00:00:00",
       "unix": 1641013200,
     }
   `);
 
-  updateMarket(market, addHours(market.time.date, 10));
+  updateMarket(market, addHours(market.current.dt, 10));
 
   expect(market.status).toBe('OPEN');
 
   expect(market.open).toMatchInlineSnapshot(`
     Object {
-      "date": 2022-01-01T14:30:00.000Z,
+      "dt": 2022-01-01T14:30:00.000Z,
       "time": "09:30:00",
       "unix": 1641047400,
     }
   `);
   expect(market.close).toMatchInlineSnapshot(`
     Object {
-      "date": 2022-01-01T21:00:00.000Z,
+      "dt": 2022-01-01T21:00:00.000Z,
       "time": "16:00:00",
       "unix": 1641070800,
     }
   `);
-  expect(market.time).toMatchInlineSnapshot(`
+  expect(market.current).toMatchInlineSnapshot(`
     Object {
-      "date": 2022-01-01T15:00:00.000Z,
+      "dt": 2022-01-01T15:00:00.000Z,
       "time": "10:00:00",
       "unix": 1641049200,
     }
   `);
 
-  updateMarket(market, addHours(market.time.date, 10));
+  updateMarket(market, addHours(market.current.dt, 10));
 
   expect(market.status).toBe('CLOSED');
 
   expect(market.open).toMatchInlineSnapshot(`
     Object {
-      "date": 2022-01-01T14:30:00.000Z,
+      "dt": 2022-01-01T14:30:00.000Z,
       "time": "09:30:00",
       "unix": 1641047400,
     }
   `);
   expect(market.close).toMatchInlineSnapshot(`
     Object {
-      "date": 2022-01-01T21:00:00.000Z,
+      "dt": 2022-01-01T21:00:00.000Z,
       "time": "16:00:00",
       "unix": 1641070800,
     }
   `);
-  expect(market.time).toMatchInlineSnapshot(`
+  expect(market.current).toMatchInlineSnapshot(`
     Object {
-      "date": 2022-01-02T01:00:00.000Z,
+      "dt": 2022-01-02T01:00:00.000Z,
       "time": "20:00:00",
       "unix": 1641085200,
     }

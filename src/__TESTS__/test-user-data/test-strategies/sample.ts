@@ -8,7 +8,7 @@ export const extraSymbols = ['SPY'];
 
 export default function ({symbol, log, market}: StrategyParameters): Strategy {
   const isSetup = () => {
-    return market.time.unix > market.open.unix;
+    return market.current.unix > market.open.unix;
   };
 
   const handleTick = (tick: Tick) => {

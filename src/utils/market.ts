@@ -50,7 +50,7 @@ export function initMarket(
       marketOpen,
       marketClose,
     ),
-    time: getTimes(getUnixTime(date)),
+    current: getTimes(getUnixTime(date)),
     open: getTimes(marketOpen),
     close: getTimes(marketClose),
     preMarketOpen: getTimes(preMarketOpen),
@@ -59,7 +59,7 @@ export function initMarket(
 }
 
 export function updateMarket(market: Market, date: Date) {
-  market.time = getTimes(getUnixTime(date));
+  market.current = getTimes(getUnixTime(date));
 
   market.status = getMarketState(
     getUnixTime(date),

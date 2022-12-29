@@ -22,7 +22,7 @@ export function getTimes(unixTime: number): Times {
   const date = fromUnixTime(unixTime);
   return {
     unix: unixTime,
-    date,
+    dt: date,
     time: format(date, 'HH:mm:ss'),
   };
 }

@@ -381,7 +381,7 @@ export type MarketStatus = 'CLOSED' | 'PREMARKET' | 'OPEN';
 
 export type Market = {
   status: MarketStatus;
-  time: Times;
+  current: Times;
   preMarketOpen: Times;
   open: Times;
   close: Times;
@@ -491,6 +491,6 @@ export type LiveTradingConfig = {
 
 export type Times = {
   unix: number;
-  date: Date;
+  dt: Date;
   time: string;
 };

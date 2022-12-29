@@ -129,7 +129,7 @@ export async function runBacktest({
 
   const brokerState = initBroker({
     getMarketTime: () => {
-      return market.time.date;
+      return market.current.dt;
     },
     initialBalance: profile.initialBalance,
   });
@@ -243,7 +243,7 @@ export async function runBacktest({
       // Make sure we have data for this minute
       await ensureTickDataIsAvailable({
         symbols,
-        minute: market.time.date,
+        minute: market.current.dt,
         log,
         dataProvider,
       });
@@ -263,7 +263,7 @@ export async function runBacktest({
             async symbol =>
               await loadTickForMinute(
                 symbol,
-                market.time.date,
+                market.current.dt,
                 TickFileType.Merged,
               ),
           ),

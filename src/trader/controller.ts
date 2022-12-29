@@ -256,7 +256,7 @@ export async function runLiveController({log}: {log: LoggerCallback}) {
               type,
               size: 0, // TODO, We don't worry about size updates because we don't store BID_SIZE or ASK_SIZE
               value: value,
-              time: market.time.unix,
+              time: market.current.unix,
             };
 
             // Update the tracker
