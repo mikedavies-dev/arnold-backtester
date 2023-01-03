@@ -1,10 +1,6 @@
 import {runBacktest} from '../../backtest/worker';
 import {loadBacktestProfile} from '../../utils/profile';
-import {
-  createTimeAsDate,
-  createTimeAsUnix,
-  getTestDate,
-} from '../test-utils/tick';
+import {createTimeAsDate, createTimeAsUnix, getTestDate} from '../testing/tick';
 import {connect, disconnect} from '../../utils/db';
 
 import {loadTickForMinute} from '../../utils/tick-storage';

@@ -267,9 +267,13 @@ export async function runLiveController({log}: {log: LoggerCallback}) {
               marketClose,
             });
 
+            // update the indicators
             profiles
               .filter(p => p.currentlyInSetup)
-              .forEach(({strategy}) => strategy.handleTick(tick));
+              .forEach(({strategy}) => {
+                strategy.indicators.forEach(indicator => indicator.update());
+                strategy.handleTick(tick);
+              });
           },
         });
       }),

@@ -6,7 +6,7 @@ import {
   getTimes,
 } from '../../utils/dates';
 
-import {getTestDate} from '../test-utils/tick';
+import {getTestDate} from '../testing/tick';
 
 test('formatting a date', () => {
   expect(formatDate(getTestDate())).toMatch(`2022-01-01`);

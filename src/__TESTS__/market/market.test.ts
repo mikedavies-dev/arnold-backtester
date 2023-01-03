@@ -9,7 +9,7 @@ import {
   updateMarket,
 } from '../../utils/market';
 
-import {getTestDate} from '../test-utils/tick';
+import {getTestDate} from '../testing/tick';
 
 test('get market open', () => {
   const marketTime = flow(parse, getMarketOpen, fromUnixTime, date =>

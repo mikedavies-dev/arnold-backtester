@@ -221,6 +221,10 @@ export async function runBacktest({
       }
     });
 
+    strategy.indicators.forEach(indicator => {
+      indicator.update();
+    });
+
     // While we either have open orders or we are in a setup
     while (
       strategy.isSetup({
@@ -284,12 +288,7 @@ export async function runBacktest({
 
           const tracker = trackers[tick.symbol];
 
-          // If this is an update for our symbol then call the strategy
-          if (tick.symbol === symbol) {
-            strategy.handleTick(tick);
-          }
-
-          // Update the tracker data
+          // update the tracker data
           handleTrackerTick({
             data: tracker,
             tick,
@@ -297,11 +296,19 @@ export async function runBacktest({
             marketClose,
           });
 
-          // Update broker, open orders, etc
+          // update the indicators
+          strategy.indicators.forEach(indicator => indicator.update());
+
+          // update broker, open orders, etc
           handleBrokerTick(brokerState, tick.symbol, tracker, {
             commissionPerOrder: profile.commissionPerOrder,
             orderExecutionDelayMs: 1000,
           });
+
+          // If this is an update for our symbol then call the strategy
+          if (tick.symbol === symbol) {
+            strategy.handleTick(tick);
+          }
         });
       }
 

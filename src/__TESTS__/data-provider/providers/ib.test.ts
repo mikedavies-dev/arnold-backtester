@@ -1,5 +1,5 @@
 import {Bar} from '../../../core';
-import {getTestDate} from '../../test-utils/tick';
+import {getTestDate} from '../../testing/tick';
 import {create as createIB} from '../../../utils/data-provider/providers/ib';
 import Env from '../../../utils/env';
 import {Instrument} from '../../../core';

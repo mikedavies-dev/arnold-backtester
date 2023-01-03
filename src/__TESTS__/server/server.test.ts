@@ -2,7 +2,7 @@ import {Server} from 'http';
 import axios from 'axios';
 
 import {startServer} from '../../server/server';
-import {backtestResults} from '../test-utils/backtest';
+import {backtestResults} from '../testing/backtest';
 
 import Env from '../../utils/env';
 import {getBacktests, getBacktest} from '../../utils/db';

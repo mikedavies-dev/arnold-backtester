@@ -3,7 +3,7 @@ import {
   loadTickForMinute,
   hasTickForMinute,
 } from '../../utils/tick-storage';
-import {getTestDate} from '../test-utils/tick';
+import {getTestDate} from '../testing/tick';
 import {TickFileType} from '../../core';
 import Env from '../../utils/env';
 

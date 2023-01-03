@@ -405,8 +405,12 @@ export type StrategyParameters = {
 };
 
 export type Indicator = {
-  init: (bars: Bar[]) => void;
-  update: (bars: Bar[]) => void;
+  update: () => void;
+};
+
+export type LineIndicator = Indicator & {
+  last: () => number;
+  values: () => number[];
 };
 
 export type IsSetupParameters = {
