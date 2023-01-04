@@ -404,12 +404,22 @@ export type StrategyParameters = {
   };
 };
 
-export type Indicator = {
+export type IndicatorUpdater = {
   update: () => void;
 };
 
+export type Indicator = {
+  updateLatest: () => void;
+  recalculate: () => void;
+  dependencies: Array<Array<Bar>>;
+};
+
 export type LineIndicator = Indicator & {
-  last: () => number;
+  values: number[];
+};
+
+export type LineIndicatorAccessor = LineIndicator & {
+  last: number;
   values: () => number[];
 };
 

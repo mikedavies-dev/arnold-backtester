@@ -1,7 +1,7 @@
-import {Bar, Indicator} from '../../core';
+import {Bar, IndicatorUpdater} from '../../core';
 
 export function updateBar(
-  indicator: Indicator,
+  indicator: IndicatorUpdater,
   bars: Bar[],
   time: string,
   value: number,
