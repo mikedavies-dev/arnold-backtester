@@ -19,6 +19,8 @@ import {
   LiveTradingConfig,
 } from '../core';
 
+import {indicatorUpdateWrapper} from '../utils/indicators';
+
 import {create as createPositions} from '../utils/positions';
 
 import {createDataProvider, createBroker} from '../utils/data-provider';
@@ -191,36 +193,39 @@ export async function runLiveController({log}: {log: LoggerCallback}) {
           .map(p => {
             const profileId = p.id;
 
+            const strategy = p.factory({
+              symbol: instrument.symbol,
+              log,
+              market,
+              trackers,
+              tracker: trackers[instrument.symbol],
+              broker: {
+                orders: positions.getOrders(profileId),
+                positions: positions.getPositions(profileId),
+                placeOrder: (order: OrderSpecification) =>
+                  broker.placeOrder({
+                    profileId,
+                    instrument: instrument,
+                    order,
+                  }),
+                hasOpenOrders: () =>
+                  broker.hasOpenOrders(profileId, instrument),
+                getPositionSize: () =>
+                  broker.getPositionSize(profileId, instrument),
+                closePosition: (reason: string | null) =>
+                  broker.closePosition(profileId, instrument, reason),
+                hasOpenPosition: () =>
+                  broker.hasOpenPosition(profileId, instrument),
+              },
+            });
+
             return {
               ...p,
               currentlyInSetup: false,
               id: p.id,
               name: p.name,
-              strategy: p.factory({
-                symbol: instrument.symbol,
-                log,
-                market,
-                trackers,
-                tracker: trackers[instrument.symbol],
-                broker: {
-                  orders: positions.getOrders(profileId),
-                  positions: positions.getPositions(profileId),
-                  placeOrder: (order: OrderSpecification) =>
-                    broker.placeOrder({
-                      profileId,
-                      instrument: instrument,
-                      order,
-                    }),
-                  hasOpenOrders: () =>
-                    broker.hasOpenOrders(profileId, instrument),
-                  getPositionSize: () =>
-                    broker.getPositionSize(profileId, instrument),
-                  closePosition: (reason: string | null) =>
-                    broker.closePosition(profileId, instrument, reason),
-                  hasOpenPosition: () =>
-                    broker.hasOpenPosition(profileId, instrument),
-                },
-              }),
+              strategy,
+              indicators: strategy.indicators.map(indicatorUpdateWrapper),
             };
           }),
       };
@@ -270,8 +275,8 @@ export async function runLiveController({log}: {log: LoggerCallback}) {
             // update the indicators
             profiles
               .filter(p => p.currentlyInSetup)
-              .forEach(({strategy}) => {
-                strategy.indicators.forEach(indicator => indicator.update());
+              .forEach(({strategy, indicators}) => {
+                indicators.forEach(indicator => indicator.update());
                 strategy.handleTick(tick);
               });
           },

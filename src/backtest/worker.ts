@@ -11,6 +11,7 @@ import {loadStrategy} from '../utils/module';
 import {mergeSortedArrays} from '../utils/data-structures';
 import {createDataProvider} from '../utils/data-provider';
 import {getTimes} from '../utils/dates';
+import {indicatorUpdateWrapper} from '../utils/indicators';
 
 import {
   initTracker,
@@ -187,6 +188,8 @@ export async function runBacktest({
     },
   });
 
+  const indicators = strategy.indicators.map(indicatorUpdateWrapper);
+
   // Process the bar data
   for (
     let marketTime = getPreMarketOpen(date);
@@ -221,7 +224,7 @@ export async function runBacktest({
       }
     });
 
-    strategy.indicators.forEach(indicator => {
+    indicators.forEach(indicator => {
       indicator.update();
     });
 
@@ -297,7 +300,7 @@ export async function runBacktest({
           });
 
           // update the indicators
-          strategy.indicators.forEach(indicator => indicator.update());
+          indicators.forEach(indicator => indicator.update());
 
           // update broker, open orders, etc
           handleBrokerTick(brokerState, tick.symbol, tracker, {
