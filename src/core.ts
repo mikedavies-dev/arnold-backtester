@@ -413,6 +413,11 @@ export type LineIndicator = Indicator & {
   values: () => number[];
 };
 
+export type Indicator2 = {
+  updateLast: () => void;
+  recalculate: () => void;
+};
+
 export type IsSetupParameters = {
   // extra params
 };

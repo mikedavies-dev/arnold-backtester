@@ -50,3 +50,42 @@ export default function RetraceFromHigh(bars: Bar[]): LineIndicator {
     },
   };
 }
+
+// export function RetraceFromHigh2(bars: Bar[]): LineIndicator {
+//   // calculate the entire array
+//   let high = 0;
+//   let values: number[] = [];
+
+//   return {
+//     updateLatest() {
+//       const bar = bars.at(-1);
+
+//       if (!bar) {
+//         return;
+//       }
+
+//       // see if the last bar high is higher than ours, if so then reset
+//       if (bar.high > high) {
+//         high = bar.high;
+//       }
+
+//       // update the current retrace
+//       values[values.length - 1] = high - bar.close;
+//     },
+//     recalculate() {
+//       high = 0;
+
+//       values = bars.map(bar => {
+//         if (bar.high > high) {
+//           high = bar.high;
+//         }
+
+//         // should we use low here?
+//         return high - bar.close;
+//       });
+//     },
+//     values() {
+//       return values;
+//     },
+//   };
+// }

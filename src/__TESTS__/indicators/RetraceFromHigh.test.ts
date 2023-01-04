@@ -1,5 +1,5 @@
 import {Bar} from '../../core';
-import RetraceFromHigh from '../../indicators/retrace-from-high';
+import RetraceFromHigh from '../../indicators/RetraceFromHigh';
 import {updateBar} from '../testing/indicators';
 
 describe('indicators - retrace from high', () => {
