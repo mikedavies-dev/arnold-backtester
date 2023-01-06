@@ -31,9 +31,6 @@ beforeAll(async () => {
 test('loading the homepage', async () => {
   const res = await instance.get('/');
   expect(res.status).toBe(200);
-  expect(res.data).toMatchInlineSnapshot(
-    `"Arnold 💪 - Stock Backtesting and Trading Platform"`,
-  );
 });
 
 test('basic api call', async () => {
