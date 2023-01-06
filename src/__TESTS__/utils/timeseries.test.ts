@@ -1,7 +1,7 @@
 import {addWeeks} from 'date-fns';
 
 import {splitDatesIntoBlocks} from '../../utils/timeseries';
-import {getTestDate} from '../test-utils/tick';
+import {getTestDate} from '../testing/tick';
 
 test('splitting dates into block sizes', () => {
   // The same dates should not return anything

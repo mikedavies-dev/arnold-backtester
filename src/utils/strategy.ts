@@ -4,16 +4,16 @@ import Env from './env';
 import {loadStrategy} from './module';
 
 export async function loadBacktestStrategy(name: string) {
-  const strategy = await loadStrategy(
+  const factory = await loadStrategy(
     Env.getUserPath(`./test-strategies/${name}.ts`),
   );
 
-  if (!strategy) {
+  if (!factory) {
     throw new Error(`Test strategy not found ${name}`);
   }
 
   return {
-    ...strategy,
+    factory,
     source: await fs.readFile(
       Env.getUserPath(`./test-strategies/${name}.ts`),
       'utf-8',
@@ -22,16 +22,16 @@ export async function loadBacktestStrategy(name: string) {
 }
 
 export async function loadLiveStrategy(name: string) {
-  const strategy = await loadStrategy(
+  const factory = await loadStrategy(
     Env.getUserPath(`./live-strategies/${name}.ts`),
   );
 
-  if (!strategy) {
+  if (!factory) {
     throw new Error(`Live strategy not found ${name}`);
   }
 
   return {
-    ...strategy,
+    factory,
     source: await fs.readFile(
       Env.getUserPath(`./live-strategies/${name}.ts`),
       'utf-8',

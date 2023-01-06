@@ -17,7 +17,7 @@ import {
 
 import {formatDateTime} from '../../utils/dates';
 
-import {getTestDate} from '../test-utils/tick';
+import {getTestDate} from '../testing/tick';
 import Env from '../../utils/env';
 
 import {

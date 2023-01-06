@@ -319,7 +319,6 @@ export type Profile = {
   threads: number;
   initialBalance: number;
   commissionPerOrder: number;
-  extraSymbols: string[];
 };
 
 // Models
@@ -380,34 +379,62 @@ export type DbLivePosition = {
 
 export type MarketStatus = 'CLOSED' | 'PREMARKET' | 'OPEN';
 
-export type HandleTickParameters = {
-  log: LoggerCallback;
-  tick: Tick;
+export type Market = {
+  status: MarketStatus;
+  current: Times;
+  preMarketOpen: Times;
+  open: Times;
+  close: Times;
+};
+
+export type StrategyParameters = {
   symbol: string;
+  log: LoggerCallback;
   tracker: Tracker;
   trackers: Record<string, Tracker>;
-  marketState: MarketStatus;
-  marketTime: Times;
+  market: Market;
   broker: {
-    placeOrder: (symbol: string, spec: OrderSpecification) => number;
-    hasOpenOrders: (symbol: string) => boolean;
-    getPositionSize: (symbol: string) => number;
-    hasOpenPosition: (symbol: string) => boolean;
-    closePosition: (symbol: string, reason: string) => void;
+    placeOrder: (spec: OrderSpecification) => number;
+    hasOpenOrders: () => boolean;
+    getPositionSize: () => number;
+    hasOpenPosition: () => boolean;
+    closePosition: (reason: string) => void;
     orders: Array<Order>;
     positions: Array<Position>;
   };
 };
 
+export type IndicatorUpdater = {
+  update: () => void;
+};
+
+export type Indicator = {
+  updateLatest: () => void;
+  recalculate: () => void;
+  dependencies: Array<Array<Bar>>;
+};
+
+export type LineIndicator = Indicator & {
+  values: number[];
+};
+
+export type LineIndicatorAccessor = LineIndicator & {
+  last: number;
+  values: () => number[];
+};
+
 export type IsSetupParameters = {
-  symbol: string;
-  log: LoggerCallback;
-  tracker: Tracker;
-  trackers: Record<string, Tracker>;
-  marketTime: Times;
-  marketOpen: Times;
-  marketClose: Times;
-  marketState: MarketStatus;
+  // extra params
+};
+
+export type HandleTickParameters = {
+  // extra params
+};
+
+export type Strategy = {
+  isSetup: (params: IsSetupParameters) => boolean;
+  handleTick: (tick: Tick) => void;
+  indicators: Indicator[];
 };
 
 export type MetricsByPeriod = {
@@ -469,7 +496,6 @@ export type LiveTradingProfile = {
   strategy: StrategyDefinition;
   accountSize: number;
   symbols: string[];
-  extraSymbols: string[];
   enabled: boolean;
 };
 
@@ -479,6 +505,6 @@ export type LiveTradingConfig = {
 
 export type Times = {
   unix: number;
-  date: Date;
+  dt: Date;
   time: string;
 };

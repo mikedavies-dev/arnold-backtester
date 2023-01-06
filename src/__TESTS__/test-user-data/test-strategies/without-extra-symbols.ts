@@ -4,16 +4,14 @@ Sample Backtest Strategy
 
 import {Strategy, StrategyParameters, Tick} from '../../../core';
 
-export const extraSymbols = ['SPY'];
-
 export default function ({symbol, log, market}: StrategyParameters): Strategy {
-  const isSetup = () => {
+  function isSetup(): boolean {
     return market.current.unix > market.open.unix;
-  };
+  }
 
-  const handleTick = (tick: Tick) => {
+  function handleTick(tick: Tick) {
     log(symbol, tick);
-  };
+  }
 
   return {
     isSetup,

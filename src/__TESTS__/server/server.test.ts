@@ -2,7 +2,7 @@ import {Server} from 'http';
 import axios from 'axios';
 
 import {startServer} from '../../server/server';
-import {backtestResults} from '../test-utils/backtest';
+import {backtestResults} from '../testing/backtest';
 
 import Env from '../../utils/env';
 import {getBacktests, getBacktest} from '../../utils/db';
@@ -83,7 +83,6 @@ test('get a backtest by id', async () => {
         "from": "2022-01-01T05:00:00.000Z",
         "to": "2022-01-01T05:00:00.000Z",
       },
-      "extraSymbols": Array [],
       "initialBalance": 10000,
       "strategy": Object {
         "name": "test",

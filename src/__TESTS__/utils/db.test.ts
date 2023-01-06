@@ -19,7 +19,7 @@ import {
   loadTrackerBars,
 } from '../../utils/db';
 
-import {getTestDate} from '../test-utils/tick';
+import {getTestDate} from '../testing/tick';
 
 describe('mongo db tests', () => {
   function getBarData(minutes: number) {
@@ -98,7 +98,6 @@ describe('mongo db tests', () => {
           dates: [getTestDate()],
         },
         symbols: ['MSFT'],
-        extraSymbols: [],
         initialBalance: 1000,
         commissionPerOrder: 1,
       },

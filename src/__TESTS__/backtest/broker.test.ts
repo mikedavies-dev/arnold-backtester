@@ -3,7 +3,7 @@ import {
   createMarket,
   updateMarketDataAndBroker,
   offsetMarketUpdate,
-} from '../test-utils/tick';
+} from '../testing/tick';
 
 import {
   initBroker,

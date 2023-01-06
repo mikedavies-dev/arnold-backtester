@@ -12,7 +12,7 @@ import {MaximumBarCount, Periods} from '../../core';
 
 import {getMarketOpen, getMarketClose} from '../../utils/market';
 
-import {createTick, createTimeAsUnix, getTestDate} from '../test-utils/tick';
+import {createTick, createTimeAsUnix, getTestDate} from '../testing/tick';
 
 describe('test updating bar data', () => {
   test('1m bars', () => {

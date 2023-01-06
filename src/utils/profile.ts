@@ -58,7 +58,6 @@ export async function loadBacktestProfile(name: string): Promise<Profile> {
   return {
     ...profile,
     symbols: await loadSymbolLists(profile.symbols),
-    extraSymbols: strategy.extraSymbols,
     strategy: {
       name: profile.strategy,
       source: strategy.source,

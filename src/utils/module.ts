@@ -1,30 +1,24 @@
-import {HandleTickParameters, IsSetupParameters} from '../core';
-
-type InitStrategy = () => void;
-type ExtraSymbols = Array<string>;
+import {
+  HandleTickParameters,
+  IsSetupParameters,
+  StrategyParameters,
+  Strategy,
+} from '../core';
 
 export type HandleTick = (args: HandleTickParameters) => void;
 export type IsSetup = (args: IsSetupParameters) => boolean;
 
 export async function loadStrategy(path: string) {
   try {
-    const {
-      init,
-      extraSymbols,
-      handleTick,
-      isSetup,
-    }: {
-      init: InitStrategy;
-      extraSymbols: ExtraSymbols;
-      handleTick: HandleTick;
-      isSetup: IsSetup;
-    } = await import(path);
+    const strategy = await import(path);
+
+    const factory = strategy.default as (
+      params: StrategyParameters,
+    ) => Strategy;
 
     return {
-      init,
-      extraSymbols,
-      handleTick,
-      isSetup,
+      factory,
+      extraSymbols: (strategy.extraSymbols as string[]) || [],
     };
   } catch (err) {
     return null;

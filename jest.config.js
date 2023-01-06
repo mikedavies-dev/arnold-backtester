@@ -5,7 +5,7 @@ module.exports = {
     'node_modules',
     'dist/tests',
     'src/tests/test-utils',
-    'src/tests/test-data',
+    'src/tests/testing',
   ],
   collectCoverageFrom: [
     './src/**/*.ts',
@@ -19,10 +19,11 @@ module.exports = {
     '!./src/ui/hooks/use-dimensions.ts',
     '!./src/utils/data-provider/**',
     '!./src/backtest/worker.ts',
-    '!./src/__TESTS__/test-user-data/live-strategies/sample.ts',
-    '!./src/__TESTS__/test-user-data/test-strategies/sample.ts',
+    '!./src/__TESTS__/test-user-data/live-strategies/*.ts',
+    '!./src/__TESTS__/test-user-data/test-strategies/*.ts',
     '!./src/ui/**/*',
     '!./src/__TESTS_UI__/**/*',
+    '!src/tests/testing/*.ts',
   ],
   projects: [
     {

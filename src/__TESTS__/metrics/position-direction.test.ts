@@ -1,7 +1,7 @@
 import {getPositionDirection} from '../../utils/results-metrics';
 
-import {createTestPosition} from '../test-utils/broker';
-import {getTestDate} from '../test-utils/tick';
+import {createTestPosition} from '../testing/broker';
+import {getTestDate} from '../testing/tick';
 
 test('check the direction of a buy order', () => {
   expect(

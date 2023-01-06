@@ -6,7 +6,7 @@ import {
   getTimes,
 } from '../../utils/dates';
 
-import {getTestDate} from '../test-utils/tick';
+import {getTestDate} from '../testing/tick';
 
 test('formatting a date', () => {
   expect(formatDate(getTestDate())).toMatch(`2022-01-01`);
@@ -30,5 +30,5 @@ test('get times in various formats', () => {
 
   expect(times.time).toBe('10:12:00');
   expect(times.unix).toBe(source);
-  expect(times.date).toMatchInlineSnapshot(`2022-01-01T15:12:00.000Z`);
+  expect(times.dt).toMatchInlineSnapshot(`2022-01-01T15:12:00.000Z`);
 });

@@ -5,6 +5,7 @@ test('running the controller with an invalid profile', async () => {
     runBacktestController({
       profile: 'samples',
       log: () => {},
+      fetchOnly: false,
     }),
   ).rejects.toThrowErrorMatchingInlineSnapshot(`"invalid-profile"`);
 });

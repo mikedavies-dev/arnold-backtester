@@ -1,6 +1,6 @@
 import {getPositionPL, totalOrderValue} from '../../utils/results-metrics';
 
-import {createTestPosition} from '../test-utils/broker';
+import {createTestPosition} from '../testing/broker';
 
 test('order value for non-filled order', () => {
   expect(totalOrderValue([])).toBe(0);

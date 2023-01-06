@@ -6,10 +6,12 @@ import {
   loadTickForMinute,
   ensureTickDataIsAvailable,
 } from '../utils/tick-storage';
+
 import {loadStrategy} from '../utils/module';
 import {mergeSortedArrays} from '../utils/data-structures';
 import {createDataProvider} from '../utils/data-provider';
 import {getTimes} from '../utils/dates';
+import {indicatorUpdateWrapper} from '../utils/indicators';
 
 import {
   initTracker,
@@ -23,6 +25,8 @@ import {
   getMarketOpen,
   getMarketClose,
   getMarketState,
+  initMarket,
+  updateMarket,
 } from '../utils/market';
 
 import {
@@ -80,12 +84,14 @@ export async function runBacktest({
   date,
   log,
   workerIndex = 0,
+  fetchOnly,
 }: {
   profile: Profile;
   symbol: string;
   date: Date;
   log: LoggerCallback;
   workerIndex: number;
+  fetchOnly: boolean;
 }) {
   // Create the data provider so we can download tick data
   const dataProvider = createDataProvider({
@@ -97,15 +103,15 @@ export async function runBacktest({
   });
 
   // Make sure the module exists
-  const strategy = await loadStrategy(
+  const Strategy = await loadStrategy(
     Env.getUserPath(`./test-strategies/${profile.strategy.name}.ts`),
   );
 
-  if (!strategy) {
+  if (!Strategy) {
     throw new BacktestWorkerError('strategy-not-found');
   }
 
-  const symbols = Array.from(new Set([symbol, ...strategy.extraSymbols]));
+  const symbols = Array.from(new Set([symbol, ...Strategy.extraSymbols]));
 
   const start = Date.now();
 
@@ -120,15 +126,11 @@ export async function runBacktest({
     )}`,
   );
 
-  const currentMarketTime: {
-    current: Date;
-  } = {
-    current: date,
-  };
+  const market = initMarket(date, preMarketOpen, marketOpen, marketClose);
 
   const brokerState = initBroker({
     getMarketTime: () => {
-      return currentMarketTime.current;
+      return market.current.dt;
     },
     initialBalance: profile.initialBalance,
   });
@@ -167,13 +169,34 @@ export async function runBacktest({
     return acc;
   }, {} as Record<string, {[time: string]: Bar}>);
 
+  const strategy = Strategy.factory({
+    symbol,
+    log,
+    trackers,
+    tracker: trackers[symbol],
+    market,
+    broker: {
+      placeOrder: (spec: OrderSpecification) =>
+        placeOrder(brokerState, symbol, spec),
+      hasOpenOrders: () => hasOpenOrders(brokerState, symbol),
+      getPositionSize: () => getPositionSize(brokerState, symbol),
+      closePosition: (reason: string | null) =>
+        closePosition(brokerState, symbol, reason),
+      hasOpenPosition: () => hasOpenPosition(brokerState, symbol),
+      orders: brokerState.orders,
+      positions: brokerState.positions,
+    },
+  });
+
+  const indicators = strategy.indicators.map(indicatorUpdateWrapper);
+
   // Process the bar data
   for (
     let marketTime = getPreMarketOpen(date);
     marketTime <= marketClose;
     marketTime += 60
   ) {
-    currentMarketTime.current = fromUnixTime(marketTime);
+    updateMarket(market, fromUnixTime(marketTime));
 
     const time = formatBarTime(Periods.m1, marketTime);
 
@@ -201,6 +224,10 @@ export async function runBacktest({
       }
     });
 
+    indicators.forEach(indicator => {
+      indicator.update();
+    });
+
     // While we either have open orders or we are in a setup
     while (
       strategy.isSetup({
@@ -220,99 +247,79 @@ export async function runBacktest({
       }) ||
       hasOpenOrders(brokerState, symbol)
     ) {
-      log(
-        `In setup or have open trades at minute ${format(
-          marketTime * 1000,
-          'yyyy-MM-dd HH:mm:ss',
-        )}`,
-      );
-
       // Make sure we have data for this minute
       await ensureTickDataIsAvailable({
         symbols,
-        minute: fromUnixTime(marketTime),
+        minute: market.current.dt,
         log,
         dataProvider,
       });
 
-      // Load the main symbol data
-      const symbolData = await Promise.all(
-        symbols.map(
-          async symbol =>
-            await loadTickForMinute(
-              symbol,
-              fromUnixTime(marketTime),
-              TickFileType.Merged,
-            ),
-        ),
-      );
-
-      // Merge all the data
-      const marketData = mergeSortedArrays<StoredTick>(
-        symbolData as Array<StoredTick[]>,
-        marketSortFn,
-      );
-
-      marketData.forEach(tick => {
-        if (!trackers[tick.symbol]) {
-          throw new BacktestWorkerError('invalid-symbol-data');
-        }
-
-        currentMarketTime.current = tick.dateTime;
-
-        const tracker = trackers[tick.symbol];
-
-        const marketState = getMarketState(
-          tick.time,
-          preMarketOpen,
-          marketOpen,
-          marketClose,
+      // if we are in fetch mode we don't need to load the tick data or check any trades
+      if (!fetchOnly) {
+        log(
+          `In setup or have open trades at minute ${format(
+            marketTime * 1000,
+            'yyyy-MM-dd HH:mm:ss',
+          )}`,
         );
 
-        // If this is an update for our symbol then call the strategy
-        if (tick.symbol === symbol) {
-          strategy.handleTick({
-            log,
-            marketState,
-            marketTime: getTimes(marketTime),
+        // Load the main symbol data
+        const symbolData = await Promise.all(
+          symbols.map(
+            async symbol =>
+              await loadTickForMinute(
+                symbol,
+                market.current.dt,
+                TickFileType.Merged,
+              ),
+          ),
+        );
+
+        // Merge all the data
+        const marketData = mergeSortedArrays<StoredTick>(
+          symbolData as Array<StoredTick[]>,
+          marketSortFn,
+        );
+
+        marketData.forEach(tick => {
+          if (!trackers[tick.symbol]) {
+            throw new BacktestWorkerError('invalid-symbol-data');
+          }
+
+          updateMarket(market, tick.dateTime);
+
+          const tracker = trackers[tick.symbol];
+
+          // update the tracker data
+          handleTrackerTick({
+            data: tracker,
             tick,
-            symbol,
-            tracker,
-            trackers,
-            broker: {
-              placeOrder: (symbol: string, spec: OrderSpecification) =>
-                placeOrder(brokerState, symbol, spec),
-              hasOpenOrders: (symbol: string) =>
-                hasOpenOrders(brokerState, symbol),
-              getPositionSize: (symbol: string) =>
-                getPositionSize(brokerState, symbol),
-              closePosition: (symbol: string, reason: string | null) =>
-                closePosition(brokerState, symbol, reason),
-              hasOpenPosition: (symbol: string) =>
-                hasOpenPosition(brokerState, symbol),
-              orders: brokerState.orders,
-              positions: brokerState.positions,
-            },
+            marketOpen,
+            marketClose,
           });
-        }
 
-        // Update the tracker data
-        handleTrackerTick({
-          data: tracker,
-          tick,
-          marketOpen,
-          marketClose,
-        });
+          // update the indicators
+          indicators.forEach(indicator => indicator.update());
 
-        // Update broker, open orders, etc
-        handleBrokerTick(brokerState, tick.symbol, tracker, {
-          commissionPerOrder: profile.commissionPerOrder,
-          orderExecutionDelayMs: 1000,
+          // update broker, open orders, etc
+          handleBrokerTick(brokerState, tick.symbol, tracker, {
+            commissionPerOrder: profile.commissionPerOrder,
+            orderExecutionDelayMs: 1000,
+          });
+
+          // If this is an update for our symbol then call the strategy
+          if (tick.symbol === symbol) {
+            strategy.handleTick(tick);
+          }
         });
-      });
+      }
 
       // Increment the market time 60 seconds (next minute bar)
       marketTime += 60;
+
+      // set the current time
+      updateMarket(market, fromUnixTime(marketTime));
     }
   }
 

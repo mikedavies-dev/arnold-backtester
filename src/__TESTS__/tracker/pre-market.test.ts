@@ -1,6 +1,6 @@
 import {initTracker, handleTrackerTick} from '../../utils/tracker';
 import {getMarketOpen, getMarketClose} from '../../utils/market';
-import {createTick, createTimeAsUnix, getTestDate} from '../test-utils/tick';
+import {createTick, createTimeAsUnix, getTestDate} from '../testing/tick';
 
 test('pre-market high', () => {
   const data = initTracker();

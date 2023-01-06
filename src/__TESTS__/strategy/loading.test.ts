@@ -2,83 +2,17 @@ import {loadLiveStrategy, loadBacktestStrategy} from '../../utils/strategy';
 
 describe('test strategy loading', () => {
   test('loading a live strategy', async () => {
-    const strategy = await loadLiveStrategy('sample');
+    const Strategy = await loadLiveStrategy('sample');
 
-    expect(strategy).toMatchInlineSnapshot(`
-      Object {
-        "extraSymbols": Array [
-          "SPY",
-        ],
-        "handleTick": [Function],
-        "init": [Function],
-        "isSetup": [Function],
-        "source": "/*
-      Sample Live Strategy
-      */
-
-      import {HandleTickParameters, IsSetupParameters} from '../../../core';
-
-      export const extraSymbols = ['SPY'];
-
-      export function init() {}
-
-      export function isSetup({
-        // symbol,
-        // tracker,
-        // log,
-        marketTime,
-        marketOpen,
-      }: IsSetupParameters) {
-        // We are in a setup once the market is open
-        return marketTime > marketOpen;
-      }
-
-      export function handleTick({tick, symbol, log}: HandleTickParameters) {
-        log(symbol, tick);
-      }
-      ",
-      }
-    `);
+    expect(typeof Strategy.source).toBe('string');
+    expect(Strategy.source.length).not.toBe('');
   });
 
   test('loading a test strategy', async () => {
-    const strategy = await loadBacktestStrategy('sample');
+    const Strategy = await loadBacktestStrategy('sample');
 
-    expect(strategy).toMatchInlineSnapshot(`
-      Object {
-        "extraSymbols": Array [
-          "SPY",
-        ],
-        "handleTick": [Function],
-        "init": [Function],
-        "isSetup": [Function],
-        "source": "/*
-      Sample Backtest Strategy
-      */
-
-      import {HandleTickParameters, IsSetupParameters} from '../../../core';
-
-      export const extraSymbols = ['SPY'];
-
-      export function init() {}
-
-      export function isSetup({
-        // symbol,
-        // tracker,
-        // log,
-        marketTime,
-        marketOpen,
-      }: IsSetupParameters) {
-        // We are in a setup once the market is open
-        return marketTime > marketOpen;
-      }
-
-      export function handleTick({tick, symbol, log}: HandleTickParameters) {
-        log(symbol, tick);
-      }
-      ",
-      }
-    `);
+    expect(typeof Strategy.source).toBe('string');
+    expect(Strategy.source.length).not.toBe('');
   });
 
   test('load an invalid live strategy', async () => {

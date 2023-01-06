@@ -3,6 +3,8 @@ import {StaticPool} from 'node-worker-threads-pool';
 import numeral from 'numeral';
 import path from 'path';
 
+import Env from '../utils/env';
+
 import {LoggerCallback, Position, Profile} from '../core';
 import {profileExists, loadBacktestProfile} from '../utils/profile';
 import {BackTestWorkerErrorCode} from '../backtest/worker';
@@ -11,6 +13,7 @@ import {
   ensureSymbolsAreAvailable,
 } from '../utils/data-storage';
 import {createDataProvider} from '../utils/data-provider';
+import {loadStrategy} from '../utils/module';
 
 const baseFolder = path.parse(__filename).dir;
 const filePath = path.join(baseFolder, '../bin/worker.js');
@@ -42,9 +45,11 @@ export class BacktestControllerError extends Error {
 export async function runBacktestController({
   log,
   profile,
+  fetchOnly,
 }: {
   log: LoggerCallback;
   profile: string;
+  fetchOnly: boolean;
 }): Promise<BacktestResults> {
   log(`Loading profile '${profile}'`);
 
@@ -67,7 +72,7 @@ export async function runBacktestController({
   log(`Starting ${runProfile.threads} threads`);
 
   const pool = new StaticPool({
-    size: runProfile.threads | 1,
+    size: fetchOnly ? 1 : runProfile.threads | 1,
     task: filePath,
     workerData: {
       profile: runProfile,
@@ -79,8 +84,19 @@ export async function runBacktestController({
   // connect
   await dataProvider.init();
 
+  const strategy = await loadStrategy(
+    Env.getUserPath(`./test-strategies/${runProfile.strategy.name}.ts`),
+  );
+
+  if (!strategy) {
+    throw new BacktestControllerError('invalid-profile');
+  }
+
+  // create an instance of the strategy for each symbol to get a list of extra symbols
+  const {extraSymbols} = strategy;
+
   const symbolsThatRequireData = Array.from(
-    new Set([...runProfile.symbols, ...runProfile.extraSymbols]),
+    new Set([...runProfile.symbols, ...extraSymbols]),
   );
 
   // Make sure we have
@@ -116,6 +132,7 @@ export async function runBacktestController({
       const result = (await pool.exec({
         symbol,
         date,
+        fetchOnly,
       })) as WorkerResult;
 
       switch (result.error) {

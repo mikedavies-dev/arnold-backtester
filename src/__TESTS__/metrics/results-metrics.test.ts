@@ -4,7 +4,7 @@ import {
   updatePeriodMetrics,
 } from '../../utils/results-metrics';
 
-import {createTestPosition} from '../test-utils/broker';
+import {createTestPosition} from '../testing/broker';
 
 const accountSize = 1000;
 const commissionPerOrder = 1;
