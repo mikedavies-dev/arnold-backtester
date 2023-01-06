@@ -91,7 +91,7 @@
     "prepare": "husky install",
     "lint-staged": "lint-staged",
     "server": "TZ=America/New_York ts-node -T ./src/bin/server.ts",
-    "server:dev": "TZ=America/New_York ts-node -T ./src/bin/server.ts",
+    "server:watch": "TZ=America/New_York nodemon --exec ts-node -T ./src/bin/server.ts",
     "build": "rm -rf ./dist && npx parcel build",
     "build:watch": "npx parcel watch",
     "before-push": "npm run check && npm run test:coverage"
@@ -117,6 +117,11 @@
       "source": "./src/web/backtest/index.html",
       "distDir": "./dist/public/backtest",
       "publicUrl": "/backtest"
+    },
+    "frontend-trader": {
+      "source": "./src/web/trader/index.html",
+      "distDir": "./dist/public/trader",
+      "publicUrl": "/trader"
     }
   }
 }
