@@ -1,4 +1,6 @@
-import {Box, Text} from 'ink';
+import {Box, Text, Spacer} from 'ink';
+import {Fragment} from 'react';
+
 type StatusElement = {
   id: string;
   text: string;
@@ -6,52 +8,35 @@ type StatusElement = {
   backgroundColor?: string;
 };
 
-export default function StatusLine({
-  width,
-  elements,
-}: {
-  width: number;
-  elements: Array<StatusElement>;
-}) {
-  const padding = 1;
-
-  const widthUsed = elements.reduce((acc, {text}) => {
-    return acc + text.length + padding * 2;
-  }, 0);
-
-  const defaultBackground = 'gray';
-
-  const fillWidth = width - widthUsed;
-
+function Line({items}: {items: Array<StatusElement>}) {
   return (
-    <Box>
-      {elements.map(({id, text, color, backgroundColor}) => {
+    <>
+      {items.map(({id, text, color}, ix) => {
         return (
-          <Text
-            backgroundColor={backgroundColor || defaultBackground}
-            key={id}
-            color={color || 'white'}
-            bold
-          >
-            {Array(padding)
-              .fill(0)
-              .map(() => ' ')}
-            {text}
-            {Array(padding)
-              .fill(0)
-              .map(() => ' ')}
-          </Text>
+          <Fragment key={id}>
+            <Text color={color || 'white'} bold>
+              {text}
+            </Text>
+            {ix < items.length - 1 && <Text color="white">&nbsp;│&nbsp;</Text>}
+          </Fragment>
         );
       })}
-      {fillWidth > 0 && (
-        <Box>
-          <Text backgroundColor={defaultBackground}>
-            {Array(fillWidth)
-              .fill(0)
-              .map(() => ' ')}
-          </Text>
-        </Box>
-      )}
+    </>
+  );
+}
+
+export default function StatusLine({
+  left,
+  right,
+}: {
+  left: Array<StatusElement>;
+  right: Array<StatusElement>;
+}) {
+  return (
+    <Box borderStyle="single">
+      <Line items={left} />
+      <Spacer />
+      <Line items={right} />
     </Box>
   );
 }

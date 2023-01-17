@@ -1,9 +1,11 @@
 import {useState, useCallback} from 'react';
+import {format} from 'date-fns';
 
 import {Box, render, Text} from 'ink';
 import TextInput from 'ink-text-input';
 import StatusLine from '../components/StatusLine';
 import {Table} from '../components/Table';
+import useInterval from '../../hooks/use-interval';
 
 // import useInterval from '../../hooks/use-interval';
 import useScreenSize from '../../hooks/use-screensize';
@@ -136,9 +138,11 @@ const columns: Array<{label: string; width: number; field: keyof TableData}> = [
 ];
 
 function LiveTraderUI() {
-  const {height, width} = useScreenSize();
+  const {height} = useScreenSize();
 
   const [command, setCommand] = useState<string>('');
+  const [activeSymbols, setActiveSymbols] = useState<typeof data>([...data]);
+  const [positions, setPositions] = useState<typeof data>([...data]);
 
   const handleCommand = useCallback((command: string) => {
     switch (command) {
@@ -150,28 +154,61 @@ function LiveTraderUI() {
     }
   }, []);
 
+  useInterval(() => {
+    const newData: Array<TableData> = Array(Math.ceil(Math.random() * 50))
+      .fill(0)
+      .map((_, ix) => {
+        return {
+          id: ix.toString(),
+          name: Math.random().toString(),
+          email: Math.random().toString(),
+          gender: Math.random().toString(),
+          phone: '',
+          dateTime: format(new Date(), 'yyyy-MM-dd HH:mm:ss'),
+          age: 1,
+        };
+      });
+    setActiveSymbols(newData);
+
+    const newPositions: Array<TableData> = Array(Math.ceil(Math.random() * 50))
+      .fill(0)
+      .map((_, ix) => {
+        return {
+          id: ix.toString(),
+          name: Math.random().toString(),
+          email: Math.random().toString(),
+          gender: Math.random().toString(),
+          phone: '',
+          dateTime: format(new Date(), 'yyyy-MM-dd HH:mm:ss'),
+          age: 1,
+        };
+      });
+    setPositions(newPositions);
+  }, 1000);
+
   return (
     <>
       <Box flexDirection="row">
         <Box width="50%">
-          <Table data={data} columns={columns} />
+          <Table data={activeSymbols} columns={columns} />
         </Box>
-        <Separator height={(height || 0) - 0} />
+        <Separator height={(height || 0) - 2} />
         <Box width="50%">
-          <Table data={data} columns={columns} />
+          <Table data={positions} columns={columns} />
         </Box>
       </Box>
       <StatusLine
-        width={width || 0}
-        elements={[
+        left={[
+          {id: 'balance', text: `$${Math.random().toFixed(2)}`},
+          {id: 'trades', text: `Trades: ${Math.ceil(Math.random() * 100)}`},
+        ]}
+        right={[
+          {id: 'p&l', text: 'P&L: -123.12', color: 'red'},
           {
             id: 'connected',
             text: 'CONNECTED',
-            backgroundColor: 'green',
-            color: 'black',
+            color: 'green',
           },
-          {id: 'balance', text: 'Balance: $10,000'},
-          {id: 'trades', text: '123 Trades'},
         ]}
       />
       <Box>
@@ -191,11 +228,11 @@ function LiveTraderUI() {
 
 export function run() {
   // enter full screen mode & and handle exit
-  // const enterAltScreenCommand = '\x1b[?1049h';
-  // const leaveAltScreenCommand = '\x1b[?1049l';
-  // process.stdout.write(enterAltScreenCommand);
-  // process.on('exit', () => {
-  //   process.stdout.write(leaveAltScreenCommand);
-  // });
+  const enterAltScreenCommand = '\x1b[?1049h';
+  const leaveAltScreenCommand = '\x1b[?1049l';
+  process.stdout.write(enterAltScreenCommand);
+  process.on('exit', () => {
+    process.stdout.write(leaveAltScreenCommand);
+  });
   render(<LiveTraderUI />);
 }
