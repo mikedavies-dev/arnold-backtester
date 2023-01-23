@@ -1,7 +1,7 @@
 {
   "extends": ["eslint:recommended", "eslint-config-prettier"],
   "ignorePatterns": [],
-  "plugins": ["import", "jest", "react"],
+  "plugins": ["import", "jest"],
   "parser": "@babel/eslint-parser",
   "rules": {
     "import/extensions": [
@@ -14,8 +14,7 @@
         "tsx": "never"
       }
     ],
-    "no-var": "error",
-    "react/prop-types": "off"
+    "no-var": "error"
   },
   "env": {
     "node": true,
@@ -27,14 +26,10 @@
       "node": {
         "extensions": [".js", ".jsx", ".ts", ".tsx"]
       }
-    },
-    "react": {
-      "version": "detect" // React version. "detect" automatically picks the version you have installed.
     }
   },
   "overrides": [
     {
-      // "parser": "@typescript-eslint/parser",
       "extends": ["plugin:@typescript-eslint/recommended"],
       "files": ["**/*.ts", "**/*.tsx"],
       "plugins": ["@typescript-eslint", "jest"],
@@ -58,7 +53,6 @@
           }
         ],
         "@typescript-eslint/no-var-requires": "off",
-        "react/react-in-jsx-scope": "off",
         "@typescript-eslint/no-empty-function": "off",
         "@typescript-eslint/no-explicit-any": "off"
       }
