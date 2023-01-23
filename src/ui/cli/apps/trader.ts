@@ -1,8 +1,9 @@
 import blessed from 'blessed';
 import contrib from 'blessed-contrib';
 import numeral from 'numeral';
+
 import {TraderStatusUpdate} from '../../../core';
-import Layout from '../components/PanelLayout';
+import Layout from '../utils/layout';
 
 type UIArguments = {
   onQuit: () => void;
@@ -13,55 +14,94 @@ type UIResult = {
   update: (args: TraderStatusUpdate) => void;
 };
 
+const InstrumentColumns = [
+  {
+    title: 'symbol',
+    width: 10,
+  },
+  {
+    title: 'last',
+    width: 10,
+  },
+  {
+    title: 'cng',
+    width: 10,
+  },
+  {
+    title: 'profiles',
+    width: 100,
+  },
+];
+
+const PositionColumns = [
+  {
+    title: 'symbol',
+    width: 10,
+  },
+  {
+    title: 'size',
+    width: 10,
+  },
+  {
+    title: 'closing',
+    width: 10,
+  },
+  {
+    title: 'open p&l',
+    width: 15,
+  },
+  {
+    title: 'realized p&l',
+    width: 15,
+  },
+];
+
 export function run({onQuit}: UIArguments): UIResult {
-  // Main screen
   const screen = blessed.screen();
   const program = blessed.program();
 
-  const Heights = {
-    LOG: 10,
-    STATUS: 1,
-  } as const;
+  const [layout, instruments] = Layout(
+    screen,
+    contrib.table({
+      keys: true,
+      vi: true,
+      bottom: 2,
+      fg: 'white',
+      columnSpacing: 10,
+      columnWidth: InstrumentColumns.map(c => c.width),
+    }),
+  );
 
-  // const layout = Layout(instruments);
+  const positions = layout.append(
+    contrib.table({
+      keys: true,
+      vi: true,
+      fg: 'white',
+      columnSpacing: 10,
+      columnWidth: PositionColumns.map(c => c.width),
+    }),
+    30,
+    true,
+  );
 
-  const instruments = contrib.table({
-    keys: true,
-    vi: true,
-    width: '50%',
-    left: '0',
-    bottom: 2,
-    top: '0',
-    fg: 'white',
-    columnSpacing: 10,
-    columnWidth: [16, 12, 12],
-  });
+  const log = layout.append(
+    contrib.log({
+      border: {},
+    }),
+    10,
+    true,
+  );
 
-  screen.append(instruments);
-
-  const positions = contrib.table({
-    width: '50%',
-    keys: true,
-    vi: true,
-    left: '50%',
-    bottom: 2,
-    top: '0',
-    fg: 'white',
-    columnSpacing: 10,
-    columnWidth: [16, 12],
-  });
-
-  screen.append(positions);
-
-  // create the system log
-  const log = contrib.log({
-    bottom: 1,
-    height: Heights.LOG + 1,
-    width: '100%',
-    border: {},
-  });
-
-  screen.append(log);
+  layout.append(
+    blessed.box({
+      width: '100%',
+      bg: 'grey',
+      content: '{green-bg}{grey-fg}{bold} CONNECTED {/}',
+      tags: true,
+    }),
+    1,
+    false,
+  );
 
   const input = blessed.textarea({
     bottom: 0,
@@ -81,50 +121,6 @@ export function run({onQuit}: UIArguments): UIResult {
 
   screen.append(input);
 
-  const status = blessed.box({
-    height: Heights.STATUS,
-    width: '100%',
-    bg: 'grey',
-    content: '{green-bg}{grey-fg}{bold} CONNECTED {/}',
-    tags: true,
-  });
-
-  screen.append(status);
-
-  const splitV = blessed.line({
-    orientation: 'vertical',
-    left: '50%',
-    width: 1,
-    bottom: 2,
-    fg: 'grey',
-  });
-  screen.append(splitV);
-
-  const splitH = blessed.line({
-    orientation: 'horizontal',
-    left: '0',
-    height: 1,
-    bottom: 2,
-    fg: 'grey',
-  });
-  screen.append(splitH);
-
-  function setComponentPositions() {
-    let bottom = input.hidden ? 0 : 1;
-
-    status.bottom = bottom;
-    bottom += Heights.STATUS;
-
-    log.bottom = bottom;
-    bottom += Heights.LOG;
-
-    splitH.bottom = bottom;
-    splitV.bottom = bottom;
-
-    instruments.bottom = bottom;
-    positions.bottom = bottom;
-  }
-
   function toggleCommandInput() {
     if (input.hidden) {
       input.setValue(':');
@@ -135,44 +131,16 @@ export function run({onQuit}: UIArguments): UIResult {
       input.hide();
     }
 
-    setComponentPositions();
     screen.render();
   }
 
-  // setInterval(() => {
-  //   const data = Array(Math.ceil(Math.random() * 100) + 75)
-  //     .fill(0)
-  //     .map(() => [Math.random().toFixed(2), Math.random().toFixed(2)]);
-  //
-  //   instruments.setData({
-  //     headers: ['col1', 'col2'],
-  //     data,
-  //   });
-  //
-  //   positions.setData({
-  //     headers: ['col1', 'col2'],
-  //     data,
-  //   });
-  //
-  //   log.log(`Some random message ${Math.random()}`);
-  //
-  //   screen.render();
-  // }, 100);
-
   function exit() {
-    input.hide();
-    screen.render();
     program.clear();
     program.disableMouse();
     program.showCursor();
     program.normalBuffer();
 
     onQuit();
-  }
-
-  function appendLog(msg: string) {
-    log.log(msg);
-    screen.render();
   }
 
   input.key('enter', function () {
@@ -199,6 +167,10 @@ export function run({onQuit}: UIArguments): UIResult {
     screen.render();
   });
 
+  program.key('C-c', function () {
+    exit();
+  });
+
   program.key(':', function () {
     if (input.hidden) {
       toggleCommandInput();
@@ -209,46 +181,37 @@ export function run({onQuit}: UIArguments): UIResult {
   program.alternateBuffer();
   program.enableMouse();
   program.clear();
-
-  setComponentPositions();
   screen.render();
 
   return {
     log: msg => {
-      appendLog(msg);
-    },
-    update: ({instruments: liveInstruments}) => {
-      appendLog(`${liveInstruments.length}`);
-      // const data = {
-      //   headers: ['symbol', 'last', '%', 'vol', 'setup'],
-      //   data: liveInstruments.map(({symbol, tracker, profiles}) => {
-      //     return [
-      //       symbol,
-      //       numeral(tracker.last).format('0,00'),
-      //       '0%',
-      //       numeral(tracker.volume).format('0,0'),
-      //       profiles.map(p => p.name).join(', '),
-      //     ];
-      //   }),
-      // };
-      // instruments.setData(data);
-
+      log.log(msg);
       screen.render();
-      const data = liveInstruments.map(({symbol, tracker, profiles}) => {
-        return [symbol, numeral(tracker.last).format('0,00'), '0'];
-      });
+    },
+    update: ({instruments: liveInstruments, positions: livePositions}) => {
+      const instrumentData = liveInstruments.map(
+        ({symbol, tracker, profiles}) => {
+          return [symbol, numeral(tracker.last).format('0,00'), '0'];
+        },
+      );
 
       instruments.setData({
-        headers: ['symbol', 'last', 'cng'],
-        data,
+        headers: InstrumentColumns.map(c => c.title),
+        data: instrumentData,
+      });
+
+      const positionData = livePositions.map(position => {
+        return [
+          position.symbol,
+          numeral(position.size).format('0,0'),
+          position.isClosing ? 'Yes' : 'No',
+        ];
       });
 
       positions.setData({
-        headers: ['col1', 'col2'],
-        data,
+        headers: PositionColumns.map(c => c.title),
+        data: positionData,
       });
-
-      log.log(`Some random message ${Math.random()}`);
 
       screen.render();
     },

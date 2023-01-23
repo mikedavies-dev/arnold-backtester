@@ -7,89 +7,98 @@ import {
 } from '../utils/market';
 import {initTracker} from '../utils/tracker';
 
-const ui = run({
-  onQuit: () => {
-    // quit the trader..
-    process.exit();
+try {
+  const ui = run({
+    onQuit: () => {
+      // quit the trader..
+      process.exit();
 
-    // what can we do here?!
-  },
-});
-
-setInterval(() => {
-  const marketOpen = getMarketOpen(new Date());
-  const preMarketOpen = getPreMarketOpen(new Date());
-  const marketClose = getMarketClose(new Date());
-
-  const market = initMarket(new Date(), preMarketOpen, marketOpen, marketClose);
-
-  ui.log(`Hello ${Math.random()}`);
-  ui.update({
-    market: market,
-    positions: [
-      {
-        symbol: 'AAA',
-        orders: [],
-        openedAt: new Date(),
-        closedAt: new Date(),
-        isClosing: false,
-        closeReason: 'Test position',
-        size: 100,
-        data: {},
-      },
-
-      {
-        symbol: 'AAA',
-        orders: [],
-        openedAt: new Date(),
-        closedAt: new Date(),
-        isClosing: false,
-        closeReason: 'Test position',
-        size: 100,
-        data: {},
-      },
-      {
-        symbol: 'AAA',
-        orders: [],
-        openedAt: new Date(),
-        closedAt: new Date(),
-        isClosing: false,
-        closeReason: 'Test position',
-        size: 100,
-        data: {},
-      },
-      {
-        symbol: 'AAA',
-        orders: [],
-        openedAt: new Date(),
-        closedAt: new Date(),
-        isClosing: false,
-        closeReason: 'Test position',
-        size: 100,
-        data: {},
-      },
-    ],
-    instruments: [
-      {
-        symbol: 'AAPL',
-        tracker: initTracker(),
-        profiles: [],
-      },
-      {
-        symbol: 'AAPL',
-        tracker: initTracker(),
-        profiles: [],
-      },
-      {
-        symbol: 'AAPL',
-        tracker: initTracker(),
-        profiles: [],
-      },
-      {
-        symbol: 'AAPL',
-        tracker: initTracker(),
-        profiles: [],
-      },
-    ],
+      // what can we do here?!
+    },
   });
-}, 1000);
+
+  setInterval(() => {
+    const marketOpen = getMarketOpen(new Date());
+    const preMarketOpen = getPreMarketOpen(new Date());
+    const marketClose = getMarketClose(new Date());
+
+    const market = initMarket(
+      new Date(),
+      preMarketOpen,
+      marketOpen,
+      marketClose,
+    );
+
+    ui.update({
+      market: market,
+      positions: [
+        {
+          symbol: 'AAA',
+          orders: [],
+          openedAt: new Date(),
+          closedAt: new Date(),
+          isClosing: false,
+          closeReason: 'Test position',
+          size: 100,
+          data: {},
+        },
+
+        {
+          symbol: 'BBB',
+          orders: [],
+          openedAt: new Date(),
+          closedAt: new Date(),
+          isClosing: false,
+          closeReason: 'Test position',
+          size: 100,
+          data: {},
+        },
+        {
+          symbol: 'CCC',
+          orders: [],
+          openedAt: new Date(),
+          closedAt: new Date(),
+          isClosing: false,
+          closeReason: 'Test position',
+          size: 100,
+          data: {},
+        },
+        {
+          symbol: 'DDD',
+          orders: [],
+          openedAt: new Date(),
+          closedAt: new Date(),
+          isClosing: false,
+          closeReason: 'Test position',
+          size: 100,
+          data: {},
+        },
+      ],
+      instruments: [
+        {
+          symbol: 'AAA',
+          tracker: initTracker(),
+          profiles: [],
+        },
+        {
+          symbol: 'BBB',
+          tracker: initTracker(),
+          profiles: [],
+        },
+        {
+          symbol: 'CCC',
+          tracker: initTracker(),
+          profiles: [],
+        },
+        {
+          symbol: 'DDD',
+          tracker: initTracker(),
+          profiles: [],
+        },
+      ],
+    });
+  }, 1000);
+} catch (err) {
+  console.log('Failed', err);
+  process.exit();
+}
