@@ -17,6 +17,7 @@ import {
   Tick,
   DataProvider,
   LiveTradingConfig,
+  TraderStatusUpdate,
 } from '../core';
 
 import {indicatorUpdateWrapper} from '../utils/indicators';
@@ -110,7 +111,15 @@ async function initProfiles(
   );
 }
 
-export async function runLiveController({log}: {log: LoggerCallback}) {
+export async function runLiveController({
+  log,
+  update,
+  exit,
+}: {
+  log: LoggerCallback;
+  update: (data: TraderStatusUpdate) => void;
+  exit: () => boolean;
+}) {
   // connect to the data provider
   log('Connecting to data provider');
   const dataProvider = await createDataProvider({log});
@@ -291,7 +300,7 @@ export async function runLiveController({log}: {log: LoggerCallback}) {
 
     let currentMinute = -1;
 
-    while (!isAfter(new Date(), shutdownAt)) {
+    while (!isAfter(new Date(), shutdownAt) && !exit()) {
       /*
       The question is: Do we need time and sales data when a stock is in a setup or can
       we just rely on watch list data for trading/entering?
@@ -327,7 +336,20 @@ export async function runLiveController({log}: {log: LoggerCallback}) {
         currentMinute = nextMinute;
       }
 
-      // TODO, update the main UI process via IPC
+      // update any ui interfaces
+      update({
+        market,
+        positions: positions.getAllPositions(),
+        instruments: instruments.map(({symbol, profiles}) => ({
+          symbol,
+          tracker: trackers[symbol],
+          profiles: profiles.map(profile => ({
+            id: profile.id,
+            name: profile.name,
+            currentlyInSetup: profile.currentlyInSetup,
+          })),
+        })),
+      });
 
       // store the current positions in the database
       await positions.writeDbUpdates();

@@ -13,7 +13,15 @@ async function run() {
   try {
     log('Connecting to database');
     await connect();
-    await runLiveController({log});
+
+    // run the trader
+    await runLiveController({
+      log,
+      exit: () => false,
+      update: args => {
+        log('Got an update!');
+      },
+    });
   } catch (err) {
     log(`Failed to run live trader`, err);
   } finally {

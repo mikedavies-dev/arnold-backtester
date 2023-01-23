@@ -897,4 +897,38 @@ describe('test the order position/storage module', () => {
 
     expect(positions1.getOrders(profileId)[0].state).toBe('FILLED');
   });
+
+  test('getting all the positions', async () => {
+    const positions = create();
+
+    expect(positions.getAllPositions().length).toBe(0);
+
+    positions.createOrder('test-get-all-positions-1', instrumentA, {
+      type: 'MKT',
+      shares: 100,
+      remaining: 100,
+      id: getNextOrderId(),
+      action: 'BUY',
+      state: 'PENDING',
+      openedAt: new Date(),
+      symbol: instrumentA.symbol,
+      executions: {},
+    });
+
+    expect(positions.getAllPositions().length).toBe(1);
+
+    positions.createOrder('test-get-all-positions-2', instrumentA, {
+      type: 'MKT',
+      shares: 100,
+      remaining: 100,
+      id: getNextOrderId(),
+      action: 'BUY',
+      state: 'PENDING',
+      openedAt: new Date(),
+      symbol: instrumentA.symbol,
+      executions: {},
+    });
+
+    expect(positions.getAllPositions().length).toBe(2);
+  });
 });

@@ -211,6 +211,7 @@ export type PositionProvider = {
   updateOrder: (orderId: number, updates: Partial<Order>) => void;
   getOrders: (profileId: string) => Array<Order>;
   getPositions: (profileId: string) => Array<Position>;
+  getAllPositions: () => Array<Position>;
 };
 
 export type Tracker = {
@@ -507,4 +508,18 @@ export type Times = {
   unix: number;
   dt: Date;
   time: string;
+};
+
+export type TraderStatusUpdate = {
+  market: Market;
+  positions: Array<Position>;
+  instruments: Array<{
+    symbol: string;
+    tracker: Tracker;
+    profiles: Array<{
+      id: string;
+      name: string;
+      currentlyInSetup: boolean;
+    }>;
+  }>;
 };

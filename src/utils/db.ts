@@ -342,6 +342,13 @@ export async function loadOpenPositions() {
   });
 }
 
+export async function loadTodayPositions() {
+  const Position = mongoose.model<DbLivePosition>('LivePosition');
+  return Position.find({
+    openedAt: {$gt: startOfDay(new Date())},
+  });
+}
+
 export async function createLivePosition(position: DbLivePosition) {
   const LivePosition = mongoose.model<DbLivePosition>('LivePosition');
   await LivePosition.create({

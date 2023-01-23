@@ -11,13 +11,13 @@ import {
 } from '../core';
 
 import {
-  loadOpenPositions,
   createLivePosition,
   createLiveOrder,
   updateLiveOrderExecution,
   updatePositionClosing,
   updateLiveOrder,
   closePosition,
+  loadTodayPositions,
 } from '../utils/db';
 
 export function isPendingOrder(order: {state: OrderState}) {
@@ -85,7 +85,7 @@ export function create({log}: {log?: LoggerCallback} = {}): PositionProvider {
 
   async function init() {
     // Load open positions form the db and store in memory
-    const dbPositions = await loadOpenPositions();
+    const dbPositions = await loadTodayPositions();
 
     dbPositions.forEach(dbPosition => {
       const {symbol, profileId} = dbPosition;
@@ -372,6 +372,10 @@ export function create({log}: {log?: LoggerCallback} = {}): PositionProvider {
     return profileIdToPositions[profileId] || [];
   }
 
+  function getAllPositions(): Array<LivePosition> {
+    return Object.values(profileIdToPositions).flat();
+  }
+
   return {
     init,
     shutdown,
@@ -388,5 +392,6 @@ export function create({log}: {log?: LoggerCallback} = {}): PositionProvider {
     isClosing,
     getOrders,
     getPositions,
+    getAllPositions,
   };
 }
