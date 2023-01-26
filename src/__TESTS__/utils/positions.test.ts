@@ -1,10 +1,7 @@
 import {OrderState, Instrument} from '../../core';
-import {
-  create,
-  isPendingOrder,
-  isFilledOrder,
-  cleanExecId,
-} from '../../utils/positions';
+import {create, cleanExecId} from '../../utils/positions';
+
+import {isPendingOrder, isFilledOrder} from '../../utils/derived';
 
 import {
   connect,

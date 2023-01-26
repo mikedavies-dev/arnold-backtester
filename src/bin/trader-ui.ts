@@ -78,12 +78,29 @@ try {
         {
           symbol: 'AAA',
           tracker: initTracker(),
-          profiles: [],
+          profiles: [
+            {
+              id: 'test',
+              name: 'Test',
+              currentlyInSetup: true,
+            },
+            {
+              id: 'test12',
+              name: 'Test12',
+              currentlyInSetup: false,
+            },
+          ],
         },
         {
           symbol: 'BBB',
           tracker: initTracker(),
-          profiles: [],
+          profiles: [
+            {
+              id: 'test',
+              name: 'Test',
+              currentlyInSetup: false,
+            },
+          ],
         },
         {
           symbol: 'CCC',

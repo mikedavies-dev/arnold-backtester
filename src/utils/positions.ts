@@ -3,12 +3,18 @@ import {v4 as uuidv4} from 'uuid';
 import {
   LoggerCallback,
   Order,
-  OrderState,
   LivePosition,
   OrderExecution,
   Instrument,
   PositionProvider,
 } from '../core';
+
+import {
+  currentPositionSize,
+  isFilledOrder,
+  isPositionOpen,
+  isPendingOrder,
+} from './derived';
 
 import {
   createLivePosition,
@@ -19,18 +25,6 @@ import {
   closePosition,
   loadTodayPositions,
 } from '../utils/db';
-
-export function isPendingOrder(order: {state: OrderState}) {
-  return ['ACCEPTED', 'PENDING'].indexOf(order.state) !== -1;
-}
-
-export function isFilledOrder(order: {state: OrderState}) {
-  return order.state === 'FILLED';
-}
-
-export function isPositionOpen(position: LivePosition) {
-  return !position.closedAt;
-}
 
 export function cleanExecId(execId: string) {
   // Mongo doesn't like some.exec.value so replace with :
@@ -175,13 +169,7 @@ export function create({log}: {log?: LoggerCallback} = {}): PositionProvider {
 
   function updatePositionSize(position: LivePosition) {
     // update the position size based on filled orders
-    position.size = position.orders
-      .filter(isFilledOrder)
-      .reduce(
-        (acc, order) =>
-          acc + (order.action === 'BUY' ? order.shares : order.shares * -1),
-        0,
-      );
+    position.size = currentPositionSize(position);
 
     // close the position if our new size is 0, we haven't already been
     // closed and we have at least one filled order

@@ -5,6 +5,7 @@ import {Times} from '../core';
 
 export const formatDate = formatFP('yyyy-MM-dd');
 export const formatDateTime = formatFP('yyyy-MM-dd HH:mm:ss');
+export const formatTime = formatFP('HH:mm:ss');
 
 export function createTimeAsUnix(time: string, base: Date) {
   return flow(parse, getUnixTime)(time, 'HH:mm', base);

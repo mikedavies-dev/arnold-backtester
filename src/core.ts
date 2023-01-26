@@ -261,6 +261,8 @@ export type OrderExecution = {
   data?: any;
 };
 
+export type OrderExecutions = Record<string, OrderExecution>;
+
 // Define the full order
 export type Order = OrderSpecification & {
   id: number;
@@ -270,7 +272,7 @@ export type Order = OrderSpecification & {
   filledAt?: Date;
   remaining: number;
   avgFillPrice?: number;
-  executions: Record<string, OrderExecution>;
+  executions: OrderExecutions;
   data?: any;
 };
 

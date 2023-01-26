@@ -1,9 +1,18 @@
 import blessed from 'blessed';
 import contrib from 'blessed-contrib';
 import numeral from 'numeral';
+import colors from 'colors';
 
-import {TraderStatusUpdate} from '../../../core';
+import {TraderStatusUpdate, Tracker} from '../../../core';
 import Layout from '../utils/layout';
+import {formatTime} from '../../../utils/dates';
+
+import {
+  positionOpenPnL,
+  positionSize,
+  positionRealisedPnL,
+  percentChange,
+} from '../../../utils/derived';
 
 type UIArguments = {
   onQuit: () => void;
@@ -16,16 +25,20 @@ type UIResult = {
 
 const InstrumentColumns = [
   {
-    title: 'symbol',
-    width: 10,
+    title: 'sym',
+    width: 4,
   },
   {
     title: 'last',
-    width: 10,
+    width: 6,
   },
   {
     title: 'cng',
-    width: 10,
+    width: 6,
+  },
+  {
+    title: 'vol',
+    width: 6,
   },
   {
     title: 'profiles',
@@ -35,26 +48,69 @@ const InstrumentColumns = [
 
 const PositionColumns = [
   {
-    title: 'symbol',
+    title: 'id',
     width: 10,
+  },
+  {
+    title: 'opened',
+    width: 10,
+  },
+  {
+    title: 'profile',
+    width: 10,
+  },
+  {
+    title: 'sym',
+    width: 4,
   },
   {
     title: 'size',
+    width: 4,
+  },
+  {
+    title: 'left',
+    width: 4,
+  },
+  {
+    title: 'open',
+    width: 6,
+  },
+  {
+    title: 'p&l',
+    width: 6,
+  },
+  {
+    title: 'closed',
     width: 10,
   },
   {
-    title: 'closing',
-    width: 10,
-  },
-  {
-    title: 'open p&l',
-    width: 15,
-  },
-  {
-    title: 'realized p&l',
-    width: 15,
+    title: 'reason',
+    width: 20,
   },
 ];
+
+function colorize(val: number) {
+  if (val === 0) {
+    return colors.white;
+  }
+
+  return val > 0 ? colors.green : colors.red;
+}
+
+function decimal(val: number) {
+  const color = colorize(val);
+  return color(numeral(val).format('0.00'));
+}
+
+function thousands(val: number) {
+  const color = colorize(val);
+  return color(numeral(val).format('0,0'));
+}
+
+function percent(val: number) {
+  const color = colorize(val);
+  return color(numeral(val).format('0.00%'));
+}
 
 export function run({onQuit}: UIArguments): UIResult {
   const screen = blessed.screen();
@@ -69,6 +125,7 @@ export function run({onQuit}: UIArguments): UIResult {
       fg: 'white',
       columnSpacing: 10,
       columnWidth: InstrumentColumns.map(c => c.width),
+      selectedFg: 'gray',
     }),
   );
 
@@ -77,7 +134,7 @@ export function run({onQuit}: UIArguments): UIResult {
       keys: true,
       vi: true,
       fg: 'white',
-      columnSpacing: 10,
+      columnSpacing: 8,
       columnWidth: PositionColumns.map(c => c.width),
     }),
     30,
@@ -191,7 +248,13 @@ export function run({onQuit}: UIArguments): UIResult {
     update: ({instruments: liveInstruments, positions: livePositions}) => {
       const instrumentData = liveInstruments.map(
         ({symbol, tracker, profiles}) => {
-          return [symbol, numeral(tracker.last).format('0,00'), '0'];
+          return [
+            symbol,
+            decimal(tracker.last),
+            percent(percentChange(tracker)),
+            thousands(tracker.volume),
+            profiles.map(p => `${p.name}`).join(', '),
+          ];
         },
       );
 
@@ -200,11 +263,24 @@ export function run({onQuit}: UIArguments): UIResult {
         data: instrumentData,
       });
 
+      const trackers = liveInstruments.reduce((acc, {symbol, tracker}) => {
+        acc.set(symbol, tracker);
+        return acc;
+      }, new Map<string, Tracker>());
+
       const positionData = livePositions.map(position => {
+        const tracker = trackers.get(position.symbol);
         return [
+          'test',
+          formatTime(position.openedAt),
+          'profileId',
           position.symbol,
+          numeral(positionSize(position)).format('0,0'),
           numeral(position.size).format('0,0'),
-          position.isClosing ? 'Yes' : 'No',
+          decimal(tracker ? positionOpenPnL(position, tracker) : 0),
+          decimal(positionRealisedPnL(position)),
+          position.closedAt ? formatTime(position.closedAt) : '',
+          position.closeReason || '',
         ];
       });
 
