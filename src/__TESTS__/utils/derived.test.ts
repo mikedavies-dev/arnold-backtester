@@ -89,7 +89,7 @@ describe('test derived functions', () => {
 
   test('tracker percent changed', () => {
     const tracker = {
-      open: 10,
+      close: 10,
       last: 11,
     };
 
@@ -98,7 +98,7 @@ describe('test derived functions', () => {
 
   test('tracker percent changed before market open', () => {
     const tracker = {
-      open: 0,
+      close: 0,
       last: 11,
     };
 

@@ -54,6 +54,10 @@ export function handleTrackerTick({
       data.bid = value;
       break;
 
+    case 'LAST':
+      data.last = value;
+      break;
+
     case 'TRADE':
       data.volume += size;
       data.last = value;

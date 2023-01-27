@@ -180,6 +180,8 @@ export type BrokerProvider = {
   ) => void;
 };
 
+export type ProfilePositions = Record<string, Array<Position>>;
+
 export type PositionProvider = {
   init: () => Promise<void>;
   shutdown: () => Promise<void>;
@@ -211,7 +213,7 @@ export type PositionProvider = {
   updateOrder: (orderId: number, updates: Partial<Order>) => void;
   getOrders: (profileId: string) => Array<Order>;
   getPositions: (profileId: string) => Array<Position>;
-  getAllPositions: () => Array<Position>;
+  getAllPositions: () => Array<LivePosition>;
 };
 
 export type Tracker = {
@@ -291,6 +293,7 @@ export type Position = {
 
 export type LivePosition = Position & {
   externalId: string;
+  profileId: string;
 };
 
 export type PositionDirection = 'LONG' | 'SHORT' | 'UNKNOWN';
@@ -514,7 +517,7 @@ export type Times = {
 
 export type TraderStatusUpdate = {
   market: Market;
-  positions: Array<Position>;
+  positions: Array<LivePosition>;
   instruments: Array<{
     symbol: string;
     tracker: Tracker;

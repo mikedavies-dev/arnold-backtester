@@ -266,6 +266,20 @@ test('in-market volume', () => {
   });
 
   expect(data.volume).toBe(450);
+
+  handleTrackerTick({
+    data,
+    marketOpen,
+    marketClose,
+    tick: createTick({
+      time: createTimeAsUnix('09:30'),
+      type: 'LAST',
+      value: 1.6,
+      size: 0,
+    }),
+  });
+
+  expect(data.last).toBe(1.6);
 });
 
 describe('market status', () => {

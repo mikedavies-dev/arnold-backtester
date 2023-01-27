@@ -18,7 +18,7 @@ async function run() {
     await runLiveController({
       log,
       exit: () => false,
-      update: args => {
+      update: () => {
         log('Got an update!');
       },
     });

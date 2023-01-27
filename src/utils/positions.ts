@@ -86,6 +86,7 @@ export function create({log}: {log?: LoggerCallback} = {}): PositionProvider {
 
       const position = {
         externalId: dbPosition.externalId,
+        profileId,
         symbol,
         orders: dbPosition.orders,
         size: 0,
@@ -199,6 +200,7 @@ export function create({log}: {log?: LoggerCallback} = {}): PositionProvider {
 
       const newPosition = {
         externalId: uuidv4(),
+        profileId,
         symbol: instrument.symbol,
         orders,
         size: 0,

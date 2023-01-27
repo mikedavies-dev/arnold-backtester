@@ -96,7 +96,7 @@ async function initProfiles(
         to: today,
       });
 
-      log(`> Loaded ${name}`);
+      log(`Loaded ${name}`);
 
       return {
         id,

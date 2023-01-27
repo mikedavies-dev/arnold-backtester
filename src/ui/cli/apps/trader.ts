@@ -1,7 +1,7 @@
 import blessed from 'blessed';
 import contrib from 'blessed-contrib';
 import numeral from 'numeral';
-import colors from 'colors';
+import colors from 'colors/safe';
 
 import {TraderStatusUpdate, Tracker} from '../../../core';
 import Layout from '../utils/layout';
@@ -26,7 +26,7 @@ type UIResult = {
 const InstrumentColumns = [
   {
     title: 'sym',
-    width: 4,
+    width: 6,
   },
   {
     title: 'last',
@@ -37,7 +37,31 @@ const InstrumentColumns = [
     width: 6,
   },
   {
+    title: 'open',
+    width: 6,
+  },
+  {
+    title: 'high',
+    width: 6,
+  },
+  {
+    title: 'low',
+    width: 6,
+  },
+  {
     title: 'vol',
+    width: 6,
+  },
+  {
+    title: 'bid',
+    width: 6,
+  },
+  {
+    title: 'ask',
+    width: 6,
+  },
+  {
+    title: 'spread',
     width: 6,
   },
   {
@@ -52,11 +76,11 @@ const PositionColumns = [
     width: 10,
   },
   {
-    title: 'opened',
+    title: 'profile',
     width: 10,
   },
   {
-    title: 'profile',
+    title: 'opened',
     width: 10,
   },
   {
@@ -126,6 +150,8 @@ export function run({onQuit}: UIArguments): UIResult {
       columnSpacing: 10,
       columnWidth: InstrumentColumns.map(c => c.width),
       selectedFg: 'gray',
+      selectedBg: 'white',
+      // interactive: false,
     }),
   );
 
@@ -145,7 +171,7 @@ export function run({onQuit}: UIArguments): UIResult {
     contrib.log({
       border: {},
     }),
-    10,
+    20,
     true,
   );
 
@@ -246,13 +272,30 @@ export function run({onQuit}: UIArguments): UIResult {
       screen.render();
     },
     update: ({instruments: liveInstruments, positions: livePositions}) => {
+      const profileLookup = new Map<string, string>();
+
       const instrumentData = liveInstruments.map(
         ({symbol, tracker, profiles}) => {
+          profiles.forEach(({id, name}) => {
+            profileLookup.set(id, name);
+          });
           return [
             symbol,
             decimal(tracker.last),
-            percent(percentChange(tracker)),
+            percent(
+              percentChange({
+                ...tracker,
+                // todo, we need to load the CLOSE tick from IB
+                close: tracker.open,
+              }),
+            ),
+            decimal(tracker.open),
+            decimal(tracker.high),
+            decimal(tracker.low),
             thousands(tracker.volume),
+            decimal(tracker.bid),
+            decimal(tracker.ask),
+            decimal(tracker.ask - tracker.bid),
             profiles.map(p => `${p.name}`).join(', '),
           ];
         },
@@ -271,9 +314,9 @@ export function run({onQuit}: UIArguments): UIResult {
       const positionData = livePositions.map(position => {
         const tracker = trackers.get(position.symbol);
         return [
-          'test',
+          position.externalId,
+          profileLookup.get(position.profileId) || 'unknown',
           formatTime(position.openedAt),
-          'profileId',
           position.symbol,
           numeral(positionSize(position)).format('0,0'),
           numeral(position.size).format('0,0'),
