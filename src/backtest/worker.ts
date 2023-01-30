@@ -147,11 +147,30 @@ export async function runBacktest({
   // Pre-load data into the trackers
   await Promise.all(
     symbols.map(async symbol => {
-      trackers[symbol].bars = await loadTrackerBars(
-        symbol,
-        date,
-        MaximumBarCount,
-      );
+      const tracker = trackers[symbol];
+
+      tracker.bars = await loadTrackerBars(symbol, date, MaximumBarCount);
+
+      // WARNING: this is not the 'true' close but the close of the last daily
+      // bar whcih isn't the same... IB don't appear to give us a way of getting
+      // historic prev-close values so we have to esitmate in backtests.
+
+      // -1 is today and -2 is previous
+      const prevClose = tracker.bars.daily.at(-2)?.close;
+
+      if (prevClose) {
+        handleTrackerTick({
+          data: tracker,
+          tick: {
+            type: 'CLOSE',
+            value: prevClose,
+            size: 0,
+            time: market.current.unix,
+          },
+          marketOpen,
+          marketClose,
+        });
+      }
     }),
   );
 

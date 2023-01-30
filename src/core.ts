@@ -18,6 +18,7 @@ export const TickTypes = [
   'HIGH',
   'LOW',
   'LAST',
+  'CLOSE',
 ] as const;
 
 export type TickType = typeof TickTypes[number];
@@ -222,6 +223,7 @@ export type Tracker = {
   low: number;
   last: number;
   volume: number;
+  prevClose: number;
   bid: number;
   ask: number;
   preMarketHigh: number;

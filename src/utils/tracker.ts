@@ -10,6 +10,7 @@ export function initTracker(): Tracker {
     high: 0,
     low: 0,
     last: 0,
+    prevClose: 0,
     volume: 0,
     bid: 0,
     ask: 0,
@@ -120,6 +121,10 @@ export function handleTrackerTick({
 
     case 'LOW':
       data.low = value;
+      break;
+
+    case 'CLOSE':
+      data.prevClose = value;
       break;
   }
 }

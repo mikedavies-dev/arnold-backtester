@@ -280,6 +280,20 @@ test('in-market volume', () => {
   });
 
   expect(data.last).toBe(1.6);
+
+  handleTrackerTick({
+    data,
+    marketOpen,
+    marketClose,
+    tick: createTick({
+      time: createTimeAsUnix('09:30'),
+      type: 'CLOSE',
+      value: 0.9,
+      size: 0,
+    }),
+  });
+
+  expect(data.prevClose).toBe(0.9);
 });
 
 describe('market status', () => {
