@@ -128,7 +128,7 @@ function decimal(val: number) {
 
 function thousands(val: number) {
   const color = colorize(val);
-  return color(numeral(val).format('0,0'));
+  return color(numeral(val).format('0.00a'));
 }
 
 function percent(val: number) {
@@ -171,7 +171,7 @@ export function run({onQuit}: UIArguments): UIResult {
     contrib.log({
       border: {},
     }),
-    20,
+    0,
     true,
   );
 
