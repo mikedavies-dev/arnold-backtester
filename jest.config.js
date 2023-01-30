@@ -20,6 +20,7 @@ module.exports = {
     '!./src/__TESTS__/test-user-data/live-strategies/*.ts',
     '!./src/__TESTS__/test-user-data/test-strategies/*.ts',
     '!src/tests/testing/*.ts',
+    '!src/utils/file-log.ts',
   ],
   projects: [
     {
