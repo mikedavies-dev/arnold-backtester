@@ -6,20 +6,15 @@ import {logger, shutdown as shutdownLogger} from '../utils/file-log';
 
 async function runApp() {
   try {
-    const ui = run({
-      onQuit: async () => {
-        logger.log('Shutting down');
-
-        await disconnect();
-        await shutdownLogger();
-
-        process.exit();
-      },
-    });
+    let ui: ReturnType<typeof run> | null = null;
 
     const log = (msg: string, ...args: any[]) => {
       logger.log(msg, ...args);
-      ui.log(msg);
+      if (ui) {
+        ui.log(msg);
+      } else {
+        console.log(msg, ...args);
+      }
     };
 
     log('Connecting to database');
@@ -31,7 +26,25 @@ async function runApp() {
       log,
       exit: () => false,
       update: args => {
-        ui.update(args);
+        if (ui) {
+          ui.update(args);
+        }
+      },
+      ready: () => {
+        if (ui) {
+          return;
+        }
+        log('Creating UI');
+        ui = run({
+          onQuit: async () => {
+            log('Shutting down');
+
+            await disconnect();
+            await shutdownLogger();
+
+            process.exit();
+          },
+        });
       },
     });
   } catch (err) {

@@ -128,7 +128,7 @@ function decimal(val: number) {
 
 function thousands(val: number) {
   const color = colorize(val);
-  return color(numeral(val).format('0.00a'));
+  return color(numeral(val).format('0.0a'));
 }
 
 function percent(val: number) {

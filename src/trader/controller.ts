@@ -115,10 +115,12 @@ export async function runLiveController({
   log,
   update,
   exit,
+  ready,
 }: {
   log: LoggerCallback;
   update: (data: TraderStatusUpdate) => void;
   exit: () => boolean;
+  ready: () => void;
 }) {
   // connect to the data provider
   log('Connecting to data provider');
@@ -299,6 +301,9 @@ export async function runLiveController({
     log(`Worker will shut down at ${formatDateTime(shutdownAt)}`);
 
     let currentMinute = -1;
+
+    // tell the caller that we are ready
+    ready();
 
     while (!isAfter(new Date(), shutdownAt) && !exit()) {
       /*
