@@ -19,6 +19,7 @@
     "numeral": "^2.0.6",
     "promise-series2": "^1.1.0",
     "proper-lockfile": "^4.1.2",
+    "strip-ansi": "^7.0.1",
     "ts-node": "^10.9.1",
     "typescript": "^4.9.3",
     "uuid": "^9.0.0"
@@ -58,6 +59,7 @@
   "scripts": {
     "backtest": "TZ=America/New_York ts-node -T src/bin/backtest.ts",
     "trader-ui": "TZ=America/New_York ts-node -T src/bin/trader-ui.ts",
+    "test-ui": "TZ=America/New_York ts-node -T src/bin/test-ui.ts",
     "trader-ui:watch": "TZ=America/New_York nodemon --exec ts-node -T src/bin/trader-ui.ts",
     "trader-logs": "tail -f ./user/logs/trader.log",
     "ensure-data": "TZ=America/New_York ts-node -T src/bin/ensure-data.ts",

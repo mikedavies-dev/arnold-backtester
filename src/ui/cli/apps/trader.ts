@@ -6,6 +6,7 @@ import colors from 'colors/safe';
 import {TraderStatusUpdate, Tracker} from '../../../core';
 import Layout from '../utils/layout';
 import {formatTime} from '../../../utils/dates';
+import * as Table from '../components/table';
 
 import {
   positionOpenPnL,
@@ -23,50 +24,61 @@ type UIResult = {
   update: (args: TraderStatusUpdate) => void;
 };
 
-const InstrumentColumns = [
+const InstrumentColumns: Table.Column[] = [
   {
     title: 'sym',
     width: 6,
+    align: 'LEFT',
   },
   {
     title: 'last',
     width: 6,
+    align: 'RIGHT',
   },
   {
     title: 'cng',
-    width: 6,
+    width: 10,
+    align: 'RIGHT',
   },
   {
     title: 'open',
-    width: 6,
+    width: 8,
+    align: 'RIGHT',
   },
   {
     title: 'high',
-    width: 6,
+    width: 8,
+    align: 'RIGHT',
   },
   {
     title: 'low',
-    width: 6,
+    width: 8,
+    align: 'RIGHT',
   },
   {
     title: 'vol',
-    width: 6,
+    width: 8,
+    align: 'RIGHT',
   },
   {
     title: 'bid',
-    width: 6,
+    width: 8,
+    align: 'RIGHT',
   },
   {
     title: 'ask',
-    width: 6,
+    width: 8,
+    align: 'RIGHT',
   },
   {
     title: 'spread',
-    width: 6,
+    width: 8,
+    align: 'RIGHT',
   },
   {
     title: 'profiles',
-    width: 100,
+    width: 30,
+    align: 'LEFT',
   },
 ];
 
@@ -122,38 +134,34 @@ function colorize(val: number) {
 }
 
 function decimal(val: number) {
-  const color = colorize(val);
-  return color(numeral(val).format('0.00'));
+  return numeral(val).format('0.00');
 }
 
 function thousands(val: number) {
-  const color = colorize(val);
-  return color(numeral(val).format('0.0a'));
+  return numeral(val).format('0.0a');
 }
 
 function percent(val: number) {
-  const color = colorize(val);
-  return color(numeral(val).format('0.00%'));
+  return numeral(val).format('0.00%');
 }
 
 export function run({onQuit}: UIArguments): UIResult {
   const screen = blessed.screen();
   const program = blessed.program();
 
-  const [layout, instruments] = Layout(
-    screen,
-    contrib.table({
-      keys: true,
-      vi: true,
-      bottom: 2,
-      fg: 'white',
-      columnSpacing: 10,
-      columnWidth: InstrumentColumns.map(c => c.width),
-      selectedFg: 'gray',
-      selectedBg: 'white',
-      // interactive: false,
-    }),
-  );
+  const instruments = Table.create({
+    keys: true,
+    vi: true,
+    bottom: 2,
+    fg: 'white',
+    columnSpacing: 10,
+    columnWidth: InstrumentColumns.map(c => c.width),
+    selectedFg: 'gray',
+    selectedBg: 'white',
+    interactive: true,
+  });
+
+  const [layout] = Layout(screen, instruments.container);
 
   const positions = layout.append(
     contrib.table({
@@ -246,7 +254,7 @@ export function run({onQuit}: UIArguments): UIResult {
   });
 
   program.key('C-s', function () {
-    instruments.focus();
+    instruments.container.focus();
     screen.render();
   });
 
@@ -279,16 +287,17 @@ export function run({onQuit}: UIArguments): UIResult {
           profiles.forEach(({id, name}) => {
             profileLookup.set(id, name);
           });
+          const pcntChange = percentChange({
+            ...tracker,
+            // todo, we need to load the CLOSE tick from IB
+            close: tracker.open,
+          });
+
+          const color = colorize(pcntChange);
           return [
             symbol,
             decimal(tracker.last),
-            percent(
-              percentChange({
-                ...tracker,
-                // todo, we need to load the CLOSE tick from IB
-                close: tracker.open,
-              }),
-            ),
+            color(percent(pcntChange)),
             decimal(tracker.open),
             decimal(tracker.high),
             decimal(tracker.low),
@@ -301,8 +310,8 @@ export function run({onQuit}: UIArguments): UIResult {
         },
       );
 
-      instruments.setData({
-        headers: InstrumentColumns.map(c => c.title),
+      Table.render(instruments, {
+        headers: InstrumentColumns,
         data: instrumentData,
       });
 

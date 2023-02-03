@@ -21,6 +21,7 @@ async function run() {
       update: () => {
         log('Got an update!');
       },
+      ready: () => {},
     });
   } catch (err) {
     log(`Failed to run live trader`, err);
