@@ -109,22 +109,22 @@ const PositionColumns: Column[] = [
   },
   {
     title: 'size',
-    width: 4,
+    width: 8,
     align: 'RIGHT',
   },
   {
     title: 'left',
-    width: 4,
+    width: 8,
     align: 'RIGHT',
   },
   {
     title: 'open',
-    width: 6,
+    width: 8,
     align: 'RIGHT',
   },
   {
     title: 'p&l',
-    width: 6,
+    width: 8,
     align: 'RIGHT',
   },
   {
@@ -135,7 +135,7 @@ const PositionColumns: Column[] = [
   {
     title: 'reason',
     width: 20,
-    align: 'RIGHT',
+    align: 'LEFT',
   },
 ];
 
@@ -193,11 +193,11 @@ export function run({onQuit}: UIArguments): UIResult {
     true,
   );
 
-  layout.append(
+  const status = layout.append(
     blessed.box({
       width: '100%',
       bg: 'grey',
-      content: '{green-bg}{grey-fg}{bold} CONNECTED {/}',
+      content: '',
       tags: true,
     }),
     1,
@@ -290,7 +290,11 @@ export function run({onQuit}: UIArguments): UIResult {
       log.log(msg);
       screen.render();
     },
-    update: ({instruments: liveInstruments, positions: livePositions}) => {
+    update: ({
+      instruments: liveInstruments,
+      positions: livePositions,
+      market,
+    }) => {
       const profileLookup = new Map<string, string>();
 
       const instrumentData = liveInstruments.map(
@@ -327,10 +331,10 @@ export function run({onQuit}: UIArguments): UIResult {
         return acc;
       }, new Map<string, Tracker>());
 
-      const positionData = livePositions.map(position => {
+      const positionData = livePositions.reverse().map(position => {
         const tracker = trackers.get(position.symbol);
         return [
-          position.externalId,
+          position.externalId.substring(0, 8),
           profileLookup.get(position.profileId) || 'unknown',
           formatTime(position.openedAt),
           position.symbol,
@@ -347,6 +351,8 @@ export function run({onQuit}: UIArguments): UIResult {
         headers: PositionColumns,
         data: positionData,
       });
+
+      status.setContent(`{green-bg}{grey-fg}{bold} ${market.current.time} {/}`);
 
       screen.render();
     },

@@ -252,12 +252,6 @@ export function create({log}: {log?: LoggerCallback} = {}): PositionProvider {
     const position = getPositionFromOrderId(orderId);
 
     if (position) {
-      log?.(
-        `Order update ${orderId} to with keys ${Object.keys(updates).join(
-          ', ',
-        )}`,
-      );
-
       position.orders.forEach(order => {
         if (order.id === orderId) {
           Object.keys(updates).forEach(key => {

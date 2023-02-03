@@ -124,16 +124,18 @@ export async function runLiveController({
 }) {
   // connect to the data provider
   log('Connecting to data provider');
-  const dataProvider = await createDataProvider({log});
+  const dataProvider = createDataProvider({log});
   await dataProvider.init();
 
   // connect to the data provider
   log('Connecting to broker');
 
-  const positions = createPositions();
+  const positions = createPositions({
+    log,
+  });
   await positions.init();
 
-  const broker = await createBroker({log, positions});
+  const broker = createBroker({log, positions});
   await broker.init();
 
   // Load the live config
@@ -262,7 +264,7 @@ export async function runLiveController({
           });
         });
 
-        await dataProvider.subscribeMarketUpdates({
+        dataProvider.subscribeMarketUpdates({
           instrument,
           onUpdate: ({type, value}) => {
             // set the current market time
