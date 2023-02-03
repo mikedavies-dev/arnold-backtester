@@ -10,7 +10,6 @@ import {
   Position,
   notEmpty,
   OrderAction,
-  Bars,
 } from '../core';
 
 type OrderExecutions = Record<string, {realizedPnL?: number}>;
@@ -35,10 +34,10 @@ export function isSellOrder(order: {action: OrderAction}) {
   return order.action === 'SELL';
 }
 
-export function percentChange(tracker: {close: number; last: number}) {
+export function percentChange(tracker: {prevClose: number; last: number}) {
   // -1 is today, -2 is yesterday
-  const diff = tracker.last - tracker.close;
-  return tracker.close ? diff / tracker.close : 0;
+  const diff = tracker.last - tracker.prevClose;
+  return tracker.prevClose ? diff / tracker.prevClose : 0;
 }
 
 export function orderRealizedPnL(order: {executions: OrderExecutions}): number {

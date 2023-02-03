@@ -29,7 +29,10 @@ type Table = {
 
 export function create(options: Partial<Options>): Table {
   // create the main container
-  const container = createBox(options);
+  const container = createBox({
+    ...options,
+    tags: true,
+  });
 
   // create the list and add it to the container
   const list = createList({
@@ -72,11 +75,10 @@ function renderLine(columns: Column[], data: string[]) {
 }
 
 export function render({list, container}: Table, {headers, data}: RenderArgs) {
-  container.setText(
-    renderLine(
-      headers,
-      headers.map(h => h.title),
-    ),
+  const header = renderLine(
+    headers,
+    headers.map(h => h.title),
   );
+  container.setContent(`{bold}${header}{/bold}`);
   list.setItems(data.map(data => renderLine(headers, data)) as any);
 }

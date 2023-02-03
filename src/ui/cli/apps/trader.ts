@@ -6,7 +6,11 @@ import colors from 'colors/safe';
 import {TraderStatusUpdate, Tracker} from '../../../core';
 import Layout from '../utils/layout';
 import {formatTime} from '../../../utils/dates';
-import * as Table from '../components/table';
+import {
+  create as createTable,
+  render as renderTable,
+  Column,
+} from '../components/table';
 
 import {
   positionOpenPnL,
@@ -24,7 +28,7 @@ type UIResult = {
   update: (args: TraderStatusUpdate) => void;
 };
 
-const InstrumentColumns: Table.Column[] = [
+const InstrumentColumns: Column[] = [
   {
     title: 'sym',
     width: 6,
@@ -82,46 +86,56 @@ const InstrumentColumns: Table.Column[] = [
   },
 ];
 
-const PositionColumns = [
+const PositionColumns: Column[] = [
   {
     title: 'id',
     width: 10,
+    align: 'LEFT',
   },
   {
     title: 'profile',
     width: 10,
+    align: 'LEFT',
   },
   {
     title: 'opened',
     width: 10,
+    align: 'LEFT',
   },
   {
     title: 'sym',
     width: 4,
+    align: 'LEFT',
   },
   {
     title: 'size',
     width: 4,
+    align: 'RIGHT',
   },
   {
     title: 'left',
     width: 4,
+    align: 'RIGHT',
   },
   {
     title: 'open',
     width: 6,
+    align: 'RIGHT',
   },
   {
     title: 'p&l',
     width: 6,
+    align: 'RIGHT',
   },
   {
     title: 'closed',
     width: 10,
+    align: 'RIGHT',
   },
   {
     title: 'reason',
     width: 20,
+    align: 'RIGHT',
   },
 ];
 
@@ -149,13 +163,10 @@ export function run({onQuit}: UIArguments): UIResult {
   const screen = blessed.screen();
   const program = blessed.program();
 
-  const instruments = Table.create({
+  const instruments = createTable({
     keys: true,
     vi: true,
-    bottom: 2,
     fg: 'white',
-    columnSpacing: 10,
-    columnWidth: InstrumentColumns.map(c => c.width),
     selectedFg: 'gray',
     selectedBg: 'white',
     interactive: true,
@@ -163,17 +174,16 @@ export function run({onQuit}: UIArguments): UIResult {
 
   const [layout] = Layout(screen, instruments.container);
 
-  const positions = layout.append(
-    contrib.table({
-      keys: true,
-      vi: true,
-      fg: 'white',
-      columnSpacing: 8,
-      columnWidth: PositionColumns.map(c => c.width),
-    }),
-    30,
-    true,
-  );
+  const positions = createTable({
+    keys: true,
+    vi: true,
+    fg: 'white',
+    selectedFg: 'gray',
+    selectedBg: 'white',
+    interactive: true,
+  });
+
+  layout.append(positions.container, 30, true);
 
   const log = layout.append(
     contrib.log({
@@ -249,12 +259,12 @@ export function run({onQuit}: UIArguments): UIResult {
   });
 
   program.key('C-p', function () {
-    positions.focus();
+    positions.list.focus();
     screen.render();
   });
 
   program.key('C-s', function () {
-    instruments.container.focus();
+    instruments.list.focus();
     screen.render();
   });
 
@@ -273,6 +283,7 @@ export function run({onQuit}: UIArguments): UIResult {
   program.enableMouse();
   program.clear();
   screen.render();
+  instruments.list.focus();
 
   return {
     log: msg => {
@@ -287,11 +298,7 @@ export function run({onQuit}: UIArguments): UIResult {
           profiles.forEach(({id, name}) => {
             profileLookup.set(id, name);
           });
-          const pcntChange = percentChange({
-            ...tracker,
-            // todo, we need to load the CLOSE tick from IB
-            close: tracker.open,
-          });
+          const pcntChange = percentChange(tracker);
 
           const color = colorize(pcntChange);
           return [
@@ -310,7 +317,7 @@ export function run({onQuit}: UIArguments): UIResult {
         },
       );
 
-      Table.render(instruments, {
+      renderTable(instruments, {
         headers: InstrumentColumns,
         data: instrumentData,
       });
@@ -336,8 +343,8 @@ export function run({onQuit}: UIArguments): UIResult {
         ];
       });
 
-      positions.setData({
-        headers: PositionColumns.map(c => c.title),
+      renderTable(positions, {
+        headers: PositionColumns,
         data: positionData,
       });
 
