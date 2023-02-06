@@ -19,13 +19,15 @@ import {
   percentChange,
 } from '../../../utils/derived';
 
-type UIArguments = {
+export type UIArguments = {
   onQuit: () => void;
+  onCommand: (command: string, args: string[]) => void;
 };
 
-type UIResult = {
+export type UIResult = {
   log: (msg: string) => void;
   update: (args: TraderStatusUpdate) => void;
+  quit: () => void;
 };
 
 const InstrumentColumns: Column[] = [
@@ -159,7 +161,7 @@ function percent(val: number) {
   return numeral(val).format('0.00%');
 }
 
-export function run({onQuit}: UIArguments): UIResult {
+export function run({onQuit, onCommand}: UIArguments): UIResult {
   const screen = blessed.screen();
   const program = blessed.program();
 
@@ -236,22 +238,21 @@ export function run({onQuit}: UIArguments): UIResult {
   }
 
   function exit() {
-    program.clear();
-    program.disableMouse();
-    program.showCursor();
-    program.normalBuffer();
-
     onQuit();
   }
 
   input.key('enter', function () {
-    const data = input.content.trim();
+    const [, data] = input.content.trim().split(':');
 
-    const [, command] = data.split(':');
+    const [command, ...args] = data.split(' ');
 
     switch (command) {
       case 'q':
         exit();
+        break;
+
+      default:
+        onCommand(command, args);
         break;
     }
 
@@ -355,6 +356,12 @@ export function run({onQuit}: UIArguments): UIResult {
       status.setContent(`{green-bg}{grey-fg}{bold} ${market.current.time} {/}`);
 
       screen.render();
+    },
+    quit: () => {
+      program.clear();
+      program.disableMouse();
+      program.showCursor();
+      program.normalBuffer();
     },
   };
 }

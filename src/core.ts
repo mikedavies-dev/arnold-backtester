@@ -188,6 +188,7 @@ export type PositionProvider = {
   shutdown: () => Promise<void>;
   writeDbUpdates: () => Promise<void>;
   hasOpenOrders: (profileId: string, instrument: Instrument) => boolean;
+  getOpenOrders: (profileId: string, instrument: Instrument) => Array<Order>;
   hasOpenPosition: (profileId: string, instrument: Instrument) => boolean;
   createOrder: (
     profileId: string,
@@ -215,6 +216,7 @@ export type PositionProvider = {
   getOrders: (profileId: string) => Array<Order>;
   getPositions: (profileId: string) => Array<Position>;
   getAllPositions: () => Array<LivePosition>;
+  getAllOpenPositions: () => Array<LivePosition>;
 };
 
 export type Tracker = {

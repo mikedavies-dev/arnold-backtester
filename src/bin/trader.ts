@@ -17,7 +17,6 @@ async function run() {
     // run the trader
     await runLiveController({
       log,
-      exit: () => false,
       update: () => {
         log('Got an update!');
       },

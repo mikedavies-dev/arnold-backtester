@@ -142,6 +142,9 @@ describe('test the order position/storage module', () => {
     expect(positions.hasOpenPosition(profileId, instrumentA)).toBe(true);
     expect(positions.hasOpenOrders(profileId, instrumentA)).toBe(true);
 
+    const openPositions = positions.getAllOpenPositions();
+    expect(openPositions.filter(p => p.profileId === profileId).length).toBe(1);
+
     positions.createOrder(profileId, instrumentA, {
       type: 'MKT',
       shares: 100,

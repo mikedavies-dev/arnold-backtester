@@ -178,7 +178,7 @@ export function create({
   }
 
   async function shutdown() {
-    log?.('Shutting down');
+    log?.('Shutting down IB broker');
     return api.disconnect();
   }
 
@@ -258,6 +258,13 @@ export function create({
     if (positions.isClosing(profileId, instrument)) {
       return -1;
     }
+
+    // close any pending orders
+    const openOrders = positions.getOpenOrders(profileId, instrument);
+
+    openOrders.forEach(order => {
+      api.cancelOrder(Number(order.id));
+    });
 
     // set the close reason
     positions.setPositionClosing(profileId, instrument, reason);

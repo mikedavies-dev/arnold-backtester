@@ -569,6 +569,10 @@ export function init({
     return orderId;
   };
 
+  const cancelOrder = (id: number) => {
+    api.cancelOrder(id);
+  };
+
   return {
     connect,
     disconnect,
@@ -585,6 +589,7 @@ export function init({
     // requestOpenOrders,
     getOpenPositions,
     placeOrder,
+    cancelOrder,
     addGlobalHandler,
     removeGlobalHandler,
     EventName: EventName,

@@ -196,7 +196,7 @@ export function create({log}: {log?: LoggerCallback} = {}): DataProvider {
   }
 
   async function shutdown() {
-    log?.('Shutting down');
+    log?.('Shutting down IB data provider');
     return api.disconnect();
   }
 

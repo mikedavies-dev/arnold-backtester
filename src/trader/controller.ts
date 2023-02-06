@@ -111,16 +111,20 @@ async function initProfiles(
   );
 }
 
+type LiveTradeController = {
+  quit: () => void;
+  closeAll: () => void;
+  close: (symbol: string) => void;
+};
+
 export async function runLiveController({
   log,
   update,
-  exit,
   ready,
 }: {
   log: LoggerCallback;
   update: (data: TraderStatusUpdate) => void;
-  exit: () => boolean;
-  ready: () => void;
+  ready: (controller: LiveTradeController) => void;
 }) {
   // connect to the data provider
   log('Connecting to data provider');
@@ -304,10 +308,63 @@ export async function runLiveController({
 
     let currentMinute = -1;
 
-    // tell the caller that we are ready
-    ready();
+    let shouldExit = false;
 
-    while (!isAfter(new Date(), shutdownAt) && !exit()) {
+    // tell the caller that we are ready
+    ready({
+      quit: () => {
+        shouldExit = true;
+      },
+      closeAll: () => {
+        const openPositions = positions.getAllOpenPositions();
+
+        if (!openPositions.length) {
+          log(`No open positions found`);
+          return;
+        }
+
+        openPositions.forEach(p => {
+          const instrument = instruments.find(i => i.symbol === p.symbol);
+
+          if (instrument) {
+            log(`Closing position ${p.externalId} for ${instrument.symbol}`);
+
+            broker.closePosition(
+              p.profileId,
+              instrument.instrument,
+              'manually closed',
+            );
+          }
+        });
+      },
+      close: (symbol: string) => {
+        const instrument = instruments.find(i => i.symbol === symbol);
+        if (!instrument) {
+          log(`No instrument found for ${symbol}`);
+          return;
+        }
+
+        const openPositions = positions
+          .getAllOpenPositions()
+          .filter(p => p.symbol === symbol);
+
+        if (!openPositions) {
+          log(`No open positions found for ${symbol}`);
+          return;
+        }
+
+        openPositions.forEach(p => {
+          log(`Closing position ${p.externalId} for ${symbol}`);
+          broker.closePosition(
+            p.profileId,
+            instrument.instrument,
+            'manually closed',
+          );
+        });
+      },
+    });
+
+    while (!isAfter(new Date(), shutdownAt) && !shouldExit) {
       /*
       The question is: Do we need time and sales data when a stock is in a setup or can
       we just rely on watch list data for trading/entering?

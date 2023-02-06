@@ -1,4 +1,4 @@
-import {run} from '../ui/cli/apps/trader';
+import {run, UIResult} from '../ui/cli/apps/trader';
 import {runLiveController} from '../trader/controller';
 
 import {connect, disconnect} from '../utils/db';
@@ -6,7 +6,7 @@ import {logger, shutdown as shutdownLogger} from '../utils/file-log';
 
 async function runApp() {
   try {
-    let ui: ReturnType<typeof run> | null = null;
+    let ui: UIResult | null = null;
 
     const log = (msg: string, ...args: any[]) => {
       logger.log(msg, ...args);
@@ -24,35 +24,60 @@ async function runApp() {
     // run the trader
     await runLiveController({
       log,
-      exit: () => false,
       update: args => {
         if (ui) {
           ui.update(args);
         }
       },
-      ready: () => {
+      ready: controller => {
         if (ui) {
           return;
         }
         log('Creating UI');
         ui = run({
           onQuit: async () => {
-            log('Shutting down');
+            controller.quit();
+          },
+          onCommand: (command, args) => {
+            try {
+              switch (command.toUpperCase()) {
+                case 'CLOSEALL':
+                  controller.closeAll();
+                  break;
 
-            await disconnect();
-            await shutdownLogger();
+                case 'CLOSE':
+                  if (args.length === 1) {
+                    const symbol = args[0].toUpperCase();
+                    controller.close(symbol);
+                  }
+                  break;
 
-            process.exit();
+                default:
+                  log(`Unknown command '${command}`);
+                  break;
+              }
+            } catch (err) {
+              log(`Command ${command} failed ${err}`);
+            }
           },
         });
       },
     });
+
+    log('Exiting');
+
+    if (ui) {
+      // typescript isn't able to figure out that we set UI in the ready callback
+      (ui as UIResult).quit();
+    }
   } catch (err) {
     logger.error('Failed', err);
     process.exit();
   } finally {
     await disconnect();
-    shutdownLogger();
+    await shutdownLogger();
+
+    process.exit();
   }
 }
 

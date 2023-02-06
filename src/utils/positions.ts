@@ -109,14 +109,24 @@ export function create({log}: {log?: LoggerCallback} = {}): PositionProvider {
     });
   }
 
+  function getOpenOrders(
+    profileId: string,
+    instrument: Instrument,
+  ): Array<Order> {
+    return positions
+      .filter(
+        e =>
+          e.profileId === profileId &&
+          e.position.symbol === instrument.symbol &&
+          isPositionOpen(e.position) &&
+          e.position.orders.some(isPendingOrder),
+      )
+      .flatMap(p => p.position.orders.filter(isPendingOrder));
+  }
+
   function hasOpenOrders(profileId: string, instrument: Instrument) {
-    return positions.some(
-      e =>
-        e.profileId === profileId &&
-        e.position.symbol === instrument.symbol &&
-        isPositionOpen(e.position) &&
-        e.position.orders.some(isPendingOrder),
-    );
+    const orders = getOpenOrders(profileId, instrument);
+    return orders.length > 0;
   }
 
   function hasOpenPosition(profileId: string, instrument: Instrument) {
@@ -360,6 +370,10 @@ export function create({log}: {log?: LoggerCallback} = {}): PositionProvider {
     return Object.values(profileIdToPositions).flat();
   }
 
+  function getAllOpenPositions(): Array<LivePosition> {
+    return getAllPositions().filter(p => !p.closedAt);
+  }
+
   return {
     init,
     shutdown,
@@ -377,5 +391,7 @@ export function create({log}: {log?: LoggerCallback} = {}): PositionProvider {
     getOrders,
     getPositions,
     getAllPositions,
+    getAllOpenPositions,
+    getOpenOrders,
   };
 }
