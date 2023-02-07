@@ -10,9 +10,13 @@ import {
   Position,
   notEmpty,
   OrderAction,
+  Order,
 } from '../core';
 
-type OrderExecutions = Record<string, {realizedPnL?: number}>;
+type OrderExecutions = Record<
+  string,
+  {realizedPnL?: number; commission: number}
+>;
 
 export function isPendingOrder(order: {state: OrderState}) {
   return ['ACCEPTED', 'PENDING'].indexOf(order.state) !== -1;
@@ -58,6 +62,24 @@ export function positionRealisedPnL(position: {
   return pipe(position.orders, A.map(orderRealizedPnL), sum);
 }
 
+export function orderCommission(order: {executions: OrderExecutions}): number {
+  return pipe(
+    order.executions,
+    Object.values,
+    A.map(e => e.commission),
+    A.filter(notEmpty),
+    sum,
+  );
+}
+
+export function positionCommission(position: {
+  orders: Array<{
+    executions: OrderExecutions;
+  }>;
+}): number {
+  return pipe(position.orders, A.map(orderCommission), sum);
+}
+
 export function positionSize(position: {
   orders: Array<{action: OrderAction; state: OrderState; shares: number}>;
 }): number {
@@ -77,16 +99,6 @@ export function positionSize(position: {
       sum,
     ),
   );
-}
-
-export function currentPositionSize(position: Position): number {
-  return position.orders
-    .filter(isFilledOrder)
-    .reduce(
-      (acc, order) =>
-        acc + (order.action === 'BUY' ? order.shares : order.shares * -1),
-      0,
-    );
 }
 
 export function positionAction(position: {
@@ -124,4 +136,14 @@ export function positionOpenPnL(position: Position, tracker: Tracker) {
   const market = size * tracker.last;
 
   return market - purchase;
+}
+
+export function currentPositionSize({orders}: {orders: Array<Order>}): number {
+  return orders
+    .filter(isFilledOrder)
+    .reduce(
+      (acc, order) =>
+        acc + (order.action === 'BUY' ? order.shares : order.shares * -1),
+      0,
+    );
 }

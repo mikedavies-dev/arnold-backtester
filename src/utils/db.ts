@@ -10,6 +10,7 @@ import {
   isAfter,
   getUnixTime,
   startOfDay,
+  endOfDay,
 } from 'date-fns';
 
 // Register the models
@@ -342,11 +343,15 @@ export async function loadOpenPositions() {
   });
 }
 
-export async function loadTodayPositions() {
+export async function loadPositionsForDateRange(from: Date, to: Date) {
   const Position = mongoose.model<DbLivePosition>('LivePosition');
   return Position.find({
-    openedAt: {$gt: startOfDay(new Date())},
+    openedAt: {$gte: startOfDay(from), $lt: endOfDay(to)},
   });
+}
+
+export async function loadTodayPositions() {
+  return loadPositionsForDateRange(new Date(), new Date());
 }
 
 export async function createLivePosition(position: DbLivePosition) {

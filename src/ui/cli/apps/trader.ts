@@ -82,7 +82,12 @@ const InstrumentColumns: Column[] = [
     align: 'RIGHT',
   },
   {
-    title: 'profiles',
+    title: 's',
+    width: 1,
+    align: 'LEFT',
+  },
+  {
+    title: 'setup',
     width: 30,
     align: 'LEFT',
   },
@@ -317,7 +322,13 @@ export function run({onQuit, onCommand}: UIArguments): UIResult {
             decimal(tracker.bid),
             decimal(tracker.ask),
             decimal(tracker.ask - tracker.bid),
-            profiles.map(p => `${p.name}`).join(', '),
+            profiles.some(p => p.currentlyInSetup)
+              ? colors.green('✓')
+              : colors.red('˟'),
+            profiles
+              .filter(p => p.currentlyInSetup)
+              .map(p => `${p.name}`)
+              .join(', '),
           ];
         },
       );

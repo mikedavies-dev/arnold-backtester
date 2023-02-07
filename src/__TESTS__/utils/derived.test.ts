@@ -3,6 +3,7 @@ import {
   orderRealizedPnL,
   percentChange,
   positionRealisedPnL,
+  positionCommission,
   positionSize,
   positionAction,
   positionFillPrice,
@@ -111,6 +112,7 @@ describe('test derived functions', () => {
         executions: {
           '1': {
             realizedPnL: 1,
+            commission: 1,
           },
         },
       }),
@@ -119,7 +121,7 @@ describe('test derived functions', () => {
     expect(
       orderRealizedPnL({
         executions: {
-          '1': {},
+          '1': {commission: 1},
         },
       }),
     ).toBe(0);
@@ -127,9 +129,9 @@ describe('test derived functions', () => {
     expect(
       orderRealizedPnL({
         executions: {
-          '1': {realizedPnL: 10},
-          '2': {realizedPnL: 10},
-          '3': {},
+          '1': {realizedPnL: 10, commission: 1},
+          '2': {realizedPnL: 10, commission: 1},
+          '3': {commission: 1},
         },
       }),
     ).toBe(20);
@@ -149,6 +151,29 @@ describe('test derived functions', () => {
             executions: {
               '1': {
                 realizedPnL: 1,
+                commission: 1,
+              },
+            },
+          },
+        ],
+      }),
+    ).toBe(1);
+  });
+
+  test('position commission', () => {
+    expect(
+      positionCommission({
+        orders: [],
+      }),
+    ).toBe(0);
+
+    expect(
+      positionCommission({
+        orders: [
+          {
+            executions: {
+              '1': {
+                commission: 1,
               },
             },
           },

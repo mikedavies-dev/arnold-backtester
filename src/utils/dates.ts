@@ -27,3 +27,7 @@ export function getTimes(unixTime: number): Times {
     time: format(date, 'HH:mm:ss'),
   };
 }
+
+export function parseDate(input: string) {
+  return parse(input, 'yyyy-MM-dd', new Date());
+}

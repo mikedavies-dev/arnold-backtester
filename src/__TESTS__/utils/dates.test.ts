@@ -4,6 +4,7 @@ import {
   createTimeAsUnix,
   createTimeAsDate,
   getTimes,
+  parseDate,
 } from '../../utils/dates';
 
 import {getTestDate} from '../testing/tick';
@@ -31,4 +32,8 @@ test('get times in various formats', () => {
   expect(times.time).toBe('10:12:00');
   expect(times.unix).toBe(source);
   expect(times.dt).toMatchInlineSnapshot(`2022-01-01T15:12:00.000Z`);
+});
+
+test('parsing a date', () => {
+  expect(formatDate(parseDate('2022-01-01'))).toEqual('2022-01-01');
 });
