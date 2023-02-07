@@ -305,6 +305,7 @@ describe('test updating bar data', () => {
         "daily": Array [],
         "m1": Array [],
         "m5": Array [],
+        "m60": Array [],
       }
     `);
 
@@ -353,6 +354,16 @@ describe('test updating bar data', () => {
             "low": 1,
             "open": 1,
             "time": "2022-01-01 09:30",
+            "volume": 1,
+          },
+        ],
+        "m60": Array [
+          Object {
+            "close": 1,
+            "high": 1,
+            "low": 1,
+            "open": 1,
+            "time": "2022-01-01 09:00",
             "volume": 1,
           },
         ],
@@ -412,6 +423,16 @@ describe('test updating bar data', () => {
             "low": 0.5,
             "open": 1,
             "time": "2022-01-01 09:30",
+            "volume": 2,
+          },
+        ],
+        "m60": Array [
+          Object {
+            "close": 3,
+            "high": 4,
+            "low": 0.5,
+            "open": 1,
+            "time": "2022-01-01 09:00",
             "volume": 2,
           },
         ],
@@ -633,6 +654,16 @@ describe('test updating bar data', () => {
             "volume": 1,
           },
         ],
+        "m60": Array [
+          Object {
+            "close": 2,
+            "high": 2,
+            "low": 1,
+            "open": 1,
+            "time": "2022-01-01 09:00",
+            "volume": 1,
+          },
+        ],
       }
     `);
 
@@ -743,6 +774,16 @@ describe('test updating bar data', () => {
             "open": 2,
             "time": "2022-01-01 09:35",
             "volume": 0,
+          },
+        ],
+        "m60": Array [
+          Object {
+            "close": 2,
+            "high": 2,
+            "low": 1,
+            "open": 1,
+            "time": "2022-01-01 09:00",
+            "volume": 1,
           },
         ],
       }

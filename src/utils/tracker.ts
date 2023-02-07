@@ -2,7 +2,7 @@ import {Tracker, BarPeriod, Bar, Periods, TickType} from '../core';
 
 import {updateBarFromTick, updateBarFromMinuteBar, formatBarTime} from './bars';
 
-const periods: Array<BarPeriod> = ['m1', 'm5', 'daily'];
+const periods: Array<BarPeriod> = ['m1', 'm5', 'm60', 'daily'];
 
 export function initTracker(): Tracker {
   return {
@@ -20,6 +20,7 @@ export function initTracker(): Tracker {
     bars: {
       m1: [],
       m5: [],
+      m60: [],
       daily: [],
     },
   };

@@ -20,6 +20,7 @@ test('init tracker', () => {
         daily: [],
         m1: [],
         m5: [],
+        m60: [],
       },
     }),
   );

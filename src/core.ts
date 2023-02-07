@@ -55,6 +55,7 @@ export type Bar = {
 export type Bars = {
   m1: Array<Bar>;
   m5: Array<Bar>;
+  m60: Array<Bar>;
   daily: Array<Bar>;
 };
 

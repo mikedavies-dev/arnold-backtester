@@ -320,6 +320,7 @@ describe('mongo db tests', () => {
         "daily": Array [],
         "m1": Array [],
         "m5": Array [],
+        "m60": Array [],
       }
     `);
 
@@ -365,6 +366,7 @@ describe('mongo db tests', () => {
           },
         ],
         "m5": Array [],
+        "m60": Array [],
       }
     `);
   });

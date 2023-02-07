@@ -34,7 +34,6 @@ import {
 
 import Env from './env';
 import {BacktestResults} from '../backtest/controller';
-import {date} from 'fp-ts';
 
 export async function connect() {
   // Connect to the db
@@ -331,6 +330,7 @@ export async function loadTrackerBars(
   return {
     m1: await loadBars(symbol, 'm1', until, count),
     m5: await loadBars(symbol, 'm5', until, count),
+    m60: await loadBars(symbol, 'm60', until, count),
     daily: await loadBars(symbol, 'daily', until, count),
   };
 }
