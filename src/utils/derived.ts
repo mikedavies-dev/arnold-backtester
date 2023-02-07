@@ -62,6 +62,10 @@ export function positionRealisedPnL(position: {
   return pipe(position.orders, A.map(orderRealizedPnL), sum);
 }
 
+export function positionPnL(position: Position, tracker: Tracker) {
+  return positionOpenPnL(position, tracker) + positionRealisedPnL(position);
+}
+
 export function orderCommission(order: {executions: OrderExecutions}): number {
   return pipe(
     order.executions,

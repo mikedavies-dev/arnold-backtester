@@ -240,6 +240,10 @@ export function hasOpenPosition(state: BrokerState, symbol: string) {
   return Boolean(state.openPositions[symbol]);
 }
 
+export function getOpenPosition(state: BrokerState, symbol: string) {
+  return state.openPositions[symbol] || null;
+}
+
 export function closeOrder(state: BrokerState, orderId: number) {
   // find the order
   if (!state.openOrders[orderId]) {

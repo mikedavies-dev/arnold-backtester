@@ -47,6 +47,7 @@ import {
   handleBrokerTick,
   hasOpenOrders,
   hasOpenPosition,
+  getOpenPosition,
   getPositionSize,
   closePosition,
 } from './broker';
@@ -202,6 +203,7 @@ export async function runBacktest({
       closePosition: (reason: string | null) =>
         closePosition(brokerState, symbol, reason),
       hasOpenPosition: () => hasOpenPosition(brokerState, symbol),
+      getOpenPosition: () => getOpenPosition(brokerState, symbol),
       orders: brokerState.orders,
       positions: brokerState.positions,
     },

@@ -249,6 +249,10 @@ export function create({
     return positions.hasOpenPosition(profileId, instrument);
   }
 
+  function getOpenPosition(profileId: string, instrument: Instrument) {
+    return positions.getOpenPosition(profileId, instrument);
+  }
+
   function closePosition(
     profileId: string,
     instrument: Instrument,
@@ -299,5 +303,6 @@ export function create({
     getPositionSize,
     closePosition,
     hasOpenPosition,
+    getOpenPosition,
   };
 }

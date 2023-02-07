@@ -137,3 +137,11 @@ export function getRetraceFromHigh(bars: Bar[], high: number) {
 export function getHigh(bars: Bar[]) {
   return bars.reduce((high, bar) => Math.max(high, bar.high), 0);
 }
+
+export function isRed(bar: Bar) {
+  return bar.close < bar.open;
+}
+
+export function areRed(bars: Bar[]) {
+  return bars.every(isRed);
+}

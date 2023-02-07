@@ -233,6 +233,8 @@ export async function runLiveController({
                   broker.closePosition(profileId, instrument, reason),
                 hasOpenPosition: () =>
                   broker.hasOpenPosition(profileId, instrument),
+                getOpenPosition: () =>
+                  broker.getOpenPosition(profileId, instrument),
               },
             });
 

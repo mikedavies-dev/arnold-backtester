@@ -174,6 +174,12 @@ export type BrokerProvider = {
   // Get the current position size for an symbol/profile combo
   getPositionSize: (profileId: string, instrument: Instrument) => number;
 
+  // get the currently open position (if any)
+  getOpenPosition: (
+    profileId: string,
+    instrument: Instrument,
+  ) => Position | null;
+
   // Close an open position with a reason
   closePosition: (
     profileId: string,
@@ -409,6 +415,7 @@ export type StrategyParameters = {
     hasOpenOrders: () => boolean;
     getPositionSize: () => number;
     hasOpenPosition: () => boolean;
+    getOpenPosition: () => Position | null;
     closePosition: (reason: string) => void;
     orders: Array<Order>;
     positions: Array<Position>;
