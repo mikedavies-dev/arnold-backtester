@@ -1,4 +1,5 @@
-import {getRetraceFromHigh, getHigh} from '../../utils/bars';
+import {Bar} from '../../core';
+import {getRetraceFromHigh, getHigh, isRed, areRed} from '../../utils/bars';
 
 function testBar(value: number) {
   return {
@@ -8,6 +9,18 @@ function testBar(value: number) {
     low: value,
     close: value,
     volume: 0,
+  };
+}
+
+function makeBar(bar: Partial<Bar>): Bar {
+  return {
+    open: 0,
+    high: 0,
+    low: 0,
+    close: 0,
+    volume: 0,
+    time: '00:00:00',
+    ...bar,
   };
 }
 
@@ -69,5 +82,46 @@ describe('bar utilities', () => {
     expect(high).toBe(0);
 
     expect(getRetraceFromHigh(bars, high)).toBe(0);
+  });
+
+  test('that a bar is red', () => {
+    expect(isRed(makeBar({open: 0, close: 0}))).toEqual(false);
+    expect(isRed(makeBar({open: 10, close: 12}))).toEqual(false);
+    expect(isRed(makeBar({open: 10, close: 8}))).toEqual(true);
+  });
+
+  test('that a series of bars are red', () => {
+    expect(areRed([makeBar({open: 10, close: 12})])).toEqual(false);
+    expect(
+      areRed([
+        makeBar({open: 10, close: 12}),
+        makeBar({open: 10, close: 12}),
+        makeBar({open: 10, close: 12}),
+      ]),
+    ).toEqual(false);
+
+    expect(
+      areRed([
+        makeBar({open: 10, close: 12}),
+        makeBar({open: 10, close: 8}),
+        makeBar({open: 10, close: 12}),
+      ]),
+    ).toEqual(false);
+
+    expect(
+      areRed([
+        makeBar({open: 10, close: 8}),
+        makeBar({open: 10, close: 8}),
+        makeBar({open: 10, close: 12}),
+      ]),
+    ).toEqual(false);
+
+    expect(
+      areRed([
+        makeBar({open: 10, close: 8}),
+        makeBar({open: 10, close: 8}),
+        makeBar({open: 10, close: 8}),
+      ]),
+    ).toEqual(true);
   });
 });

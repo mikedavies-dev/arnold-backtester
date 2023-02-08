@@ -9,6 +9,7 @@ import {
   positionFillPrice,
   positionOpenPnL,
   currentPositionSize,
+  positionPnL,
 } from '../../utils/derived';
 
 import {initTracker} from '../../utils/tracker';
@@ -380,6 +381,10 @@ describe('test derived functions', () => {
     expect(positionOpenPnL(position, createTracker({last: 100}))).toBe(0);
     expect(positionOpenPnL(position, createTracker({last: 110}))).toBe(0);
     expect(positionOpenPnL(position, createTracker({last: 90}))).toBe(0);
+
+    expect(positionPnL(position, createTracker({last: 100}))).toBe(0);
+    expect(positionPnL(position, createTracker({last: 110}))).toBe(0);
+    expect(positionPnL(position, createTracker({last: 90}))).toBe(0);
   });
 
   test('open profit for a position with mutliple orders', () => {

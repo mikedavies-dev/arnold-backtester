@@ -14,6 +14,7 @@ import {
   closeOrder,
   closeOpenOrders,
   hasOpenPosition,
+  getOpenPosition,
 } from '../../backtest/broker';
 
 test('init positions function returns an empty positions ds', () => {
@@ -82,6 +83,12 @@ test('placing market buy order and wait for it to be filled at the ask', () => {
   // Make sure we have open orders
   expect(hasOpenOrders(market.broker, market.symbol)).toBe(true);
   expect(hasOpenPosition(market.broker, market.symbol)).toBe(true);
+
+  const openPosition = getOpenPosition(market.broker, market.symbol);
+  expect(openPosition?.symbol).toEqual(market.symbol);
+
+  const unknownPosition = getOpenPosition(market.broker, 'INVALID_SYMBOL');
+  expect(unknownPosition).toBeNull();
 
   // Move the market along
   updateMarketDataAndBroker(market, [['09:30:02', 1.1, 1.3, 1.2, 0]]);

@@ -240,7 +240,10 @@ export function hasOpenPosition(state: BrokerState, symbol: string) {
   return Boolean(state.openPositions[symbol]);
 }
 
-export function getOpenPosition(state: BrokerState, symbol: string) {
+export function getOpenPosition(
+  state: BrokerState,
+  symbol: string,
+): Position | null {
   return state.openPositions[symbol] || null;
 }
 
