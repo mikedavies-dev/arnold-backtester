@@ -444,6 +444,11 @@ export function create({log}: {log?: LoggerCallback} = {}): DataProvider {
     api.cancelMarketData(requestId);
   }
 
+  function select(instrument: Instrument) {
+    const contract: Contract = instrument.data as Contract;
+    api.select(contract);
+  }
+
   return {
     name: 'ib',
     init,
@@ -455,5 +460,6 @@ export function create({log}: {log?: LoggerCallback} = {}): DataProvider {
     // cancelPriceUpdates,
     subscribeMarketUpdates,
     cancelMarketUpdates,
+    select,
   };
 }

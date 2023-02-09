@@ -15,6 +15,7 @@ test('instrument lookup', async () => {
     downloadTickData: async () => {},
     subscribeMarketUpdates: () => 0,
     cancelMarketUpdates: () => {},
+    select: () => {},
     instrumentLookup: async () => [
       {
         externalId: 'ABCD',

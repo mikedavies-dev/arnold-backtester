@@ -25,9 +25,11 @@ import {
 export function init({
   host = '127.0.0.1',
   port = 4002,
+  groupId = 7,
 }: {
   host: string;
   port: number;
+  groupId?: number;
 }) {
   const api = new IBApi({
     host,
@@ -36,6 +38,7 @@ export function init({
 
   let nextRequestId = 0;
   let nextValidOrderId = 0;
+  let groupEventsRequestId = 0;
 
   type OpenPosition = {
     account: string;
@@ -278,13 +281,17 @@ export function init({
   async function connect(clientId: number) {
     return new Promise<void>((resolve, reject) => {
       const timeoutTimer = setTimeout(async () => {
-        await api.disconnect();
+        api.disconnect();
         reject(new Error('Timeout connecting to IB'));
       }, 10000);
 
       api.on(EventName.connected, () => {
         clearTimeout(timeoutTimer);
-        setTimeout(resolve, 200);
+        setTimeout(() => {
+          groupEventsRequestId = getNextRequestId();
+          // api.subscribeToGroupEvents(groupEventsRequestId, groupId);
+          resolve();
+        }, 200);
       });
 
       api.connect(clientId);
@@ -565,12 +572,17 @@ export function init({
     });
 
     // Load the order
-
     return orderId;
   };
 
   const cancelOrder = (id: number) => {
     api.cancelOrder(id);
+  };
+
+  const select = (contract: Contract) => {
+    if (contract.conId) {
+      api.updateDisplayGroup(groupEventsRequestId, String(contract.conId));
+    }
   };
 
   return {
@@ -593,6 +605,7 @@ export function init({
     addGlobalHandler,
     removeGlobalHandler,
     EventName: EventName,
+    select,
   };
 }
 

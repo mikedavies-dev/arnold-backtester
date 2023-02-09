@@ -11,7 +11,7 @@ export default function ATR(period: number, bars: Bar[]): LineIndicator {
     recalculate() {
       trueRange = bars.map(trueRangeOfBar);
 
-      values = trueRange.map((value, ix) => {
+      values = trueRange.map((_value, ix) => {
         if (ix < period) {
           return 0;
         }

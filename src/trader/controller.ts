@@ -115,6 +115,7 @@ type LiveTradeController = {
   quit: () => void;
   closeAll: () => void;
   close: (symbol: string) => void;
+  selectSymbol: (symbol: string) => void;
 };
 
 export async function runLiveController({
@@ -292,12 +293,13 @@ export async function runLiveController({
             });
 
             // update the indicators
-            profiles
-              .filter(p => p.currentlyInSetup)
-              .forEach(({strategy, indicators}) => {
-                indicators.forEach(indicator => indicator.update());
+            profiles.forEach(({currentlyInSetup, strategy, indicators}) => {
+              indicators.forEach(indicator => indicator.update());
+
+              if (currentlyInSetup) {
                 strategy.handleTick(tick);
-              });
+              }
+            });
           },
         });
       }),
@@ -364,6 +366,21 @@ export async function runLiveController({
           );
         });
       },
+      selectSymbol: symbol => {
+        const instrument = instruments.find(i => i.symbol === symbol);
+        if (!instrument) {
+          log(`No instrument found for ${symbol}`);
+          return;
+        }
+        dataProvider.select(instrument.instrument);
+      },
+    });
+
+    // perform an inicial update/calculation of the indicators
+    instruments.forEach(({profiles}) => {
+      profiles.forEach(({indicators}) => {
+        indicators.forEach(indicator => indicator.update());
+      });
     });
 
     while (!isAfter(new Date(), shutdownAt) && !shouldExit) {
@@ -390,8 +407,8 @@ export async function runLiveController({
             if (profile.currentlyInSetup !== inSetup) {
               log(
                 inSetup
-                  ? `${profile.name} for ${symbol} is in a setup`
-                  : `${profile.name} for ${symbol} no longer in a setup`,
+                  ? `${symbol} is in a ${profile.name} setup`
+                  : `${symbol} is no longer in a ${profile.name} setup`,
               );
             }
 
@@ -423,7 +440,7 @@ export async function runLiveController({
       await sleep(1000);
     }
   } catch (err) {
-    log('Failed', err);
+    log('Failed ${err}', err);
   }
 
   // Disconnect
