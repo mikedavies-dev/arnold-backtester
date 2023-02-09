@@ -50,7 +50,8 @@ export function init({
   const openPositions: Record<number, OpenPosition> = {};
 
   function getNextRequestId() {
-    return nextRequestId++;
+    const id = nextRequestId++;
+    return id;
   }
 
   function getNextOrderId() {
