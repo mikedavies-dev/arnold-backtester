@@ -182,7 +182,7 @@ function percent(val: number) {
 export function run({
   onQuit,
   onCommand,
-  onLog,
+  // onLog,
   onSelectSymbol,
 }: UIArguments): UIResult {
   const screen = blessed.screen();
@@ -208,7 +208,7 @@ export function run({
     interactive: true,
   });
 
-  layout.append(positions.container, 30, true);
+  layout.append(positions.container, 10, true);
 
   const log = layout.append(
     contrib.log({
