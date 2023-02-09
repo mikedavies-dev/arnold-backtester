@@ -42,6 +42,7 @@ const dataProvider: DataProvider = {
   downloadTickData: async () => {},
   subscribeMarketUpdates: () => 0,
   cancelMarketUpdates: () => {},
+  select: () => {},
 };
 
 describe('mongo db tests', () => {

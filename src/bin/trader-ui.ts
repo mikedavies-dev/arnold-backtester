@@ -60,6 +60,13 @@ async function runApp() {
               log(`Command ${command} failed ${err}`);
             }
           },
+          onLog: (msg: string, ...args: any[]) => {
+            log(msg, ...args);
+          },
+          onSelectSymbol: symbol => {
+            log(`Selecting symbol ${symbol}`);
+            controller.selectSymbol(symbol);
+          },
         });
       },
     });

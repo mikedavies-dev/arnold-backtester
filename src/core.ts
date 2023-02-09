@@ -155,6 +155,7 @@ export type DataProvider = {
   instrumentLookup(searchTerm: string): Promise<Instrument[]>;
   subscribeMarketUpdates(args: SubscribeMarketUpdateArgs): number;
   cancelMarketUpdates: (requestId: number) => void;
+  select: (instrument: Instrument) => void;
 };
 
 export type BrokerProvider = {

@@ -22,6 +22,8 @@ import {
 export type UIArguments = {
   onQuit: () => void;
   onCommand: (command: string, args: string[]) => void;
+  onLog: (msg: string, ...args: any[]) => void;
+  onSelectSymbol: (symbol: string) => void;
 };
 
 export type UIResult = {
@@ -37,12 +39,23 @@ const InstrumentColumns: Column[] = [
     align: 'LEFT',
   },
   {
+    title: 's',
+    width: 1,
+    align: 'LEFT',
+  },
+
+  {
     title: 'last',
     width: 6,
     align: 'RIGHT',
   },
   {
     title: 'cng',
+    width: 10,
+    align: 'RIGHT',
+  },
+  {
+    title: '%cng',
     width: 10,
     align: 'RIGHT',
   },
@@ -82,9 +95,9 @@ const InstrumentColumns: Column[] = [
     align: 'RIGHT',
   },
   {
-    title: 's',
-    width: 1,
-    align: 'LEFT',
+    title: '-high',
+    width: 8,
+    align: 'RIGHT',
   },
   {
     title: 'setup',
@@ -166,7 +179,12 @@ function percent(val: number) {
   return numeral(val).format('0.00%');
 }
 
-export function run({onQuit, onCommand}: UIArguments): UIResult {
+export function run({
+  onQuit,
+  onCommand,
+  onLog,
+  onSelectSymbol,
+}: UIArguments): UIResult {
   const screen = blessed.screen();
   const program = blessed.program();
 
@@ -291,6 +309,16 @@ export function run({onQuit, onCommand}: UIArguments): UIResult {
   screen.render();
   instruments.list.focus();
 
+  let listSymbols: string[] = [];
+
+  instruments.list.on('select', (_, index) => {
+    const symbol = listSymbols[index] || null;
+
+    if (symbol) {
+      onSelectSymbol(listSymbols[index]);
+    }
+  });
+
   return {
     log: msg => {
       log.log(msg);
@@ -303,6 +331,8 @@ export function run({onQuit, onCommand}: UIArguments): UIResult {
     }) => {
       const profileLookup = new Map<string, string>();
 
+      listSymbols = liveInstruments.map(i => i.symbol);
+
       const instrumentData = liveInstruments.map(
         ({symbol, tracker, profiles}) => {
           profiles.forEach(({id, name}) => {
@@ -313,7 +343,11 @@ export function run({onQuit, onCommand}: UIArguments): UIResult {
           const color = colorize(pcntChange);
           return [
             symbol,
+            profiles.some(p => p.currentlyInSetup)
+              ? colors.green('✓')
+              : colors.red('˟'),
             decimal(tracker.last),
+            color(decimal(tracker.last - tracker.prevClose)),
             color(percent(pcntChange)),
             decimal(tracker.open),
             decimal(tracker.high),
@@ -322,9 +356,7 @@ export function run({onQuit, onCommand}: UIArguments): UIResult {
             decimal(tracker.bid),
             decimal(tracker.ask),
             decimal(tracker.ask - tracker.bid),
-            profiles.some(p => p.currentlyInSetup)
-              ? colors.green('✓')
-              : colors.red('˟'),
+            decimal(tracker.high - tracker.last),
             profiles
               .filter(p => p.currentlyInSetup)
               .map(p => `${p.name}`)

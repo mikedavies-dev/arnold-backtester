@@ -46,6 +46,7 @@ const dataProvider: DataProvider = {
   downloadTickData: async () => {},
   subscribeMarketUpdates: () => 0,
   cancelMarketUpdates: () => {},
+  select: () => {},
   instrumentLookup: async searchTerm => {
     return instruments.filter(
       i =>
