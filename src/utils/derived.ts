@@ -39,7 +39,6 @@ export function isSellOrder(order: {action: OrderAction}) {
 }
 
 export function percentChange(tracker: {prevClose: number; last: number}) {
-  // -1 is today, -2 is yesterday
   const diff = tracker.last - tracker.prevClose;
   return tracker.prevClose ? diff / tracker.prevClose : 0;
 }
@@ -150,4 +149,31 @@ export function currentPositionSize({orders}: {orders: Array<Order>}): number {
         acc + (order.action === 'BUY' ? order.shares : order.shares * -1),
       0,
     );
+}
+
+export function positionEntryPrice({
+  orders,
+}: {
+  orders: Array<Order>;
+}): number | null {
+  return orders.find(isFilledOrder)?.avgFillPrice || null;
+}
+
+export function positionAvgFillPrice({orders}: {orders: Array<Order>}) {
+  const action = positionAction({orders});
+
+  const {shares, value} = orders
+    .filter(o => o.action === action && isFilledOrder(o))
+    .reduce(
+      (acc, o) => ({
+        value: acc.value + o.shares * Number(o.avgFillPrice),
+        shares: acc.shares + o.shares,
+      }),
+      {
+        shares: 0,
+        value: 0,
+      },
+    );
+
+  return shares > 0 ? value / shares : 0;
 }

@@ -10,6 +10,8 @@ import {
   positionOpenPnL,
   currentPositionSize,
   positionPnL,
+  positionEntryPrice,
+  positionAvgFillPrice,
 } from '../../utils/derived';
 
 import {initTracker} from '../../utils/tracker';
@@ -408,5 +410,59 @@ describe('test derived functions', () => {
     expect(positionOpenPnL(position, createTracker({last: 100}))).toBe(0);
     expect(positionOpenPnL(position, createTracker({last: 110}))).toBe(500);
     expect(positionOpenPnL(position, createTracker({last: 90}))).toBe(-500);
+  });
+
+  test('position entry price', () => {
+    const position = createPosition({
+      orders: [
+        createOrder({
+          shares: 100,
+          action: 'BUY',
+          state: 'FILLED',
+          avgFillPrice: 100,
+        }),
+        createOrder({
+          shares: 100,
+          action: 'BUY',
+          state: 'FILLED',
+          avgFillPrice: 100,
+        }),
+        createOrder({
+          shares: 50,
+          action: 'SELL',
+          state: 'FILLED',
+          avgFillPrice: 100,
+        }),
+      ],
+    });
+    expect(positionEntryPrice(position)).toBe(100);
+    expect(positionEntryPrice({orders: []})).toBeNull();
+  });
+
+  test('position average fill price', () => {
+    const position = createPosition({
+      orders: [
+        createOrder({
+          shares: 100,
+          action: 'BUY',
+          state: 'FILLED',
+          avgFillPrice: 100,
+        }),
+        createOrder({
+          shares: 150,
+          action: 'BUY',
+          state: 'FILLED',
+          avgFillPrice: 150,
+        }),
+        createOrder({
+          shares: 50,
+          action: 'SELL',
+          state: 'FILLED',
+          avgFillPrice: 100,
+        }),
+      ],
+    });
+    expect(positionAvgFillPrice(position)).toBe(130);
+    expect(positionAvgFillPrice({orders: []})).toBe(0);
   });
 });

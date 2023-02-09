@@ -11,10 +11,12 @@ import {
   positionRealisedPnL,
   positionSize,
   positionAction,
+  positionEntryPrice,
   isFilledOrder,
+  positionAvgFillPrice,
 } from '../utils/derived';
 
-import {getLiveConfig} from '../utils/live-config';
+import {getConfig} from '../utils/live-config';
 
 const log = Logger('backtest');
 
@@ -49,7 +51,7 @@ async function run() {
 
     const positions = await loadPositionsForDateRange(from, to);
 
-    const {profiles} = await getLiveConfig();
+    const {profiles} = await getConfig();
 
     const data = positions
       .filter(p => p.closedAt)
@@ -71,6 +73,8 @@ async function run() {
           formatDateTime(position.closedAt),
           positionCommission(position).toFixed(2),
           positionRealisedPnL(position).toFixed(2),
+          positionEntryPrice(position)?.toFixed(2) || null,
+          positionAvgFillPrice(position).toFixed(2),
           position.orders.length,
           position.orders.filter(isFilledOrder).length,
           position.closeReason,
@@ -92,6 +96,8 @@ async function run() {
             'closedAt',
             'commission',
             'pnl',
+            'entryPrice',
+            'avgEntryPrice',
             'totalOrders',
             'filledOrders',
             'closeReason',

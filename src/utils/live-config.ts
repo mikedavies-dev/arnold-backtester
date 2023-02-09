@@ -5,7 +5,7 @@ import {LiveTradingConfig} from '../core';
 import {loadSymbolLists} from '../utils/symbol-lists';
 import {loadLiveStrategy} from './strategy';
 
-export async function getLiveConfig(): Promise<LiveTradingConfig> {
+export async function getConfig(): Promise<LiveTradingConfig> {
   const configPath = Env.getUserPath('./live.json');
 
   if (!(await fileExists(configPath))) {
@@ -24,23 +24,29 @@ export async function getLiveConfig(): Promise<LiveTradingConfig> {
   };
 
   const profiles = await Promise.all(
-    config.profiles
-      .filter(p => p.enabled)
-      .map(async profile => {
-        const strategy = await loadLiveStrategy(profile.strategy);
+    config.profiles.map(async profile => {
+      const strategy = await loadLiveStrategy(profile.strategy);
 
-        return {
-          ...profile,
-          strategy: {
-            name: profile.strategy,
-            source: strategy.source,
-          },
-          symbols: await loadSymbolLists(profile.symbols),
-        };
-      }),
+      return {
+        ...profile,
+        strategy: {
+          name: profile.strategy,
+          source: strategy.source,
+        },
+        symbols: await loadSymbolLists(profile.symbols),
+      };
+    }),
   );
 
   return {
     profiles,
+  };
+}
+
+export async function getLiveConfig(): Promise<LiveTradingConfig> {
+  const {profiles} = await getConfig();
+
+  return {
+    profiles: profiles.filter(p => p.enabled),
   };
 }
