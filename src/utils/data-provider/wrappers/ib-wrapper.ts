@@ -289,7 +289,7 @@ export function init({
         clearTimeout(timeoutTimer);
         setTimeout(() => {
           groupEventsRequestId = getNextRequestId();
-          // api.subscribeToGroupEvents(groupEventsRequestId, groupId);
+          api.subscribeToGroupEvents(groupEventsRequestId, groupId);
           resolve();
         }, 200);
       });
