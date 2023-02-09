@@ -106,7 +106,7 @@ export function init({
 
   // IB Message handlers
   api.on(EventName.error, (err, code, reqId) => {
-    // console.log('ERROR', err, code, reqId);
+    console.log('ERROR', err, code, reqId);
   });
 
   api.on(EventName.nextValidId, orderId => {

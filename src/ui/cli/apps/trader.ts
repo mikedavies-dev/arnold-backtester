@@ -3,7 +3,7 @@ import contrib from 'blessed-contrib';
 import numeral from 'numeral';
 import colors from 'colors/safe';
 
-import {TraderStatusUpdate, Tracker} from '../../../core';
+import {LineIndicator, TraderStatusUpdate, Tracker} from '../../../core';
 import Layout from '../utils/layout';
 import {formatTime} from '../../../utils/dates';
 import {
@@ -31,6 +31,17 @@ export type UIResult = {
   update: (args: TraderStatusUpdate) => void;
   quit: () => void;
 };
+
+// indicators to show in the grid
+import {latest} from '../../../utils/indicators';
+
+import RetraceFromHigh from '../../../indicators/RetraceFromHigh';
+import ATR from '../../../indicators/ATR';
+
+export function calcAndLatest(indicator: LineIndicator): number {
+  indicator.recalculate();
+  return latest(indicator);
+}
 
 const InstrumentColumns: Column[] = [
   {
@@ -91,6 +102,16 @@ const InstrumentColumns: Column[] = [
   },
   {
     title: 'spread',
+    width: 8,
+    align: 'RIGHT',
+  },
+  {
+    title: 'atr(14)',
+    width: 8,
+    align: 'RIGHT',
+  },
+  {
+    title: 'retrace',
     width: 8,
     align: 'RIGHT',
   },
@@ -311,6 +332,7 @@ export function run({
 
   let listSymbols: string[] = [];
 
+  // this isn't nice but we don't have a way of getting the data from the row
   instruments.list.on('select', (_, index) => {
     const symbol = listSymbols[index] || null;
 
@@ -338,9 +360,10 @@ export function run({
           profiles.forEach(({id, name}) => {
             profileLookup.set(id, name);
           });
-          const pcntChange = percentChange(tracker);
 
+          const pcntChange = percentChange(tracker);
           const color = colorize(pcntChange);
+
           return [
             symbol,
             profiles.some(p => p.currentlyInSetup)
@@ -356,6 +379,8 @@ export function run({
             decimal(tracker.bid),
             decimal(tracker.ask),
             decimal(tracker.ask - tracker.bid),
+            decimal(calcAndLatest(ATR(14, tracker.bars.m5))),
+            decimal(calcAndLatest(RetraceFromHigh(tracker.bars.m5))),
             decimal(tracker.high - tracker.last),
             profiles
               .filter(p => p.currentlyInSetup)

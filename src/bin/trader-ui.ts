@@ -8,14 +8,25 @@ async function runApp() {
   try {
     let ui: UIResult | null = null;
 
-    const log = (msg: string, ...args: any[]) => {
+    const nativeLog = console.log;
+
+    const log = (msg: any, ...args: any[]) => {
       logger.log(msg, ...args);
       if (ui) {
         ui.log(msg);
       } else {
-        console.log(msg, ...args);
+        nativeLog(msg, ...args);
       }
     };
+
+    const originalConsole = Object.assign({}, global.console);
+
+    Object.assign(global.console, {
+      log: (msg: any, ...args: any[]): void => {
+        log(msg, ...args);
+        originalConsole.log(msg, ...args);
+      },
+    });
 
     log('Connecting to database');
 
@@ -64,7 +75,6 @@ async function runApp() {
             log(msg, ...args);
           },
           onSelectSymbol: symbol => {
-            log(`Selecting symbol ${symbol}`);
             controller.selectSymbol(symbol);
           },
         });

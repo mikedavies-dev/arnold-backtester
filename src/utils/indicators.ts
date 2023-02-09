@@ -12,7 +12,7 @@ export function indicatorUpdateWrapper(indicator: Indicator): IndicatorUpdater {
   return {
     update() {
       // have any of our dependencies moved to a new bar? if so we need to recalc
-      const hasNewBar = barsToTime.some(
+      const haveNewBar = barsToTime.some(
         ({time, bars}) => time !== (bars.at(-1)?.time || ''),
       );
 
@@ -22,7 +22,9 @@ export function indicatorUpdateWrapper(indicator: Indicator): IndicatorUpdater {
       });
 
       // calculate the last bar or recalculate all
-      const update = hasNewBar ? indicator.recalculate : indicator.updateLatest;
+      const update = haveNewBar
+        ? indicator.recalculate
+        : indicator.updateLatest;
 
       update();
     },
