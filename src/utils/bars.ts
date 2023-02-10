@@ -1,4 +1,4 @@
-import {format, startOfDay, fromUnixTime} from 'date-fns';
+import {format, startOfDay, fromUnixTime, parse} from 'date-fns';
 import {Bar, Bars, BarPeriod, MaximumBarCount, Periods} from '../core';
 
 export const formatBarTime = (period: number, marketTime: number): string => {
@@ -12,6 +12,10 @@ export const formatBarTime = (period: number, marketTime: number): string => {
   return format(date, 'yyyy-MM-dd HH:mm');
 };
 
+export function barTime(bar: Bar) {
+  const date = parse(bar.time, 'yyyy-MM-dd HH:mm', new Date());
+  return format(date, 'HH:mm:ss');
+}
 export const updateBarFromTick = ({
   bars,
   price,
