@@ -7,6 +7,7 @@ import {
   isSameSecond,
   addSeconds,
   addMinutes,
+  max,
 } from 'date-fns';
 import numeral from 'numeral';
 
@@ -309,14 +310,16 @@ export function create({log}: {log?: LoggerCallback} = {}): DataProvider {
 
           await write(type, ticks);
 
-          // If the last tick is the same as our previous from, add a second
-          // This could mean that we have more than 1000 ticks in any one second
+          // IB sometimes has more than 1000 ticks per second, in that case we have to
+          // ignore the reset because we can't request data for a specific ms.
+          //
+          // Also IB sometimes returns data for before the request so make sure that we
+          // don't go backwards!
 
-          const nextDate = ticks[ticks.length - 1].dateTime;
-
-          currentTime = isSameSecond(currentTime, nextDate)
-            ? addSeconds(nextDate, 1)
-            : nextDate;
+          currentTime = max([
+            addSeconds(currentTime, 1),
+            ticks[ticks.length - 1].dateTime,
+          ]);
         } while (true); // eslint-disable-line
       };
 
