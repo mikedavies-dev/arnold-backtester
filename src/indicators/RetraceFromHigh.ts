@@ -36,15 +36,15 @@ export default function RetraceFromHigh(bars: Bar[]): LineIndicator {
       const bar = bars.at(-1);
 
       if (bar) {
-        // market is not open yet or it's a new day so reset
-        if (barTime(bar) < '09:30') {
-          high = 0;
-          low = 0;
-
-          values[values.length - 1] = 0;
-          return;
-        }
-
+        // // market is not open yet or it's a new day so reset
+        // if (barTime(bar) < '09:30') {
+        //   high = 0;
+        //   low = 0;
+        //
+        //   values[values.length - 1] = 0;
+        //   return;
+        // }
+        //
         // see if the last bar high is higher than ours, if so then reset
         if (bar.high > high) {
           high = bar.close;
