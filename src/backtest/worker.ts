@@ -236,6 +236,7 @@ export async function runBacktest({
           marketTime,
         });
       } else {
+        log(`** Missing minute bar data ${symbol}, ${time}`);
         handleMissingBar({
           data: trackers[symbol],
           marketTime,
@@ -245,12 +246,10 @@ export async function runBacktest({
       }
     });
 
-    indicators.forEach(indicator => {
-      indicator.update();
-    });
+    indicators.forEach(indicator => indicator.update());
 
     // While we either have open orders or we are in a setup
-    while (
+    if (
       strategy.isSetup({
         symbol,
         tracker: trackers[symbol],
@@ -336,11 +335,11 @@ export async function runBacktest({
         });
       }
 
-      // Increment the market time 60 seconds (next minute bar)
-      marketTime += 60;
-
-      // set the current time
-      updateMarket(market, fromUnixTime(marketTime));
+      // // Increment the market time 60 seconds (next minute bar)
+      // marketTime += 60;
+      //
+      // // set the current time
+      // updateMarket(market, fromUnixTime(marketTime));
     }
   }
 

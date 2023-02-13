@@ -302,13 +302,18 @@ export function create({log}: {log?: LoggerCallback} = {}): DataProvider {
             break;
           }
 
-          log?.(
-            `Fetched ${numeral(ticks.length).format('0,0')} ${type} ticks for ${
-              instrument.symbol
-            } from ${formatDateTime(currentTime)}`,
-          );
+          // log?.(
+          //   `Fetched ${numeral(ticks.length).format('0,0')} ${type} ticks for ${
+          //     instrument.symbol
+          //   } from ${formatDateTime(currentTime)}`,
+          // );
 
           await write(type, ticks);
+
+          // assume we don't have any more for this period
+          if (ticks.length < 100) {
+            break;
+          }
 
           // IB sometimes has more than 1000 ticks per second, in that case we have to
           // ignore the reset because we can't request data for a specific ms.
