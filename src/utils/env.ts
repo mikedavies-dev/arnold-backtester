@@ -42,8 +42,6 @@ const environment: {
   IB_LOCK_TIMEOUT: string;
   IB_DISPLAY_GROUP: string;
 
-  EARLIEST_DATA: string;
-
   DISABLE_PROVIDER_TESTS: string;
   NODE_ENV: string;
   USER_FOLDER: string;
@@ -75,7 +73,6 @@ const environment: {
   IB_LOCK_TIMEOUT: getEnv('IB_LOCK_TIMEOUT', '120000'),
   IB_DISPLAY_GROUP: getEnv('IB_DISPLAY_GROUP', '7'),
 
-  EARLIEST_DATA: getEnv('EARLIEST_DATA', '2021-01-01'),
   DISABLE_PROVIDER_TESTS: getEnv('DISABLE_PROVIDER_TESTS', ''),
   USER_FOLDER: getEnv('USER_FOLDER', './user'),
   NODE_ENV: getEnv('NODE_ENV', 'development'),

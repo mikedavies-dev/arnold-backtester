@@ -302,11 +302,11 @@ export function create({log}: {log?: LoggerCallback} = {}): DataProvider {
             break;
           }
 
-          // log?.(
-          //   `Fetched ${numeral(ticks.length).format('0,0')} ${type} ticks for ${
-          //     instrument.symbol
-          //   } from ${formatDateTime(currentTime)}`,
-          // );
+          log?.(
+            `Fetched ${numeral(ticks.length).format('0,0')} ${type} ticks for ${
+              instrument.symbol
+            } from ${formatDateTime(currentTime)}`,
+          );
 
           await write(type, ticks);
 
