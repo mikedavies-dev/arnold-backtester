@@ -329,7 +329,7 @@ export function create({log}: {log?: LoggerCallback} = {}): DataProvider {
       };
 
       // Download bid/ask data
-      await downloadAndWriteData(TickFileType.BidAsk, downloadBidAskTickData);
+      // await downloadAndWriteData(TickFileType.BidAsk, downloadBidAskTickData);
 
       // Download trade data
       await downloadAndWriteData(TickFileType.Trades, downloadTradeTickData);
