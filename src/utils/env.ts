@@ -46,6 +46,8 @@ const environment: {
   NODE_ENV: string;
   USER_FOLDER: string;
 
+  POLYGONIO_KEY: string;
+
   // Other..
   getEnv: (name: string, def: string) => string;
   getUserPath: (path: string) => string;
@@ -72,6 +74,8 @@ const environment: {
   IB_BASE_CLIENT_ID: getEnv('IB_BASE_CLIENT_ID', '1'),
   IB_LOCK_TIMEOUT: getEnv('IB_LOCK_TIMEOUT', '120000'),
   IB_DISPLAY_GROUP: getEnv('IB_DISPLAY_GROUP', '7'),
+
+  POLYGONIO_KEY: getEnv('POLYGONIO_KEY', ''),
 
   DISABLE_PROVIDER_TESTS: getEnv('DISABLE_PROVIDER_TESTS', ''),
   USER_FOLDER: getEnv('USER_FOLDER', './user'),
