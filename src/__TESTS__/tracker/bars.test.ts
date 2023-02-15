@@ -34,8 +34,8 @@ describe('test updating bar data', () => {
     });
 
     expect(data.bars.m1).toMatchInlineSnapshot(`
-      Array [
-        Object {
+      [
+        {
           "close": 2,
           "high": 2,
           "low": 2,
@@ -59,8 +59,8 @@ describe('test updating bar data', () => {
     });
 
     expect(data.bars.m1).toMatchInlineSnapshot(`
-      Array [
-        Object {
+      [
+        {
           "close": 2.1,
           "high": 2.1,
           "low": 2,
@@ -84,8 +84,8 @@ describe('test updating bar data', () => {
     });
 
     expect(data.bars.m1).toMatchInlineSnapshot(`
-      Array [
-        Object {
+      [
+        {
           "close": 2.2,
           "high": 2.2,
           "low": 2,
@@ -109,8 +109,8 @@ describe('test updating bar data', () => {
     });
 
     expect(data.bars.m1).toMatchInlineSnapshot(`
-      Array [
-        Object {
+      [
+        {
           "close": 1.9,
           "high": 2.2,
           "low": 1.9,
@@ -134,8 +134,8 @@ describe('test updating bar data', () => {
     });
 
     expect(data.bars.m1).toMatchInlineSnapshot(`
-      Array [
-        Object {
+      [
+        {
           "close": 1.9,
           "high": 2.2,
           "low": 1.9,
@@ -143,7 +143,7 @@ describe('test updating bar data', () => {
           "time": "2022-01-01 09:30",
           "volume": 400,
         },
-        Object {
+        {
           "close": 2.1,
           "high": 2.1,
           "low": 2.1,
@@ -174,8 +174,8 @@ describe('test updating bar data', () => {
     });
 
     expect(data.bars.m5).toMatchInlineSnapshot(`
-      Array [
-        Object {
+      [
+        {
           "close": 2,
           "high": 2,
           "low": 2,
@@ -223,8 +223,8 @@ describe('test updating bar data', () => {
     });
 
     expect(data.bars.m5).toMatchInlineSnapshot(`
-      Array [
-        Object {
+      [
+        {
           "close": 2,
           "high": 2,
           "low": 1.9,
@@ -248,8 +248,8 @@ describe('test updating bar data', () => {
     });
 
     expect(data.bars.m5).toMatchInlineSnapshot(`
-      Array [
-        Object {
+      [
+        {
           "close": 2,
           "high": 2,
           "low": 1.9,
@@ -257,7 +257,7 @@ describe('test updating bar data', () => {
           "time": "2022-01-01 09:30",
           "volume": 400,
         },
-        Object {
+        {
           "close": 2,
           "high": 2,
           "low": 2,
@@ -301,11 +301,11 @@ describe('test updating bar data', () => {
     const marketClose = getMarketClose(getTestDate());
 
     expect(tracker.bars).toMatchInlineSnapshot(`
-      Object {
-        "daily": Array [],
-        "m1": Array [],
-        "m5": Array [],
-        "m60": Array [],
+      {
+        "daily": [],
+        "m1": [],
+        "m5": [],
+        "m60": [],
       }
     `);
 
@@ -326,9 +326,9 @@ describe('test updating bar data', () => {
     });
 
     expect(tracker.bars).toMatchInlineSnapshot(`
-      Object {
-        "daily": Array [
-          Object {
+      {
+        "daily": [
+          {
             "close": 1,
             "high": 1,
             "low": 1,
@@ -337,8 +337,8 @@ describe('test updating bar data', () => {
             "volume": 1,
           },
         ],
-        "m1": Array [
-          Object {
+        "m1": [
+          {
             "close": 1,
             "high": 1,
             "low": 1,
@@ -347,8 +347,8 @@ describe('test updating bar data', () => {
             "volume": 1,
           },
         ],
-        "m5": Array [
-          Object {
+        "m5": [
+          {
             "close": 1,
             "high": 1,
             "low": 1,
@@ -357,8 +357,8 @@ describe('test updating bar data', () => {
             "volume": 1,
           },
         ],
-        "m60": Array [
-          Object {
+        "m60": [
+          {
             "close": 1,
             "high": 1,
             "low": 1,
@@ -387,9 +387,9 @@ describe('test updating bar data', () => {
     });
 
     expect(tracker.bars).toMatchInlineSnapshot(`
-      Object {
-        "daily": Array [
-          Object {
+      {
+        "daily": [
+          {
             "close": 3,
             "high": 4,
             "low": 0.5,
@@ -398,8 +398,8 @@ describe('test updating bar data', () => {
             "volume": 2,
           },
         ],
-        "m1": Array [
-          Object {
+        "m1": [
+          {
             "close": 1,
             "high": 1,
             "low": 1,
@@ -407,7 +407,7 @@ describe('test updating bar data', () => {
             "time": "2022-01-01 09:30",
             "volume": 1,
           },
-          Object {
+          {
             "close": 3,
             "high": 4,
             "low": 0.5,
@@ -416,8 +416,8 @@ describe('test updating bar data', () => {
             "volume": 1,
           },
         ],
-        "m5": Array [
-          Object {
+        "m5": [
+          {
             "close": 3,
             "high": 4,
             "low": 0.5,
@@ -426,8 +426,8 @@ describe('test updating bar data', () => {
             "volume": 2,
           },
         ],
-        "m60": Array [
-          Object {
+        "m60": [
+          {
             "close": 3,
             "high": 4,
             "low": 0.5,
@@ -583,8 +583,8 @@ describe('test updating bar data', () => {
     });
 
     expect(tracker.bars.m1).toMatchInlineSnapshot(`
-      Array [
-        Object {
+      [
+        {
           "close": 2,
           "high": 2,
           "low": 1,
@@ -615,9 +615,9 @@ describe('test updating bar data', () => {
     );
 
     expect(tracker.bars).toMatchInlineSnapshot(`
-      Object {
-        "daily": Array [
-          Object {
+      {
+        "daily": [
+          {
             "close": 2,
             "high": 2,
             "low": 1,
@@ -626,8 +626,8 @@ describe('test updating bar data', () => {
             "volume": 1,
           },
         ],
-        "m1": Array [
-          Object {
+        "m1": [
+          {
             "close": 2,
             "high": 2,
             "low": 1,
@@ -635,7 +635,7 @@ describe('test updating bar data', () => {
             "time": "2022-01-01 09:30",
             "volume": 1,
           },
-          Object {
+          {
             "close": 2,
             "high": 2,
             "low": 2,
@@ -644,8 +644,8 @@ describe('test updating bar data', () => {
             "volume": 0,
           },
         ],
-        "m5": Array [
-          Object {
+        "m5": [
+          {
             "close": 2,
             "high": 2,
             "low": 1,
@@ -654,8 +654,8 @@ describe('test updating bar data', () => {
             "volume": 1,
           },
         ],
-        "m60": Array [
-          Object {
+        "m60": [
+          {
             "close": 2,
             "high": 2,
             "low": 1,
@@ -697,9 +697,9 @@ describe('test updating bar data', () => {
     });
 
     expect(tracker.bars).toMatchInlineSnapshot(`
-      Object {
-        "daily": Array [
-          Object {
+      {
+        "daily": [
+          {
             "close": 2,
             "high": 2,
             "low": 1,
@@ -708,8 +708,8 @@ describe('test updating bar data', () => {
             "volume": 1,
           },
         ],
-        "m1": Array [
-          Object {
+        "m1": [
+          {
             "close": 2,
             "high": 2,
             "low": 1,
@@ -717,7 +717,7 @@ describe('test updating bar data', () => {
             "time": "2022-01-01 09:30",
             "volume": 1,
           },
-          Object {
+          {
             "close": 2,
             "high": 2,
             "low": 2,
@@ -725,7 +725,7 @@ describe('test updating bar data', () => {
             "time": "2022-01-01 09:31",
             "volume": 0,
           },
-          Object {
+          {
             "close": 2,
             "high": 2,
             "low": 2,
@@ -733,7 +733,7 @@ describe('test updating bar data', () => {
             "time": "2022-01-01 09:32",
             "volume": 0,
           },
-          Object {
+          {
             "close": 2,
             "high": 2,
             "low": 2,
@@ -741,7 +741,7 @@ describe('test updating bar data', () => {
             "time": "2022-01-01 09:33",
             "volume": 0,
           },
-          Object {
+          {
             "close": 2,
             "high": 2,
             "low": 2,
@@ -749,7 +749,7 @@ describe('test updating bar data', () => {
             "time": "2022-01-01 09:34",
             "volume": 0,
           },
-          Object {
+          {
             "close": 2,
             "high": 2,
             "low": 2,
@@ -758,8 +758,8 @@ describe('test updating bar data', () => {
             "volume": 0,
           },
         ],
-        "m5": Array [
-          Object {
+        "m5": [
+          {
             "close": 2,
             "high": 2,
             "low": 1,
@@ -767,7 +767,7 @@ describe('test updating bar data', () => {
             "time": "2022-01-01 09:30",
             "volume": 1,
           },
-          Object {
+          {
             "close": 2,
             "high": 2,
             "low": 2,
@@ -776,8 +776,8 @@ describe('test updating bar data', () => {
             "volume": 0,
           },
         ],
-        "m60": Array [
-          Object {
+        "m60": [
+          {
             "close": 2,
             "high": 2,
             "low": 1,

@@ -55,7 +55,7 @@ describe('merge and distribute arrays', () => {
     const merged = mergeAndDistributeArrays(array2, array1);
     expect(merged.length).toEqual(560);
     expect(merged).toMatchInlineSnapshot(`
-      Array [
+      [
         "A0",
         "A1",
         "A2",

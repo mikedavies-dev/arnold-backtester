@@ -24,14 +24,14 @@ test('init positions function returns an empty positions ds', () => {
   });
 
   expect(state).toMatchInlineSnapshot(`
-    Object {
+    {
       "balance": 1000,
       "getMarketTime": [Function],
       "nextOrderId": 1,
-      "openOrders": Object {},
-      "openPositions": Object {},
-      "orders": Array [],
-      "positions": Array [],
+      "openOrders": {},
+      "openPositions": {},
+      "orders": [],
+      "positions": [],
     }
   `);
 });
@@ -708,7 +708,7 @@ test('closePosition should close pending orders', () => {
   closePosition(market.broker, market.symbol);
 
   // Make sure it closed the position
-  expect(market.broker.openPositions).toMatchInlineSnapshot(`Object {}`);
+  expect(market.broker.openPositions).toMatchInlineSnapshot(`{}`);
 });
 
 test('closePosition should close pending orders', () => {
@@ -731,7 +731,7 @@ test('closePosition should close pending orders', () => {
   closePosition(market.broker, market.symbol, 'Test Reason 2');
 
   // Make sure it closed the position
-  expect(market.broker.openPositions).toMatchInlineSnapshot(`Object {}`);
+  expect(market.broker.openPositions).toMatchInlineSnapshot(`{}`);
 
   // The close reason should be the same as the first
   expect(market.broker.positions[0].closeReason).toMatchInlineSnapshot(

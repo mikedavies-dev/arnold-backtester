@@ -12,7 +12,7 @@ test('merge two arrays', () => {
   );
 
   expect(sorted).toMatchInlineSnapshot(`
-    Array [
+    [
       1,
       2,
       4,
@@ -34,7 +34,7 @@ test('merge three arrays', () => {
   );
 
   expect(sorted).toMatchInlineSnapshot(`
-    Array [
+    [
       0,
       1,
       1,
@@ -75,7 +75,7 @@ test('first array is shorter than the second', () => {
   );
 
   expect(sorted).toMatchInlineSnapshot(`
-    Array [
+    [
       0,
       1,
       1,
@@ -105,7 +105,7 @@ test('second array is shorter than the first', () => {
   );
 
   expect(sorted).toMatchInlineSnapshot(`
-    Array [
+    [
       0,
       1,
       1,

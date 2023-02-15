@@ -10,12 +10,17 @@ import Env from '../env';
 import {create as createIBDataProvider} from './providers/ib';
 import {create as createIBBrokerProvider} from './brokers/ib';
 
+import {create as createPolygonDataProvider} from './providers/polygonio';
+
 export function createDataProvider({
   log,
 }: {log?: LoggerCallback} = {}): DataProvider {
   switch (Env.DATA_PROVIDER) {
     case 'ib':
       return createIBDataProvider({log});
+
+    case 'polygonio':
+      return createPolygonDataProvider({log});
 
     default:
       throw new Error(`Unknown data provider ${Env.DATA_PROVIDER}`);

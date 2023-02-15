@@ -72,7 +72,7 @@ export async function runBacktestController({
   log(`Starting ${runProfile.threads} threads`);
 
   const pool = new StaticPool({
-    size: fetchOnly ? 1 : runProfile.threads | 1,
+    size: fetchOnly ? 5 : runProfile.threads | 1,
     task: filePath,
     workerData: {
       profile: runProfile,

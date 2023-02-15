@@ -58,18 +58,18 @@ test('writing a new csv', async () => {
   );
 
   expect(results1).toMatchInlineSnapshot(`
-    Array [
-      Object {
+    [
+      {
         "field1": 1,
         "field2": "test",
         "field3": 123,
       },
-      Object {
+      {
         "field1": 2,
         "field2": "test",
         "field3": 123,
       },
-      Object {
+      {
         "field1": 3,
         "field2": "test",
         "field3": 123,
@@ -92,33 +92,33 @@ test('writing a new csv', async () => {
   );
 
   expect(results2).toMatchInlineSnapshot(`
-    Array [
-      Object {
+    [
+      {
         "field1": 1,
         "field2": "test",
         "field3": 123,
       },
-      Object {
+      {
         "field1": 2,
         "field2": "test",
         "field3": 123,
       },
-      Object {
+      {
         "field1": 3,
         "field2": "test",
         "field3": 123,
       },
-      Object {
+      {
         "field1": 1,
         "field2": "test",
         "field3": 123,
       },
-      Object {
+      {
         "field1": 2,
         "field2": "test",
         "field3": 123,
       },
-      Object {
+      {
         "field1": 3,
         "field2": "test",
         "field3": 123,
@@ -140,18 +140,18 @@ test('writing a new csv', async () => {
   );
 
   expect(results3).toMatchInlineSnapshot(`
-    Array [
-      Object {
+    [
+      {
         "field1": 1,
         "field2": "test",
         "field3": 123,
       },
-      Object {
+      {
         "field1": 2,
         "field2": "test",
         "field3": 123,
       },
-      Object {
+      {
         "field1": 3,
         "field2": "test",
         "field3": 123,

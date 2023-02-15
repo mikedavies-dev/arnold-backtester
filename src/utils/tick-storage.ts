@@ -76,6 +76,9 @@ export async function writeTickData(
   data: StoredTick[],
   overwrite: boolean,
 ) {
+  if (!data.length) {
+    return;
+  }
   const outputFilename = formatDataFilename(symbol, time, type);
 
   // Ensure that the path exists
@@ -155,6 +158,7 @@ export async function ensureTickDataIsAvailable({
   symbols,
   minute,
   dataProvider,
+  log,
 }: // log,
 {
   symbols: string[];
@@ -184,6 +188,11 @@ export async function ensureTickDataIsAvailable({
         instrument,
         minute,
         write: async (type, ticks) => {
+          log(
+            `${instrument.symbol} writing ${
+              ticks.length
+            } ${type} ticks @ ${format(minute, 'yyyy-MM-dd HH:mm:ss')}`,
+          );
           await writeTickData(instrument.symbol, minute, type, ticks, false);
         },
         merge: async () => mergeTickData(instrument.symbol, minute),

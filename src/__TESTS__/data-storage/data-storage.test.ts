@@ -279,48 +279,48 @@ describe('mongo db tests', () => {
     );
 
     expect(storedData).toMatchInlineSnapshot(`
-      Array [
-        Object {
+      [
+        {
           "dateTime": 2022-01-01T05:00:00.000Z,
           "index": 0,
           "size": 1,
-          "symbol": "${symbol}",
+          "symbol": "ZZZZ",
           "time": 1641013200,
           "type": "BID",
           "value": 99,
         },
-        Object {
+        {
           "dateTime": 2022-01-01T05:00:00.000Z,
           "index": 0,
           "size": 1,
-          "symbol": "${symbol}",
+          "symbol": "ZZZZ",
           "time": 1641013200,
           "type": "TRADE",
           "value": 100,
         },
-        Object {
+        {
           "dateTime": 2022-01-01T05:00:01.000Z,
           "index": 0,
           "size": 1,
-          "symbol": "${symbol}",
+          "symbol": "ZZZZ",
           "time": 1641013201,
           "type": "BID",
           "value": 100,
         },
-        Object {
+        {
           "dateTime": 2022-01-01T05:00:02.000Z,
           "index": 0,
           "size": 1,
-          "symbol": "${symbol}",
+          "symbol": "ZZZZ",
           "time": 1641013202,
           "type": "TRADE",
           "value": 101,
         },
-        Object {
+        {
           "dateTime": 2022-01-01T05:00:03.000Z,
           "index": 0,
           "size": 1,
-          "symbol": "${symbol}",
+          "symbol": "ZZZZ",
           "time": 1641013203,
           "type": "ASK",
           "value": 101,

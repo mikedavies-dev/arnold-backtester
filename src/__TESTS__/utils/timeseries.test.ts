@@ -30,32 +30,32 @@ test('splitting dates into block sizes', () => {
   );
 
   expect(testMinuteDate).toMatchInlineSnapshot(`
-    Array [
-      Object {
+    [
+      {
         "days": 1,
         "end": 2022-01-02T05:00:00.000Z,
       },
-      Object {
+      {
         "days": 1,
         "end": 2022-01-03T05:00:00.000Z,
       },
-      Object {
+      {
         "days": 1,
         "end": 2022-01-04T05:00:00.000Z,
       },
-      Object {
+      {
         "days": 1,
         "end": 2022-01-05T05:00:00.000Z,
       },
-      Object {
+      {
         "days": 1,
         "end": 2022-01-06T05:00:00.000Z,
       },
-      Object {
+      {
         "days": 1,
         "end": 2022-01-07T05:00:00.000Z,
       },
-      Object {
+      {
         "days": 1,
         "end": 2022-01-08T05:00:00.000Z,
       },

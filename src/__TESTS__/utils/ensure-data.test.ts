@@ -172,7 +172,7 @@ describe('test data availability', () => {
 
     expect(await findNonRequestedRangeForPeriod(symbol, period, from, to))
       .toMatchInlineSnapshot(`
-      Object {
+      {
         "from": 2019-02-01T00:00:00.000Z,
         "to": 2019-02-03T00:00:00.000Z,
       }
@@ -197,7 +197,7 @@ describe('test data availability', () => {
 
     expect(await findNonRequestedRangeForPeriod(symbol, period, from, to))
       .toMatchInlineSnapshot(`
-      Object {
+      {
         "from": 2019-02-01T00:00:00.000Z,
         "to": 2019-02-10T00:00:00.000Z,
       }
@@ -208,7 +208,7 @@ describe('test data availability', () => {
 
     expect(await findNonRequestedRangeForPeriod(symbol, period, from, to))
       .toMatchInlineSnapshot(`
-      Object {
+      {
         "from": 2019-02-01T00:00:00.000Z,
         "to": 2019-02-10T00:00:00.000Z,
       }
@@ -218,7 +218,7 @@ describe('test data availability', () => {
 
     expect(await findNonRequestedRangeForPeriod(symbol, period, from, to))
       .toMatchInlineSnapshot(`
-      Object {
+      {
         "from": 2019-02-02T00:00:00.000Z,
         "to": 2019-02-10T00:00:00.000Z,
       }
@@ -229,7 +229,7 @@ describe('test data availability', () => {
 
     expect(await findNonRequestedRangeForPeriod(symbol, period, from, to))
       .toMatchInlineSnapshot(`
-      Object {
+      {
         "from": 2019-02-05T00:00:00.000Z,
         "to": 2019-02-10T00:00:00.000Z,
       }
@@ -251,7 +251,7 @@ describe('test data availability', () => {
 
     expect(await findNonRequestedRangeForPeriod(symbol, period, from, to))
       .toMatchInlineSnapshot(`
-      Object {
+      {
         "from": 2019-02-06T00:00:00.000Z,
         "to": 2019-02-10T00:00:00.000Z,
       }
@@ -275,7 +275,7 @@ describe('test data availability', () => {
         addDays(to, 1),
       ),
     ).toMatchInlineSnapshot(`
-      Object {
+      {
         "from": 2019-02-11T00:00:00.000Z,
         "to": 2019-02-11T00:00:00.000Z,
       }
@@ -289,7 +289,7 @@ describe('test data availability', () => {
         addDays(to, 1),
       ),
     ).toMatchInlineSnapshot(`
-      Object {
+      {
         "from": 2019-02-11T00:00:00.000Z,
         "to": 2019-02-11T00:00:00.000Z,
       }
@@ -303,7 +303,7 @@ describe('test data availability', () => {
         addDays(to, 1),
       ),
     ).toMatchInlineSnapshot(`
-      Object {
+      {
         "from": 2019-01-31T00:00:00.000Z,
         "to": 2019-02-11T00:00:00.000Z,
       }

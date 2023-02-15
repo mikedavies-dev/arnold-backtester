@@ -236,7 +236,6 @@ export async function runBacktest({
           marketTime,
         });
       } else {
-        log(`** Missing minute bar data ${symbol}, ${time}`);
         handleMissingBar({
           data: trackers[symbol],
           marketTime,

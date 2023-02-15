@@ -75,8 +75,8 @@ test('test symbol lookup', async () => {
   });
 
   expect(results).toMatchInlineSnapshot(`
-    Object {
-      "data": Object {},
+    {
+      "data": {},
       "externalId": "ABCD",
       "name": "ABCD INC",
       "symbol": "ABCD",
@@ -118,8 +118,8 @@ test('enter a new search term', async () => {
 
   // Second search chose MSFT
   expect(results).toMatchInlineSnapshot(`
-    Object {
-      "data": Object {},
+    {
+      "data": {},
       "externalId": "MSFT",
       "name": "MICROSOFT INC",
       "symbol": "MSFT",

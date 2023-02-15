@@ -347,9 +347,10 @@ export function create({log}: {log?: LoggerCallback} = {}): DataProvider {
   }
 
   /*
-  function subscribePriceUpdates({
+    function subscribePriceUpdates({
     instrument,
     onUpdate,
+
   }: SubscribePriceUpdateArgs) {
     const contract: Contract = instrument.data as Contract;
 

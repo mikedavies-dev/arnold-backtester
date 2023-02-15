@@ -39,15 +39,15 @@ test('instrument lookup', async () => {
   const results = await provider.instrumentLookup('ZZZZ');
 
   expect(results).toMatchInlineSnapshot(`
-    Array [
-      Object {
+    [
+      {
         "data": null,
         "exchange": "NYSE",
         "externalId": "ABCD",
         "name": "ABCD INC",
         "symbol": "ABCD",
       },
-      Object {
+      {
         "data": null,
         "exchange": "NYSE",
         "externalId": "ABCD2",
