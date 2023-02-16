@@ -52,7 +52,7 @@ test('writing a new csv', async () => {
     true,
   );
 
-  const results1 = await readCSV<ReadWriteTestRecord, ReadWriteTestRecord>(
+  const results1 = readCSV<ReadWriteTestRecord, ReadWriteTestRecord>(
     newFilename,
     row => row,
   );
@@ -86,7 +86,7 @@ test('writing a new csv', async () => {
     false,
   );
 
-  const results2 = await readCSV<ReadWriteTestRecord, ReadWriteTestRecord>(
+  const results2 = readCSV<ReadWriteTestRecord, ReadWriteTestRecord>(
     newFilename,
     row => row,
   );
@@ -134,7 +134,7 @@ test('writing a new csv', async () => {
     true,
   );
 
-  const results3 = await readCSV<ReadWriteTestRecord, ReadWriteTestRecord>(
+  const results3 = readCSV<ReadWriteTestRecord, ReadWriteTestRecord>(
     newFilename,
     row => row,
   );
@@ -158,4 +158,11 @@ test('writing a new csv', async () => {
       },
     ]
   `);
+});
+
+test('writing an empty csv should not add load invalid data', async () => {
+  const filename = Env.getUserPath('./TEMP_empty.csv');
+  await writeCsv(filename, [], ['header1', 'header2'], v => v, true);
+  const data = readCSV(filename, v => v);
+  expect(data.length).toBe(0);
 });

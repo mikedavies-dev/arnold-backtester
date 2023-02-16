@@ -60,11 +60,6 @@ export async function ensureBarDataIsAvailable({
           );
 
           if (!range) {
-            log(
-              `No data required for ${
-                instrument.symbol
-              } ${period} from ${formatDate(from)} to ${formatDate(to)}`,
-            );
             return;
           }
 
@@ -108,15 +103,15 @@ export async function ensureBarDataIsAvailable({
                 );
               }
             },
-            0,
+            1,
             blocks,
           );
         },
-        null,
+        3,
         requiredBarPeriods,
       );
     },
-    null,
+    10,
     instruments,
   );
 }

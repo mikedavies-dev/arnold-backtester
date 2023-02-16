@@ -89,7 +89,7 @@ export type WriteTickDataFn = (
 
 export type DownloadTickDataArgs = {
   instrument: Instrument;
-  minute: Date;
+  date: Date;
   write: WriteTickDataFn;
   merge: () => Promise<void>;
 };

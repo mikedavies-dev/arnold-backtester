@@ -1,7 +1,6 @@
 import {create as createPolygon} from '../../../utils/data-provider/providers/polygonio';
-import {Bar, Instrument} from '../../../core';
+import {Instrument} from '../../../core';
 import {getTestDate} from '../../testing/tick';
-import {createTimeAsDate} from '../../../utils/dates';
 
 const microsoft = {
   externalId: 'MSFT@XNAS',
@@ -117,19 +116,5 @@ describe('test the polygonio data provider', () => {
 
     // Close the connection
     await polygon.shutdown();
-  });
-
-  test('download tick data', async () => {
-    const polygon = createPolygon();
-    await polygon.init();
-
-    const minute = createTimeAsDate('09:30', '2023-02-01', getTestDate());
-
-    await polygon.downloadTickData({
-      instrument: microsoft as Instrument,
-      minute,
-      write: async () => {},
-      merge: async () => {},
-    });
   });
 });

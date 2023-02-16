@@ -17,14 +17,14 @@ export async function writeCsv<CsvType extends Record<string, any>>(
   transform: (entry: CsvType) => (string | number)[],
   overwrite: boolean,
 ) {
-  const fileData = data.map(transform).join('\n');
   const exists = await fileExists(outputFilename);
 
-  const output =
-    !exists || overwrite
-      ? `${headers.join(',')}\n${fileData}\n`
-      : `${fileData}\n`;
+  const rows = [
+    ...(!exists || overwrite ? [headers.join(',')] : []),
+    ...data.map(transform),
+  ];
 
+  const output = `${rows.join('\n')}\n`;
   const operation =
     overwrite || !exists
       ? Fs.writeFile(outputFilename, output)

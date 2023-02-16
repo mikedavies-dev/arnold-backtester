@@ -10,8 +10,8 @@ import {
 } from '../../core';
 import {ensureBarDataIsAvailable} from '../../utils/data-storage';
 import {
-  hasTickForMinute,
-  loadTickForMinute,
+  hasTickForDay,
+  loadTickForDate,
   ensureTickDataIsAvailable,
 } from '../../utils/tick-storage';
 
@@ -116,7 +116,7 @@ describe('mongo db tests', () => {
       name: 'test',
       init: jest.fn(async () => {}),
       shutdown: jest.fn(async () => {}),
-      getTimeSeries: jest.fn(async (instrument: Instrument, from: Date) => {
+      getTimeSeries: jest.fn(async (_instrument: Instrument, from: Date) => {
         return [
           {
             time: formatDateTime(from),
@@ -241,7 +241,7 @@ describe('mongo db tests', () => {
     };
     createDataProviderMock.mockReturnValue(mockProvider);
 
-    expect(await hasTickForMinute(symbol, getTestDate())).toBeFalsy();
+    expect(await hasTickForDay(symbol, getTestDate())).toBeFalsy();
 
     const dataProvider = createDataProvider();
 
@@ -249,14 +249,14 @@ describe('mongo db tests', () => {
       dataProvider,
       symbols: [symbol],
       log: () => {},
-      minute: getTestDate(),
+      date: getTestDate(),
     });
 
     // We didn't have any data available so it should have been downloaded
     expect(mockProvider.downloadTickData).toBeCalledTimes(1);
 
     // Now we have data
-    expect(await hasTickForMinute(symbol, getTestDate())).toBeTruthy();
+    expect(await hasTickForDay(symbol, getTestDate())).toBeTruthy();
 
     mockProvider.downloadTickData.mockReset();
 
@@ -265,14 +265,14 @@ describe('mongo db tests', () => {
       dataProvider,
       symbols: [symbol],
       log: () => {},
-      minute: getTestDate(),
+      date: getTestDate(),
     });
 
     // We already have data so it should not have been called again
     expect(mockProvider.downloadTickData).toBeCalledTimes(0);
 
     // load the tick data
-    const storedData = await loadTickForMinute(
+    const storedData = await loadTickForDate(
       symbol,
       testDate,
       TickFileType.Merged,
@@ -357,7 +357,7 @@ describe('mongo db tests', () => {
       dataProvider,
       symbols: ['ZZZZ'],
       log: () => {},
-      minute: getTestDate(),
+      date: getTestDate(),
     });
 
     // If we make the call again we should not download data
@@ -365,7 +365,7 @@ describe('mongo db tests', () => {
       dataProvider,
       symbols: ['ZZZZ'],
       log: () => {},
-      minute: getTestDate(),
+      date: getTestDate(),
     });
   });
 
@@ -388,15 +388,15 @@ describe('mongo db tests', () => {
       }),
     });
 
-    expect(await hasTickForMinute(symbol, getTestDate())).toBeFalsy();
+    expect(await hasTickForDay(symbol, getTestDate())).toBeFalsy();
 
     await ensureTickDataIsAvailable({
       dataProvider: createDataProvider(),
       symbols: ['ZZZZ'],
       log: () => {},
-      minute: getTestDate(),
+      date: getTestDate(),
     });
 
-    expect(await hasTickForMinute(symbol, getTestDate())).toBeTruthy();
+    expect(await hasTickForDay(symbol, getTestDate())).toBeTruthy();
   });
 });

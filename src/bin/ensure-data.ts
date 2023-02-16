@@ -1,5 +1,4 @@
 import series from 'promise-series2';
-import {format, fromUnixTime, parseISO} from 'date-fns';
 
 import Logger from '../utils/logger';
 import {connect, disconnect} from '../utils/db';
@@ -12,14 +11,6 @@ import {
 import {loadStrategy} from '../utils/module';
 import Env from '../utils/env';
 
-import {
-  getPreMarketOpen,
-  getMarketOpen,
-  getMarketClose,
-  getMarketState,
-  initMarket,
-  updateMarket,
-} from '../utils/market';
 import {ensureTickDataIsAvailable} from '../utils/tick-storage';
 
 const log = Logger('ensure-data');
@@ -88,29 +79,16 @@ async function run() {
           to: runProfile.dates.to,
         });
 
-        // ensure tick data is available
         await series(
           async date => {
-            const marketClose = getMarketClose(date);
-            log(
-              `Loading minute data for ${symbolsThatRequireData.join(
-                ', ',
-              )} on ${format(date, 'yyyy-MM-dd')}`,
-            );
-            for (
-              let marketTime = getPreMarketOpen(date);
-              marketTime <= marketClose;
-              marketTime += 60
-            ) {
-              await ensureTickDataIsAvailable({
-                symbols: symbolsThatRequireData,
-                minute: fromUnixTime(marketTime),
-                dataProvider,
-                log,
-              });
-            }
+            await ensureTickDataIsAvailable({
+              dataProvider,
+              symbols: symbolsThatRequireData,
+              log,
+              date,
+            });
           },
-          10,
+          5,
           runProfile.dates.dates,
         );
       },

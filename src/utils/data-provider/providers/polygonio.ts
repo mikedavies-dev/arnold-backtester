@@ -1,5 +1,5 @@
 import axios from 'axios';
-import {addMinutes, format, getUnixTime, subDays} from 'date-fns';
+import {endOfDay, format, getUnixTime, startOfDay, subDays} from 'date-fns';
 import {z} from 'zod';
 import axiosRetry from 'axios-retry';
 
@@ -147,7 +147,7 @@ export function create({log}: {log?: LoggerCallback} = {}): DataProvider {
 
   async function downloadTickData({
     instrument,
-    minute,
+    date,
     write,
     merge,
   }: DownloadTickDataArgs) {
@@ -170,8 +170,8 @@ export function create({log}: {log?: LoggerCallback} = {}): DataProvider {
       status: z.string(),
     });
 
-    const from = minute.getTime();
-    const to = addMinutes(minute, 1).getTime();
+    const from = startOfDay(date).getTime();
+    const to = endOfDay(date).getTime();
 
     const request = async (url: string) => {
       const {data} = await instance.get(url);

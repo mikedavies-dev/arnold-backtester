@@ -3,12 +3,12 @@ import {loadBacktestProfile} from '../../utils/profile';
 import {createTimeAsDate, createTimeAsUnix, getTestDate} from '../testing/tick';
 import {connect, disconnect} from '../../utils/db';
 
-import {loadTickForMinute} from '../../utils/tick-storage';
+import {loadTickForDate} from '../../utils/tick-storage';
 
 jest.mock('../../utils/tick-storage');
 
-const loadTickForSymbolAndDateMock = loadTickForMinute as jest.MockedFunction<
-  typeof loadTickForMinute
+const loadTickForSymbolAndDateMock = loadTickForDate as jest.MockedFunction<
+  typeof loadTickForDate
 >;
 
 describe.skip('test worker module', () => {
@@ -38,7 +38,6 @@ describe.skip('test worker module', () => {
           date: getTestDate(),
           log: () => {},
           workerIndex: 0,
-          fetchOnly: false,
         }),
     ).rejects.toThrowErrorMatchingInlineSnapshot(`"no-symbol-data"`);
   });
@@ -84,7 +83,6 @@ describe.skip('test worker module', () => {
       date: getTestDate(),
       log: () => {},
       workerIndex: 0,
-      fetchOnly: false,
     });
 
     expect(data).toMatchInlineSnapshot(`Array []`);
@@ -134,7 +132,6 @@ describe.skip('test worker module', () => {
           date: getTestDate(),
           log: () => {},
           workerIndex: 0,
-          fetchOnly: false,
         }),
     ).rejects.toThrowErrorMatchingInlineSnapshot(`"invalid-symbol-data"`);
   });
@@ -156,7 +153,6 @@ describe.skip('test worker module', () => {
           date: getTestDate(),
           log: () => {},
           workerIndex: 0,
-          fetchOnly: false,
         }),
     ).rejects.toThrowErrorMatchingInlineSnapshot(`"strategy-not-found"`);
   });

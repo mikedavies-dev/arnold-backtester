@@ -90,6 +90,12 @@ const TimeSeriesDataAvailability = new Schema<DbTimeSeriesDataAvailability>({
   dateRequested: Date,
 });
 
+TimeSeriesDataAvailability.index({
+  symbol: 1,
+  period: 1,
+  dateRequested: 1,
+});
+
 const Instrument = new Schema<DbInstrument>({
   externalId: String,
   provider: String,

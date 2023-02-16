@@ -1,14 +1,6 @@
 import {Contract, BarSizeSetting, Bar as IbBar} from '@stoqey/ib';
 import series from 'promise-series2';
-import {
-  format,
-  parse,
-  isSameDay,
-  isSameSecond,
-  addSeconds,
-  addMinutes,
-  max,
-} from 'date-fns';
+import {format, parse, isSameDay, addSeconds, max, endOfDay} from 'date-fns';
 import numeral from 'numeral';
 
 import {acquireLock} from '../../lock';
@@ -260,7 +252,7 @@ export function create({log}: {log?: LoggerCallback} = {}): DataProvider {
 
   async function downloadTickData({
     instrument,
-    minute,
+    date,
     write,
     merge,
   }: DownloadTickDataArgs) {
@@ -276,7 +268,7 @@ export function create({log}: {log?: LoggerCallback} = {}): DataProvider {
     try {
       log?.(
         `Downloading tick data for ${instrument.symbol} @ ${formatDateTime(
-          minute,
+          date,
         )}`,
       );
 
@@ -284,8 +276,9 @@ export function create({log}: {log?: LoggerCallback} = {}): DataProvider {
         type: TickFileType,
         downloadDataFn: DownloadTickDataFn,
       ) => {
-        let currentTime = minute;
-        const until = addMinutes(minute, 1);
+        let currentTime = date;
+
+        const until = endOfDay(date);
 
         do {
           // get ticks for this minute
@@ -297,7 +290,7 @@ export function create({log}: {log?: LoggerCallback} = {}): DataProvider {
             log?.(
               `Finished downloading ${type} ticks for ${
                 instrument.symbol
-              } for ${formatDateTime(minute)}`,
+              } for ${formatDateTime(currentTime)}`,
             );
             break;
           }
@@ -336,7 +329,7 @@ export function create({log}: {log?: LoggerCallback} = {}): DataProvider {
 
       log?.(
         `Merging tick data for ${instrument.symbol} for ${formatDateTime(
-          minute,
+          date,
         )}`,
       );
       await merge();
