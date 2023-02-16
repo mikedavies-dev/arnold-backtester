@@ -1,6 +1,7 @@
 import {create as createPolygon} from '../../../utils/data-provider/providers/polygonio';
 import {Instrument} from '../../../core';
 import {getTestDate} from '../../testing/tick';
+import Env from '../../../utils/env';
 
 const microsoft = {
   externalId: 'MSFT@XNAS',
@@ -23,32 +24,35 @@ const microsoft = {
 };
 
 describe('test the polygonio data provider', () => {
-  test('instrument lookups', async () => {
-    const polygon = createPolygon();
-    await polygon.init();
-    const results = await polygon.instrumentLookup('MSFT');
+  if (Env.DISABLE_PROVIDER_TESTS) {
+    test('polygon sanity', () => {});
+  } else {
+    test('instrument lookups', async () => {
+      const polygon = createPolygon();
+      await polygon.init();
+      const results = await polygon.instrumentLookup('MSFT');
 
-    expect(
-      results.find(r => r.name.indexOf('Microsoft Corp') !== -1),
-    ).toBeTruthy();
+      expect(
+        results.find(r => r.name.indexOf('Microsoft Corp') !== -1),
+      ).toBeTruthy();
 
-    await polygon.shutdown();
-  });
+      await polygon.shutdown();
+    });
 
-  test('request m1 bar data', async () => {
-    const polygon = createPolygon();
-    await polygon.init();
+    test('request m1 bar data', async () => {
+      const polygon = createPolygon();
+      await polygon.init();
 
-    // 1 min
-    const m1 = await polygon.getTimeSeries(
-      microsoft as Instrument,
-      getTestDate(),
-      2,
-      'm1',
-    );
+      // 1 min
+      const m1 = await polygon.getTimeSeries(
+        microsoft as Instrument,
+        getTestDate(),
+        2,
+        'm1',
+      );
 
-    expect(m1.length).toBe(1062);
-    expect(m1[0]).toMatchInlineSnapshot(`
+      expect(m1.length).toBe(1062);
+      expect(m1[0]).toMatchInlineSnapshot(`
       {
         "close": 341.94,
         "high": 342.23,
@@ -59,24 +63,24 @@ describe('test the polygonio data provider', () => {
       }
     `);
 
-    // Close the connection
-    await polygon.shutdown();
-  });
+      // Close the connection
+      await polygon.shutdown();
+    });
 
-  test('request m5 bar data', async () => {
-    const polygon = createPolygon();
-    await polygon.init();
+    test('request m5 bar data', async () => {
+      const polygon = createPolygon();
+      await polygon.init();
 
-    // 5 mins
-    const bars = await polygon.getTimeSeries(
-      microsoft as Instrument,
-      getTestDate(),
-      10,
-      'm5',
-    );
+      // 5 mins
+      const bars = await polygon.getTimeSeries(
+        microsoft as Instrument,
+        getTestDate(),
+        10,
+        'm5',
+      );
 
-    expect(bars.length).toEqual(1059);
-    expect(bars[0]).toMatchInlineSnapshot(`
+      expect(bars.length).toEqual(1059);
+      expect(bars[0]).toMatchInlineSnapshot(`
       {
         "close": 326.75,
         "high": 326.75,
@@ -87,23 +91,23 @@ describe('test the polygonio data provider', () => {
       }
     `);
 
-    // Close the connection
-    await polygon.shutdown();
-  });
+      // Close the connection
+      await polygon.shutdown();
+    });
 
-  test('request daily bar data', async () => {
-    const polygon = createPolygon();
-    await polygon.init();
+    test('request daily bar data', async () => {
+      const polygon = createPolygon();
+      await polygon.init();
 
-    // Daily data
-    const bars = await polygon.getTimeSeries(
-      microsoft as Instrument,
-      getTestDate(),
-      10,
-      'daily',
-    );
-    expect(bars.length).toEqual(7);
-    expect(bars[0]).toMatchInlineSnapshot(`
+      // Daily data
+      const bars = await polygon.getTimeSeries(
+        microsoft as Instrument,
+        getTestDate(),
+        10,
+        'daily',
+      );
+      expect(bars.length).toEqual(7);
+      expect(bars[0]).toMatchInlineSnapshot(`
       {
         "close": 333.2,
         "high": 333.605,
@@ -114,7 +118,8 @@ describe('test the polygonio data provider', () => {
       }
     `);
 
-    // Close the connection
-    await polygon.shutdown();
-  });
+      // Close the connection
+      await polygon.shutdown();
+    });
+  }
 });
