@@ -3,17 +3,30 @@ import {parentPort, workerData, threadId} from 'worker_threads';
 
 import Logger from '../utils/logger';
 import {runBacktest, BacktestWorkerError} from '../backtest/worker';
-import {Profile} from '../core';
+import {Profile, LogMessage} from '../core';
 
 import {connect, disconnect} from '../utils/db';
+import {format} from 'date-fns';
 
-const log = Logger(`Worker#${threadId}`);
+const consoleLogger = Logger(`Worker#${threadId}`);
 
 if (parentPort) {
   parentPort.on('message', async (param: {symbol: string; date: Date}) => {
+    const logs: Array<LogMessage> = [];
+
     if (!parentPort) {
       return;
     }
+
+    const log = (msg: string) => {
+      const fullMsg = `[${format(param.date, 'yyyyMMdd')}:${threadId}:${
+        param.symbol
+      }] ${msg}`;
+      logs.push({
+        at: Date.now(),
+        msg: fullMsg,
+      });
+    };
 
     const {profile}: {profile: Profile} = workerData;
 
@@ -29,12 +42,17 @@ if (parentPort) {
         workerIndex: threadId,
       });
 
+      consoleLogger(
+        `Finished backtest on ${param.symbol} with ${positions.length} positions and ${logs.length} logs`,
+      );
+
       // Send the results to the parent
       parentPort.postMessage({
         positions,
+        logs,
       });
     } catch (err) {
-      log('Failed', err);
+      consoleLogger('Failed', err);
       setTimeout(() => {
         parentPort?.postMessage({
           error: err instanceof BacktestWorkerError ? err.code : 'unknown',
@@ -42,7 +60,6 @@ if (parentPort) {
       }, 10);
     } finally {
       await disconnect();
-      log('Finished!');
     }
   });
 }

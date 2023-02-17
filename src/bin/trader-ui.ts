@@ -2,9 +2,10 @@ import {run, UIResult} from '../ui/cli/apps/trader';
 import {runLiveController} from '../trader/controller';
 
 import {connect, disconnect} from '../utils/db';
-import {logger, shutdown as shutdownLogger} from '../utils/file-log';
+import {getLogger, shutdown as shutdownLogger} from '../utils/file-log';
 
 async function runApp() {
+  const logger = getLogger('trader');
   try {
     let ui: UIResult | null = null;
 

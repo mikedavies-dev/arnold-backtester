@@ -345,11 +345,17 @@ export type MongoObjectId = {
   toString(): string;
 };
 
+export type LogMessage = {
+  at: number;
+  msg: string;
+};
+
 export type DbBacktest = {
   _id?: MongoObjectId;
   createdAt: Date;
   positions: Array<Position>;
   profile: Profile;
+  logs: Array<LogMessage>;
 };
 
 export type DbTimeSeriesBar = {

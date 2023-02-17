@@ -68,11 +68,16 @@ export async function resetDatabase() {
 export async function storeBacktestResults(results: BacktestResults) {
   const Backtest = mongoose.model<DbBacktest>('Backtest');
 
-  await Backtest.create<DbBacktest>({
+  const logs = results.logs.sort((v1, v2) => v1.at - v2.at);
+
+  const stored = await Backtest.create<DbBacktest>({
     createdAt: results.createdAt,
     positions: results.positions,
     profile: results.profile,
+    logs,
   });
+
+  return stored;
 }
 
 export async function getBacktests(): Promise<Array<DbBacktest>> {
@@ -86,6 +91,10 @@ export async function getBacktest(id: string): Promise<DbBacktest | null> {
   return backtest;
 }
 
+export async function getLastBacktest(): Promise<DbBacktest | null> {
+  const Backtest = mongoose.model<DbBacktest>('Backtest');
+  return Backtest.findOne().sort({createdAt: -1});
+}
 export async function storeSeries(
   symbol: string,
   period: TimeSeriesPeriod,

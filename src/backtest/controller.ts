@@ -5,7 +5,7 @@ import path from 'path';
 
 import Env from '../utils/env';
 
-import {LoggerCallback, Position, Profile} from '../core';
+import {LogMessage, LoggerCallback, Position, Profile} from '../core';
 import {profileExists, loadBacktestProfile} from '../utils/profile';
 import {BackTestWorkerErrorCode} from '../backtest/worker';
 import {
@@ -23,6 +23,7 @@ const filePath = path.join(baseFolder, '../bin/worker.js');
 export type WorkerResult = {
   error?: BackTestWorkerErrorCode;
   positions?: Array<Position>;
+  logs: Array<LogMessage>;
 };
 
 export type BackTestControllerErrorCode =
@@ -35,6 +36,7 @@ export type BacktestResults = {
   positions: Array<Position>;
   profile: Profile;
   createdAt: Date;
+  logs: Array<LogMessage>;
 };
 
 export class BacktestControllerError extends Error {
@@ -177,9 +179,14 @@ export async function runBacktestController({
     .filter(val => !val.error)
     .flatMap(val => val.positions || []);
 
+  const logs = results.flatMap(r => r.logs);
+
+  log(`Got ${logs.length} logs for ${results.length} results`);
+
   return {
     createdAt: new Date(),
     positions,
     profile: runProfile,
+    logs,
   };
 }

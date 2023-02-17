@@ -1,0 +1,3 @@
+#!/bin/bash
+TZ=America/New_York ts-node -T ./src/bin/backtest.ts $@
+

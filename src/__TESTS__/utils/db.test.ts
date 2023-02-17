@@ -1,4 +1,4 @@
-import {addMinutes} from 'date-fns';
+import {addMinutes, getUnixTime} from 'date-fns';
 
 import {BacktestResults} from '../../backtest/controller';
 import {Instrument} from '../../core';
@@ -17,6 +17,7 @@ import {
   loadBars,
   loadMinuteDataForDate,
   loadTrackerBars,
+  getLastBacktest,
 } from '../../utils/db';
 
 import {getTestDate} from '../testing/tick';
@@ -101,6 +102,12 @@ describe('mongo db tests', () => {
         initialBalance: 1000,
         commissionPerOrder: 1,
       },
+      logs: [
+        {
+          at: getUnixTime(getTestDate()),
+          msg: 'test log message',
+        },
+      ],
     };
 
     // Store the results
@@ -116,6 +123,10 @@ describe('mongo db tests', () => {
       storedBacktest._id?.toString() || '',
     );
     expect(storedSingleBacktest).toMatchObject(results);
+
+    // get the latest backtest
+    const latest = await getLastBacktest();
+    expect(latest).toMatchObject(results);
   });
 
   test('load and save instruments to db', async () => {

@@ -58,6 +58,12 @@ const Backtest = new Schema<DbBacktest>(
       initialBalance: Number,
       commissionPerOrder: Number,
     },
+    logs: [
+      {
+        at: Number,
+        msg: String,
+      },
+    ],
   },
   {minimize: false},
 );
