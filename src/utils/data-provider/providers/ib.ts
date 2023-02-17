@@ -1,13 +1,6 @@
 import {Contract, BarSizeSetting, Bar as IbBar} from '@stoqey/ib';
 import series from 'promise-series2';
-import {
-  format,
-  parse,
-  isSameDay,
-  isSameSecond,
-  addSeconds,
-  addMinutes,
-} from 'date-fns';
+import {format, parse, isSameDay, addSeconds, max, endOfDay} from 'date-fns';
 import numeral from 'numeral';
 
 import {acquireLock} from '../../lock';
@@ -259,7 +252,7 @@ export function create({log}: {log?: LoggerCallback} = {}): DataProvider {
 
   async function downloadTickData({
     instrument,
-    minute,
+    date,
     write,
     merge,
   }: DownloadTickDataArgs) {
@@ -275,7 +268,7 @@ export function create({log}: {log?: LoggerCallback} = {}): DataProvider {
     try {
       log?.(
         `Downloading tick data for ${instrument.symbol} @ ${formatDateTime(
-          minute,
+          date,
         )}`,
       );
 
@@ -283,8 +276,9 @@ export function create({log}: {log?: LoggerCallback} = {}): DataProvider {
         type: TickFileType,
         downloadDataFn: DownloadTickDataFn,
       ) => {
-        let currentTime = minute;
-        const until = addMinutes(minute, 1);
+        let currentTime = date;
+
+        const until = endOfDay(date);
 
         do {
           // get ticks for this minute
@@ -296,7 +290,7 @@ export function create({log}: {log?: LoggerCallback} = {}): DataProvider {
             log?.(
               `Finished downloading ${type} ticks for ${
                 instrument.symbol
-              } for ${formatDateTime(minute)}`,
+              } for ${formatDateTime(currentTime)}`,
             );
             break;
           }
@@ -309,26 +303,33 @@ export function create({log}: {log?: LoggerCallback} = {}): DataProvider {
 
           await write(type, ticks);
 
-          // If the last tick is the same as our previous from, add a second
-          // This could mean that we have more than 1000 ticks in any one second
+          // assume we don't have any more for this period
+          if (ticks.length < 100) {
+            break;
+          }
 
-          const nextDate = ticks[ticks.length - 1].dateTime;
+          // IB sometimes has more than 1000 ticks per second, in that case we have to
+          // ignore the reset because we can't request data for a specific ms.
+          //
+          // Also IB sometimes returns data for before the request so make sure that we
+          // don't go backwards!
 
-          currentTime = isSameSecond(currentTime, nextDate)
-            ? addSeconds(nextDate, 1)
-            : nextDate;
+          currentTime = max([
+            addSeconds(currentTime, 1),
+            ticks[ticks.length - 1].dateTime,
+          ]);
         } while (true); // eslint-disable-line
       };
 
       // Download bid/ask data
-      await downloadAndWriteData(TickFileType.BidAsk, downloadBidAskTickData);
+      // await downloadAndWriteData(TickFileType.BidAsk, downloadBidAskTickData);
 
       // Download trade data
       await downloadAndWriteData(TickFileType.Trades, downloadTradeTickData);
 
       log?.(
         `Merging tick data for ${instrument.symbol} for ${formatDateTime(
-          minute,
+          date,
         )}`,
       );
       await merge();
@@ -339,9 +340,10 @@ export function create({log}: {log?: LoggerCallback} = {}): DataProvider {
   }
 
   /*
-  function subscribePriceUpdates({
+    function subscribePriceUpdates({
     instrument,
     onUpdate,
+
   }: SubscribePriceUpdateArgs) {
     const contract: Contract = instrument.data as Contract;
 

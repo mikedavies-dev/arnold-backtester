@@ -18,13 +18,13 @@ describe('indicators - retrace from high', () => {
 
     expect(indicator.values).toStrictEqual([]);
 
-    updateBar(updater, bars, '09:30:00', 1);
+    updateBar(updater, bars, '2022-01-01 09:30', 1);
     expect(indicator.values).toStrictEqual([0]);
 
-    updateBar(updater, bars, '09:30:00', 2);
+    updateBar(updater, bars, '2022-01-01 09:30', 2);
     expect(indicator.values).toStrictEqual([0]);
 
-    updateBar(updater, bars, '09:30:00', 1.2);
+    updateBar(updater, bars, '2022-01-01 09:30', 1.2);
     expect(indicator.values).toStrictEqual([0.8]);
   });
 
@@ -35,28 +35,45 @@ describe('indicators - retrace from high', () => {
 
     expect(indicator.values).toStrictEqual([]);
 
-    updateBar(updater, bars, '09:30:00', 2);
+    updateBar(updater, bars, '2022-01-01 09:30', 2);
     expect(indicator.values).toStrictEqual([0]);
 
-    updateBar(updater, bars, '09:30:00', 1);
+    updateBar(updater, bars, '2022-01-01 09:30', 1);
     expect(indicator.values).toStrictEqual([1]);
 
-    updateBar(updater, bars, '09:30:01', 3);
+    updateBar(updater, bars, '2022-01-01 09:31', 3);
     expect(indicator.values).toStrictEqual([1, 0]);
 
-    updateBar(updater, bars, '09:30:01', 4);
+    updateBar(updater, bars, '2022-01-01 09:31', 4);
     expect(indicator.values).toStrictEqual([1, 0]);
 
-    updateBar(updater, bars, '09:30:01', 2);
+    updateBar(updater, bars, '2022-01-01 09:31', 2);
     expect(indicator.values).toStrictEqual([1, 2]);
 
-    updateBar(updater, bars, '09:30:02', 5);
+    updateBar(updater, bars, '2022-01-01 09:32', 5);
     expect(indicator.values).toStrictEqual([1, 2, 0]);
 
-    updateBar(updater, bars, '09:30:02', 3);
+    updateBar(updater, bars, '2022-01-01 09:32', 3);
     expect(indicator.values).toStrictEqual([1, 2, 2]);
 
-    updateBar(updater, bars, '09:30:03', 2);
+    updateBar(updater, bars, '2022-01-01 09:33', 2);
     expect(indicator.values).toStrictEqual([1, 2, 2, 3]);
+  });
+
+  test('resetting the high on a new day', () => {
+    const bars: Bar[] = [];
+    const indicator = RetraceFromHigh(bars);
+    const updater = indicatorUpdateWrapper(indicator);
+
+    expect(indicator.values).toStrictEqual([]);
+
+    updateBar(updater, bars, '2022-01-01 09:30', 2);
+    expect(indicator.values).toStrictEqual([0]);
+
+    updateBar(updater, bars, '2022-01-01 09:30', 1);
+    expect(indicator.values).toStrictEqual([1]);
+
+    updateBar(updater, bars, '2022-01-02 08:30', 1);
+    expect(indicator.values).toStrictEqual([1, 0]);
   });
 });

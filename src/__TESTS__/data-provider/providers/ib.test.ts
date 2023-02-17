@@ -75,7 +75,7 @@ if (Env.DISABLE_PROVIDER_TESTS) {
     expect(bars.length).toMatchInlineSnapshot(`10`);
     expect(findDuplicates(bars)).toStrictEqual([]);
     expect(bars[0]).toMatchInlineSnapshot(`
-      Object {
+      {
         "close": 324.6,
         "high": 325.72,
         "low": 317.25,
@@ -103,7 +103,7 @@ if (Env.DISABLE_PROVIDER_TESTS) {
     expect(bars.length).toMatchInlineSnapshot(`160`);
     expect(findDuplicates(bars)).toStrictEqual([]);
     expect(bars[0]).toMatchInlineSnapshot(`
-      Object {
+      {
         "close": 322.86,
         "high": 324.83,
         "low": 321.85,
@@ -130,7 +130,7 @@ if (Env.DISABLE_PROVIDER_TESTS) {
     );
     expect(bars.length).toMatchInlineSnapshot(`1912`);
     expect(bars[0]).toMatchInlineSnapshot(`
-      Object {
+      {
         "close": 323.37,
         "high": 324.83,
         "low": 323.2,
@@ -158,7 +158,7 @@ if (Env.DISABLE_PROVIDER_TESTS) {
     );
     expect(m1.length).toMatchInlineSnapshot(`1901`);
     expect(m1[0]).toMatchInlineSnapshot(`
-      Object {
+      {
         "close": 341.94,
         "high": 342.23,
         "low": 341.94,

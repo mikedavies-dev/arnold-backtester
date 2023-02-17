@@ -693,53 +693,53 @@ describe('test backtest results metrics', () => {
       );
 
       expect(metrics.metricsByPosition).toMatchInlineSnapshot(`
-        Array [
-          Object {
+        [
+          {
             "accountBalance": 1000,
             "drawdown": 0,
             "pnl": 0,
           },
-          Object {
+          {
             "accountBalance": 1098,
             "drawdown": 0,
             "pnl": 98,
           },
-          Object {
+          {
             "accountBalance": 1196,
             "drawdown": 0,
             "pnl": 196,
           },
-          Object {
+          {
             "accountBalance": 1094,
             "drawdown": -102,
             "pnl": 94,
           },
-          Object {
+          {
             "accountBalance": 992,
             "drawdown": -204,
             "pnl": -8,
           },
-          Object {
+          {
             "accountBalance": 890,
             "drawdown": -306,
             "pnl": -110,
           },
-          Object {
+          {
             "accountBalance": 988,
             "drawdown": -208,
             "pnl": -12,
           },
-          Object {
+          {
             "accountBalance": 1086,
             "drawdown": -110,
             "pnl": 86,
           },
-          Object {
+          {
             "accountBalance": 1184,
             "drawdown": -12,
             "pnl": 184,
           },
-          Object {
+          {
             "accountBalance": 1082,
             "drawdown": -114,
             "pnl": 82,

@@ -14,14 +14,9 @@ program
   .description('Run a backtest profile')
   .usage('[OPTIONS]...')
   .requiredOption('-p, --profile <profile>', 'the name of the profile to run')
-  .option(
-    '-f, --fetchOnly',
-    'download data without running the backtest',
-    false,
-  )
   .parse();
 
-const options = program.opts<{profile: string; fetchOnly: boolean}>();
+const options = program.opts<{profile: string}>();
 
 const log = Logger('backtest');
 
@@ -33,12 +28,9 @@ async function run() {
     const results = await runBacktestController({
       log,
       profile: options.profile,
-      fetchOnly: options.fetchOnly,
     });
 
-    if (!options.fetchOnly) {
-      await storeBacktestResults(results);
-    }
+    await storeBacktestResults(results);
   } catch (err) {
     const errorCode =
       err instanceof BacktestControllerError ? err.code : 'unknown';

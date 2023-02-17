@@ -2,7 +2,6 @@ import series from 'promise-series2';
 import {
   addHours,
   fromUnixTime,
-  getMinutes,
   getUnixTime,
   isAfter,
   parse,
@@ -292,12 +291,37 @@ export async function runLiveController({
               marketClose,
             });
 
-            // update the indicators
-            profiles.forEach(({currentlyInSetup, strategy, indicators}) => {
-              indicators.forEach(indicator => indicator.update());
+            profiles.forEach(profile => {
+              // update the indicators
+              profile.indicators.forEach(indicator => indicator.update());
 
-              if (currentlyInSetup) {
-                strategy.handleTick(tick);
+              const inSetup = profile.strategy.isSetup({});
+
+              // Update the UI
+              if (profile.currentlyInSetup !== inSetup) {
+                log(
+                  inSetup
+                    ? `${symbol} is in a ${profile.name} setup`
+                    : `${symbol} is no longer in a ${profile.name} setup`,
+                );
+              }
+
+              profile.currentlyInSetup = inSetup;
+
+              /*
+              The question is: Do we need time and sales data when a stock is in a setup or can
+              we just rely on watch list data for trading/entering?
+
+              We'll start with just using the watch data and then move to time and sales later
+              if we need it. That means that backtesting has a lot higher resolution data than
+              live trading in terms of tick and bid/ask updates but hopefully that won't cause issues
+
+              If we need time and sales data we can add it fairly easily later by requesting it when
+              any profile for a symbol is in a setup and stopping when not and no open orders
+              */
+
+              if (inSetup) {
+                profile.strategy.handleTick(tick);
               }
             });
           },
@@ -309,8 +333,6 @@ export async function runLiveController({
 
     // Wait until the market closes
     log(`Worker will shut down at ${formatDateTime(shutdownAt)}`);
-
-    let currentMinute = -1;
 
     let shouldExit = false;
 
@@ -384,41 +406,6 @@ export async function runLiveController({
     });
 
     while (!isAfter(new Date(), shutdownAt) && !shouldExit) {
-      /*
-      The question is: Do we need time and sales data when a stock is in a setup or can
-      we just rely on watch list data for trading/entering?
-
-      We'll start with just using the watch data and then move to time and sales later
-      if we need it. That means that backtesting has a lot higher resolution data than
-      live trading in terms of tick and bid/ask updates but hopefully that won't cause issues
-
-      If we need time and sales data we can add it fairly easily later by requesting it when
-      any profile for a symbol is in a setup and stopping when not and no open orders
-      */
-
-      const nextMinute = getMinutes(new Date());
-
-      if (nextMinute !== currentMinute) {
-        instruments.forEach(({symbol, profiles}) => {
-          profiles.forEach(profile => {
-            const inSetup = profile.strategy.isSetup({});
-
-            // Update the UI
-            if (profile.currentlyInSetup !== inSetup) {
-              log(
-                inSetup
-                  ? `${symbol} is in a ${profile.name} setup`
-                  : `${symbol} is no longer in a ${profile.name} setup`,
-              );
-            }
-
-            profile.currentlyInSetup = inSetup;
-          });
-        });
-
-        currentMinute = nextMinute;
-      }
-
       // update any ui interfaces
       update({
         market,

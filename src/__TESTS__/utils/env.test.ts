@@ -5,13 +5,12 @@ test('basic env functionality', () => {
   expect(Env.isTesting).toBe(true);
   expect(Env.env).not.toBe(null);
   expect(Env.MONGO_CONNECTION_STRING).not.toBe(null);
-  expect(Env.env.TEST_CONFIG_SETTING).toBe('1234');
   expect(Env.getEnv('INVALID', 'default-value')).toBe('default-value');
 });
 
 test('get env config path', () => {
   expect(getConfigPath('test')).toMatchInlineSnapshot(`"../../.env.test"`);
-  expect(getConfigPath('development')).toMatchInlineSnapshot(`"../../.env"`);
-  expect(getConfigPath('production')).toMatchInlineSnapshot(`"../../.env"`);
-  expect(getConfigPath(undefined)).toMatchInlineSnapshot(`"../../.env"`);
+  expect(getConfigPath('development')).toBe(null);
+  expect(getConfigPath('production')).toBe(null);
+  expect(getConfigPath(undefined)).toBe(null);
 });

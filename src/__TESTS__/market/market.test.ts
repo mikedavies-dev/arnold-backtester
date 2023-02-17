@@ -57,21 +57,21 @@ test('init market time', () => {
   expect(market.status).toBe('CLOSED');
 
   expect(market.open).toMatchInlineSnapshot(`
-    Object {
+    {
       "dt": 2022-01-01T14:30:00.000Z,
       "time": "09:30:00",
       "unix": 1641047400,
     }
   `);
   expect(market.close).toMatchInlineSnapshot(`
-    Object {
+    {
       "dt": 2022-01-01T21:00:00.000Z,
       "time": "16:00:00",
       "unix": 1641070800,
     }
   `);
   expect(market.current).toMatchInlineSnapshot(`
-    Object {
+    {
       "dt": 2022-01-01T05:00:00.000Z,
       "time": "00:00:00",
       "unix": 1641013200,
@@ -83,21 +83,21 @@ test('init market time', () => {
   expect(market.status).toBe('OPEN');
 
   expect(market.open).toMatchInlineSnapshot(`
-    Object {
+    {
       "dt": 2022-01-01T14:30:00.000Z,
       "time": "09:30:00",
       "unix": 1641047400,
     }
   `);
   expect(market.close).toMatchInlineSnapshot(`
-    Object {
+    {
       "dt": 2022-01-01T21:00:00.000Z,
       "time": "16:00:00",
       "unix": 1641070800,
     }
   `);
   expect(market.current).toMatchInlineSnapshot(`
-    Object {
+    {
       "dt": 2022-01-01T15:00:00.000Z,
       "time": "10:00:00",
       "unix": 1641049200,
@@ -109,21 +109,21 @@ test('init market time', () => {
   expect(market.status).toBe('CLOSED');
 
   expect(market.open).toMatchInlineSnapshot(`
-    Object {
+    {
       "dt": 2022-01-01T14:30:00.000Z,
       "time": "09:30:00",
       "unix": 1641047400,
     }
   `);
   expect(market.close).toMatchInlineSnapshot(`
-    Object {
+    {
       "dt": 2022-01-01T21:00:00.000Z,
       "time": "16:00:00",
       "unix": 1641070800,
     }
   `);
   expect(market.current).toMatchInlineSnapshot(`
-    Object {
+    {
       "dt": 2022-01-02T01:00:00.000Z,
       "time": "20:00:00",
       "unix": 1641085200,

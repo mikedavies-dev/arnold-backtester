@@ -14,6 +14,8 @@ import {
 } from '../utils/data-storage';
 import {createDataProvider} from '../utils/data-provider';
 import {loadStrategy} from '../utils/module';
+import {ensureTickDataIsAvailable} from '../utils/tick-storage';
+import series from 'promise-series2';
 
 const baseFolder = path.parse(__filename).dir;
 const filePath = path.join(baseFolder, '../bin/worker.js');
@@ -45,11 +47,9 @@ export class BacktestControllerError extends Error {
 export async function runBacktestController({
   log,
   profile,
-  fetchOnly,
 }: {
   log: LoggerCallback;
   profile: string;
-  fetchOnly: boolean;
 }): Promise<BacktestResults> {
   log(`Loading profile '${profile}'`);
 
@@ -72,7 +72,7 @@ export async function runBacktestController({
   log(`Starting ${runProfile.threads} threads`);
 
   const pool = new StaticPool({
-    size: fetchOnly ? 1 : runProfile.threads | 1,
+    size: runProfile.threads | 1,
     task: filePath,
     workerData: {
       profile: runProfile,
@@ -113,6 +113,19 @@ export async function runBacktestController({
     to: runProfile.dates.to,
   });
 
+  await series(
+    async date => {
+      await ensureTickDataIsAvailable({
+        dataProvider,
+        symbols: symbolsThatRequireData,
+        log,
+        date,
+      });
+    },
+    5,
+    runProfile.dates.dates,
+  );
+
   const start = Date.now();
 
   const dateSymbolCombos = runProfile.dates.dates
@@ -132,7 +145,6 @@ export async function runBacktestController({
       const result = (await pool.exec({
         symbol,
         date,
-        fetchOnly,
       })) as WorkerResult;
 
       switch (result.error) {

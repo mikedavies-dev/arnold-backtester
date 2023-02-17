@@ -123,13 +123,13 @@ export async function hasRequestedData(
   const TimeSeriesDataAvailability =
     mongoose.model<DbTimeSeriesDataAvailability>('TimeSeriesDataAvailability');
 
-  const record = await TimeSeriesDataAvailability.countDocuments({
+  const first = await TimeSeriesDataAvailability.findOne({
     symbol,
     period,
     dateRequested: date,
   });
 
-  return record > 0;
+  return Boolean(first);
 }
 
 export async function recordDataHasBeenRequested(

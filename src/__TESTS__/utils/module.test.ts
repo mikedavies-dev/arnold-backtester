@@ -6,7 +6,7 @@ test('Load valid test module', async () => {
   const Strategy = await loadStrategy(modulePath);
 
   expect(Strategy?.extraSymbols).toMatchInlineSnapshot(`
-    Array [
+    [
       "SPY",
     ]
   `);

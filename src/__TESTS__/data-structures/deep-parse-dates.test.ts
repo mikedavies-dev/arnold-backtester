@@ -11,11 +11,11 @@ test('deep parse dates', () => {
   };
 
   expect(src).toMatchInlineSnapshot(`
-    Object {
+    {
       "date1": "2022-01-24T17:35:25.922Z",
       "id": "61eee35d5f20b1b5c542430c",
       "invalidDate1": "2022-01-24",
-      "nested1": Object {
+      "nested1": {
         "date1": "2022-01-24T17:35:25.922Z",
       },
     }
@@ -25,11 +25,11 @@ test('deep parse dates', () => {
   deepParseDates(src);
 
   expect(src).toMatchInlineSnapshot(`
-    Object {
+    {
       "date1": 2022-01-24T17:35:25.922Z,
       "id": "61eee35d5f20b1b5c542430c",
       "invalidDate1": 2022-01-24T05:00:00.000Z,
-      "nested1": Object {
+      "nested1": {
         "date1": 2022-01-24T17:35:25.922Z,
       },
     }

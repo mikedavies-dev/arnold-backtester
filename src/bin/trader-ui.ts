@@ -8,23 +8,19 @@ async function runApp() {
   try {
     let ui: UIResult | null = null;
 
-    const nativeLog = console.log;
-
+    const originalConsole = Object.assign({}, global.console);
     const log = (msg: any, ...args: any[]) => {
       logger.log(msg, ...args);
       if (ui) {
         ui.log(msg);
       } else {
-        nativeLog(msg, ...args);
+        originalConsole.log(msg, ...args);
       }
     };
-
-    const originalConsole = Object.assign({}, global.console);
 
     Object.assign(global.console, {
       log: (msg: any, ...args: any[]): void => {
         log(msg, ...args);
-        originalConsole.log(msg, ...args);
       },
     });
 

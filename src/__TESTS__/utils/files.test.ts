@@ -52,24 +52,24 @@ test('writing a new csv', async () => {
     true,
   );
 
-  const results1 = await readCSV<ReadWriteTestRecord, ReadWriteTestRecord>(
+  const results1 = readCSV<ReadWriteTestRecord, ReadWriteTestRecord>(
     newFilename,
     row => row,
   );
 
   expect(results1).toMatchInlineSnapshot(`
-    Array [
-      Object {
+    [
+      {
         "field1": 1,
         "field2": "test",
         "field3": 123,
       },
-      Object {
+      {
         "field1": 2,
         "field2": "test",
         "field3": 123,
       },
-      Object {
+      {
         "field1": 3,
         "field2": "test",
         "field3": 123,
@@ -86,39 +86,39 @@ test('writing a new csv', async () => {
     false,
   );
 
-  const results2 = await readCSV<ReadWriteTestRecord, ReadWriteTestRecord>(
+  const results2 = readCSV<ReadWriteTestRecord, ReadWriteTestRecord>(
     newFilename,
     row => row,
   );
 
   expect(results2).toMatchInlineSnapshot(`
-    Array [
-      Object {
+    [
+      {
         "field1": 1,
         "field2": "test",
         "field3": 123,
       },
-      Object {
+      {
         "field1": 2,
         "field2": "test",
         "field3": 123,
       },
-      Object {
+      {
         "field1": 3,
         "field2": "test",
         "field3": 123,
       },
-      Object {
+      {
         "field1": 1,
         "field2": "test",
         "field3": 123,
       },
-      Object {
+      {
         "field1": 2,
         "field2": "test",
         "field3": 123,
       },
-      Object {
+      {
         "field1": 3,
         "field2": "test",
         "field3": 123,
@@ -134,28 +134,35 @@ test('writing a new csv', async () => {
     true,
   );
 
-  const results3 = await readCSV<ReadWriteTestRecord, ReadWriteTestRecord>(
+  const results3 = readCSV<ReadWriteTestRecord, ReadWriteTestRecord>(
     newFilename,
     row => row,
   );
 
   expect(results3).toMatchInlineSnapshot(`
-    Array [
-      Object {
+    [
+      {
         "field1": 1,
         "field2": "test",
         "field3": 123,
       },
-      Object {
+      {
         "field1": 2,
         "field2": "test",
         "field3": 123,
       },
-      Object {
+      {
         "field1": 3,
         "field2": "test",
         "field3": 123,
       },
     ]
   `);
+});
+
+test('writing an empty csv should not add load invalid data', async () => {
+  const filename = Env.getUserPath('./TEMP_empty.csv');
+  await writeCsv(filename, [], ['header1', 'header2'], v => v, true);
+  const data = readCSV(filename, v => v);
+  expect(data.length).toBe(0);
 });

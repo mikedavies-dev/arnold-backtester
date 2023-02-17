@@ -12,12 +12,12 @@ import {
   LoggerCallback,
   DataProvider,
   TickFileType,
+  notEmpty,
 } from '../core';
 import {instrumentLookup} from './db';
 
 import {formatDateTime} from './dates';
 import {fileExists, writeCsv, readCSV} from './files';
-import {mergeAndDistributeArrays} from './data-structures';
 
 export async function loadTickFile(
   filename: string,
@@ -45,14 +45,11 @@ export async function loadTickFile(
 
 function formatDataFilename(symbol: string, date: Date, type: TickFileType) {
   return Env.getUserPath(
-    `data/${symbol}/${format(date, 'yyyyMMdd')}/${format(
-      date,
-      'HHmm',
-    )}_${type}.csv`,
+    `data/${symbol}/${format(date, 'yyyyMMdd')}_${type}.csv`,
   );
 }
 
-export async function loadTickForMinute(
+export async function loadTickForDate(
   symbol: string,
   time: Date,
   type: TickFileType,
@@ -61,7 +58,7 @@ export async function loadTickForMinute(
   return loadTickFile(filename);
 }
 
-export async function hasTickForMinute(
+export async function hasTickForDay(
   symbol: string,
   date: Date,
 ): Promise<boolean> {
@@ -98,50 +95,19 @@ export async function writeTickData(
   );
 }
 
-// export function sortTicksByDate(row1: Tick, row2: Tick) {
-//   // Sort on both index and time so we don't loose th original order
-//   // if we have multiple values per second
-//   const val1 = row1.time * 1000000 + row1.index;
-//   const val2 = row2.time * 1000000 + row2.index;
-
-//   return val1 - val2;
-// }
-
 async function mergeTickData(symbol: string, date: Date) {
-  const [bidAsk, trades] = await Promise.all(
-    [TickFileType.BidAsk, TickFileType.Trades].map(type =>
-      loadTickForMinute(symbol, date, type),
-    ),
-  );
+  const mergedData = (
+    await Promise.all(
+      [TickFileType.BidAsk, TickFileType.Trades].map(type =>
+        loadTickForDate(symbol, date, type),
+      ),
+    )
+  )
+    .filter(notEmpty)
+    .flat()
+    .sort((m1, m2) => m1.dateTime.getTime() - m2.dateTime.getTime());
 
-  // Merge each second separately so we get an even distribution of trades/quotes
-  const merged: StoredTick[] = [];
-
-  /*
-  IB don't give us millisecond data on bid/ask/trade data and because we get a lot more
-  bid/ask data than trades if we try to merge them simply based on time then we will
-  have a lot more bid/ask data at the end of each second.
-
-  To avoid this we merge the data by second and then distribute the data evenly across the
-  entire second. This isn't ideal but it's as close as we can get without having millisecond
-  data.
-  */
-
-  for (let second = 0; second < 60; second += 1) {
-    const array1 =
-      bidAsk?.filter(t => t.dateTime.getSeconds() === second) || [];
-
-    const array2 =
-      trades?.filter(t => t.dateTime.getSeconds() === second) || [];
-
-    merged.splice(
-      merged.length,
-      0,
-      ...mergeAndDistributeArrays(array1, array2),
-    );
-  }
-
-  await writeTickData(symbol, date, TickFileType.Merged, merged, true);
+  await writeTickData(symbol, date, TickFileType.Merged, mergedData, true);
 
   // Delete temp data after merging
   await Promise.all(
@@ -153,12 +119,13 @@ async function mergeTickData(symbol: string, date: Date) {
 
 export async function ensureTickDataIsAvailable({
   symbols,
-  minute,
+  date,
   dataProvider,
+  log,
 }: // log,
 {
   symbols: string[];
-  minute: Date;
+  date: Date;
   dataProvider: DataProvider;
   log: LoggerCallback;
 }) {
@@ -169,27 +136,32 @@ export async function ensureTickDataIsAvailable({
 
   return series(
     async instrument => {
-      if (await hasTickForMinute(instrument.symbol, minute)) {
+      if (await hasTickForDay(instrument.symbol, date)) {
         return;
       }
 
       // delete existing data
       await del([
-        formatDataFilename(instrument.symbol, minute, TickFileType.BidAsk),
-        formatDataFilename(instrument.symbol, minute, TickFileType.Trades),
-        formatDataFilename(instrument.symbol, minute, TickFileType.Merged),
+        formatDataFilename(instrument.symbol, date, TickFileType.BidAsk),
+        formatDataFilename(instrument.symbol, date, TickFileType.Trades),
+        formatDataFilename(instrument.symbol, date, TickFileType.Merged),
       ]);
 
       await dataProvider.downloadTickData({
         instrument,
-        minute,
+        date,
         write: async (type, ticks) => {
-          await writeTickData(instrument.symbol, minute, type, ticks, false);
+          log(
+            `${instrument.symbol} writing ${
+              ticks.length
+            } ${type} ticks @ ${format(date, 'yyyy-MM-dd HH:mm:ss')}`,
+          );
+          await writeTickData(instrument.symbol, date, type, ticks, false);
         },
-        merge: async () => mergeTickData(instrument.symbol, minute),
+        merge: async () => mergeTickData(instrument.symbol, date),
       });
     },
-    4,
+    5,
     instruments,
   );
 }

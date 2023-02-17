@@ -246,8 +246,8 @@ describe('mongo db tests', () => {
     expect(bars.length).toEqual(3);
 
     expect(bars).toMatchInlineSnapshot(`
-      Array [
-        Object {
+      [
+        {
           "close": -3,
           "high": -3,
           "low": -3,
@@ -255,7 +255,7 @@ describe('mongo db tests', () => {
           "time": "2021-12-31 23:57",
           "volume": -3,
         },
-        Object {
+        {
           "close": -2,
           "high": -2,
           "low": -2,
@@ -263,7 +263,7 @@ describe('mongo db tests', () => {
           "time": "2021-12-31 23:58",
           "volume": -2,
         },
-        Object {
+        {
           "close": -1,
           "high": -1,
           "low": -1,
@@ -291,8 +291,8 @@ describe('mongo db tests', () => {
 
     // Make sure we have all the data
     expect(barsByDate).toMatchInlineSnapshot(`
-      Object {
-        "2022-01-01 00:00": Object {
+      {
+        "2022-01-01 00:00": {
           "close": 0,
           "high": 0,
           "low": 0,
@@ -300,7 +300,7 @@ describe('mongo db tests', () => {
           "time": "2022-01-01 00:00",
           "volume": 0,
         },
-        "2022-01-01 00:01": Object {
+        "2022-01-01 00:01": {
           "close": 1,
           "high": 1,
           "low": 1,
@@ -316,11 +316,11 @@ describe('mongo db tests', () => {
     // No data to start with
     expect(await loadTrackerBars('TEST_3', getTestDate(), 3))
       .toMatchInlineSnapshot(`
-      Object {
-        "daily": Array [],
-        "m1": Array [],
-        "m5": Array [],
-        "m60": Array [],
+      {
+        "daily": [],
+        "m1": [],
+        "m5": [],
+        "m60": [],
       }
     `);
 
@@ -337,10 +337,10 @@ describe('mongo db tests', () => {
     // Only load m1 data for last 3 bars
     expect(await loadTrackerBars('TEST_3', getTestDate(), 3))
       .toMatchInlineSnapshot(`
-      Object {
-        "daily": Array [],
-        "m1": Array [
-          Object {
+      {
+        "daily": [],
+        "m1": [
+          {
             "close": -3,
             "high": -3,
             "low": -3,
@@ -348,7 +348,7 @@ describe('mongo db tests', () => {
             "time": "2021-12-31 23:57",
             "volume": -3,
           },
-          Object {
+          {
             "close": -2,
             "high": -2,
             "low": -2,
@@ -356,7 +356,7 @@ describe('mongo db tests', () => {
             "time": "2021-12-31 23:58",
             "volume": -2,
           },
-          Object {
+          {
             "close": -1,
             "high": -1,
             "low": -1,
@@ -365,8 +365,8 @@ describe('mongo db tests', () => {
             "volume": -1,
           },
         ],
-        "m5": Array [],
-        "m60": Array [],
+        "m5": [],
+        "m60": [],
       }
     `);
   });

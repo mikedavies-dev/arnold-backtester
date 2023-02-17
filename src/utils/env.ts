@@ -10,14 +10,25 @@ export function getConfigPath(env: string | undefined) {
       return `../../.env.${env}`;
 
     default:
-      return '../../.env';
+      return null;
   }
 }
 
+// load the main config
 dotenv.config({
-  path: path.resolve(__dirname, getConfigPath(nodeEnv)),
+  path: path.resolve(__dirname, '../../.env'),
   override: true,
 });
+
+// load the env based config (if any)
+const envConfig = getConfigPath(nodeEnv);
+
+if (envConfig) {
+  dotenv.config({
+    path: path.resolve(__dirname, envConfig),
+    override: true,
+  });
+}
 
 function getEnv(name: string, def: string) {
   return process.env[name] || def;
@@ -42,11 +53,11 @@ const environment: {
   IB_LOCK_TIMEOUT: string;
   IB_DISPLAY_GROUP: string;
 
-  EARLIEST_DATA: string;
-
   DISABLE_PROVIDER_TESTS: string;
   NODE_ENV: string;
   USER_FOLDER: string;
+
+  POLYGONIO_KEY: string;
 
   // Other..
   getEnv: (name: string, def: string) => string;
@@ -75,7 +86,8 @@ const environment: {
   IB_LOCK_TIMEOUT: getEnv('IB_LOCK_TIMEOUT', '120000'),
   IB_DISPLAY_GROUP: getEnv('IB_DISPLAY_GROUP', '7'),
 
-  EARLIEST_DATA: getEnv('EARLIEST_DATA', '2021-01-01'),
+  POLYGONIO_KEY: getEnv('POLYGONIO_KEY', ''),
+
   DISABLE_PROVIDER_TESTS: getEnv('DISABLE_PROVIDER_TESTS', ''),
   USER_FOLDER: getEnv('USER_FOLDER', './user'),
   NODE_ENV: getEnv('NODE_ENV', 'development'),

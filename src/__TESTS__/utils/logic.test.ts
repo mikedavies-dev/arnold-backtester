@@ -19,7 +19,7 @@ test('initArrayOfSize', () => {
   expect(initArrayOfSize(0, 1)).toStrictEqual([]);
   expect(initArrayOfSize(1, 1)).toStrictEqual([1]);
   expect(initArrayOfSize(10, 'Hi')).toMatchInlineSnapshot(`
-    Array [
+    [
       "Hi",
       "Hi",
       "Hi",
@@ -34,44 +34,44 @@ test('initArrayOfSize', () => {
   `);
 
   expect(initArrayOfSize(10, {val1: 1, val2: 'test '})).toMatchInlineSnapshot(`
-    Array [
-      Object {
+    [
+      {
         "val1": 1,
         "val2": "test ",
       },
-      Object {
+      {
         "val1": 1,
         "val2": "test ",
       },
-      Object {
+      {
         "val1": 1,
         "val2": "test ",
       },
-      Object {
+      {
         "val1": 1,
         "val2": "test ",
       },
-      Object {
+      {
         "val1": 1,
         "val2": "test ",
       },
-      Object {
+      {
         "val1": 1,
         "val2": "test ",
       },
-      Object {
+      {
         "val1": 1,
         "val2": "test ",
       },
-      Object {
+      {
         "val1": 1,
         "val2": "test ",
       },
-      Object {
+      {
         "val1": 1,
         "val2": "test ",
       },
-      Object {
+      {
         "val1": 1,
         "val2": "test ",
       },
@@ -84,7 +84,7 @@ test('initArrayOfSize', () => {
 
   // value at index 1 should not have been changed
   expect(testArray[1]).toMatchInlineSnapshot(`
-    Object {
+    {
       "val1": 1,
       "val2": "test",
     }
