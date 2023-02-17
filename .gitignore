@@ -1,6 +1,5 @@
 # Hidden files
 .env
-.env.*
 .parcel-cache
 .vscode
 .DS_Store
