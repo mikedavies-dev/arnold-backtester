@@ -1,5 +1,6 @@
 import * as Fs from 'fs/promises';
 import LineByLine from 'n-readlines';
+import {isNumeric} from './strings';
 
 export async function fileExists(path: string) {
   try {
@@ -31,10 +32,6 @@ export async function writeCsv<CsvType extends Record<string, any>>(
       : Fs.appendFile(outputFilename, output);
 
   await operation;
-}
-
-function isNumeric(n: any) {
-  return !isNaN(parseFloat(n)) && isFinite(n); // eslint-disable-line
 }
 
 export function readCSV<

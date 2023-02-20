@@ -7,6 +7,7 @@ import {runBacktestController} from '../backtest/controller';
 import {calculateMetrics} from '../utils/results-metrics';
 import {formatDateTime} from '../utils/dates';
 import {positionAction} from '../utils/derived';
+import {isNumeric} from '../utils/strings';
 
 import {
   connect,
@@ -36,6 +37,11 @@ async function dbAction(cb: () => Promise<void>) {
 }
 
 async function getBacktestFromInput(input: string | undefined) {
+  if (isNumeric(input)) {
+    const backtests = await getBacktests();
+    return backtests.at(Number(input)) || null;
+  }
+
   if (input) {
     return getBacktest(input);
   }
@@ -50,6 +56,11 @@ async function list() {
 
     renderTable({
       columns: [
+        {
+          label: 'ix',
+          width: 5,
+          align: 'left',
+        },
         {
           label: 'id',
           width: 28,
@@ -82,9 +93,10 @@ async function list() {
         },
       ],
 
-      rows: backtests.map(backtest => {
+      rows: backtests.map((backtest, ix) => {
         const metrics = calculateMetrics(backtest.positions, metricOptions);
         return [
+          `${ix}`,
           `${backtest._id}`,
           formatDateTime(backtest.createdAt),
           backtest.profile.strategy.name,

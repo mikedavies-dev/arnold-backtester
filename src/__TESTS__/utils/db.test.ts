@@ -107,6 +107,10 @@ describe('mongo db tests', () => {
           at: getUnixTime(getTestDate()),
           msg: 'test log message',
         },
+        {
+          at: getUnixTime(getTestDate()) + 1,
+          msg: 'another log message',
+        },
       ],
     };
 
