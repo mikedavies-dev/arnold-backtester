@@ -156,6 +156,7 @@ export type DataProvider = {
   subscribeMarketUpdates(args: SubscribeMarketUpdateArgs): number;
   cancelMarketUpdates: (requestId: number) => void;
   select: (instrument: Instrument) => void;
+  features: Record<'QUOTES', boolean>;
 };
 
 export type BrokerProvider = {
