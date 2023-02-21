@@ -43,7 +43,9 @@ const environment: {
   SERVER_PORT: string;
 
   // Data provider
-  DATA_PROVIDER: string;
+  DATA_PROVIDER_BACKTEST: string;
+  DATA_PROVIDER_TRADER: string;
+
   BROKER_PROVIDER: string;
 
   // IB
@@ -76,7 +78,8 @@ const environment: {
   SERVER_PORT: getEnv('SERVER_PORT', '4010'),
 
   // Data
-  DATA_PROVIDER: getEnv('DATA_PROVIDER', 'ib'),
+  DATA_PROVIDER_BACKTEST: getEnv('DATA_PROVIDER_BACKTEST', 'ib'),
+  DATA_PROVIDER_TRADER: getEnv('DATA_PROVIDER_TRADER', 'ib'),
   BROKER_PROVIDER: getEnv('BROKER_PROVIDER', 'ib'),
 
   // IB

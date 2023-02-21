@@ -35,7 +35,7 @@ test('instrument lookup', async () => {
   };
   createDataProviderMock.mockReturnValue(mockProvider);
 
-  const provider = createDataProvider();
+  const provider = createDataProvider({type: 'backtest'});
   const results = await provider.instrumentLookup('ZZZZ');
 
   expect(results).toMatchInlineSnapshot(`

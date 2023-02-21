@@ -136,7 +136,7 @@ describe('mongo db tests', () => {
     };
     createDataProviderMock.mockReturnValue(mockProvider);
 
-    const dataProvider = createDataProvider();
+    const dataProvider = createDataProvider({type: 'backtest'});
 
     const instrument = {
       externalId: 'ZZZZ',
@@ -243,7 +243,7 @@ describe('mongo db tests', () => {
 
     expect(await hasTickForDay(symbol, getTestDate())).toBeFalsy();
 
-    const dataProvider = createDataProvider();
+    const dataProvider = createDataProvider({type: 'backtest'});
 
     await ensureTickDataIsAvailable({
       dataProvider,
@@ -351,7 +351,7 @@ describe('mongo db tests', () => {
     };
     createDataProviderMock.mockReturnValue(mockProvider);
 
-    const dataProvider = createDataProvider();
+    const dataProvider = createDataProvider({type: 'backtest'});
 
     await ensureTickDataIsAvailable({
       dataProvider,
@@ -391,7 +391,7 @@ describe('mongo db tests', () => {
     expect(await hasTickForDay(symbol, getTestDate())).toBeFalsy();
 
     await ensureTickDataIsAvailable({
-      dataProvider: createDataProvider(),
+      dataProvider: createDataProvider({type: 'backtest'}),
       symbols: ['ZZZZ'],
       log: () => {},
       date: getTestDate(),

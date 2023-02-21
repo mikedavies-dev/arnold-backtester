@@ -14,8 +14,14 @@ import {create as createPolygonDataProvider} from './providers/polygonio';
 
 export function createDataProvider({
   log,
-}: {log?: LoggerCallback} = {}): DataProvider {
-  switch (Env.DATA_PROVIDER) {
+  type,
+}: {
+  log?: LoggerCallback;
+  type: 'backtest' | 'trader';
+}): DataProvider {
+  const provider =
+    type === 'backtest' ? Env.DATA_PROVIDER_BACKTEST : Env.DATA_PROVIDER_TRADER;
+  switch (provider) {
     case 'ib':
       return createIBDataProvider({log});
 
@@ -23,7 +29,7 @@ export function createDataProvider({
       return createPolygonDataProvider({log});
 
     default:
-      throw new Error(`Unknown data provider ${Env.DATA_PROVIDER}`);
+      throw new Error(`Unknown data provider ${provider}`);
   }
 }
 

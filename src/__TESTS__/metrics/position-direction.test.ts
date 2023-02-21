@@ -1,11 +1,11 @@
-import {getPositionDirection} from '../../utils/results-metrics';
+import {positionDirection} from '../../utils/derived';
 
 import {createTestPosition} from '../testing/broker';
 import {getTestDate} from '../testing/tick';
 
 test('check the direction of a buy order', () => {
   expect(
-    getPositionDirection(
+    positionDirection(
       createTestPosition({
         time: '09:30',
         length: 5,
@@ -21,7 +21,7 @@ test('check the direction of a buy order', () => {
 
 test('check the direction of a sell order', () => {
   expect(
-    getPositionDirection(
+    positionDirection(
       createTestPosition({
         time: '09:30',
         length: 5,
@@ -37,7 +37,7 @@ test('check the direction of a sell order', () => {
 
 test('check the direction of a position without orders', () => {
   expect(
-    getPositionDirection({
+    positionDirection({
       symbol: 'ZZZZ',
       orders: [],
       size: 0,
@@ -47,5 +47,5 @@ test('check the direction of a position without orders', () => {
       isClosing: false,
       data: null,
     }),
-  ).toBe('UNKNOWN');
+  ).toBe('LONG');
 });

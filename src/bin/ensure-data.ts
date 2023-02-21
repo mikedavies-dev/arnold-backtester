@@ -25,7 +25,7 @@ async function run() {
       return;
     }
 
-    const dataProvider = createDataProvider();
+    const dataProvider = createDataProvider({type: 'backtest'});
 
     // Connect to data provider
     try {

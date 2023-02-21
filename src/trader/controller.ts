@@ -128,7 +128,7 @@ export async function runLiveController({
 }) {
   // connect to the data provider
   log('Connecting to data provider');
-  const dataProvider = createDataProvider({log});
+  const dataProvider = createDataProvider({log, type: 'trader'});
   await dataProvider.init();
 
   // connect to the data provider

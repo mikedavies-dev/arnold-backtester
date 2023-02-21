@@ -1,7 +1,15 @@
 import {getHours, getDay} from 'date-fns';
 import {pipe} from 'fp-ts/lib/function';
+import * as A from 'fp-ts/Array';
 import {Position, Order, PositionDirection, MetricsByPeriod} from '../core';
 import {incIf, ratio, initArrayOfSize} from './logic';
+
+import {
+  isBuyOrder,
+  isFilledOrder,
+  isSellOrder,
+  positionDirection,
+} from './derived';
 
 type Options = {
   accountSize: number;
@@ -42,26 +50,18 @@ export const totalOrderValue = (orders: Array<Order>) =>
     0,
   );
 
-const filledOrders = (order: Order) => order.state === 'FILLED';
-const buyOrders = (order: Order) => order.action === 'BUY';
-const sellOrders = (order: Order) => order.action === 'SELL';
-
-const filterOrders =
-  (predicate: (order: Order) => boolean) => (orders: Array<Order>) =>
-    orders.filter(predicate);
-
 export function getPositionPL(position: Position) {
   const totalBuyValue = pipe(
     position.orders,
-    filterOrders(filledOrders),
-    filterOrders(buyOrders),
+    A.filter(isFilledOrder),
+    A.filter(isBuyOrder),
     totalOrderValue,
   );
 
   const totalSellValue = pipe(
     position.orders,
-    filterOrders(filledOrders),
-    filterOrders(sellOrders),
+    A.filter(isFilledOrder),
+    A.filter(isSellOrder),
     totalOrderValue,
   );
 
@@ -72,18 +72,7 @@ export function getPositionCommission(
   position: Position,
   commissionPerOrder: number,
 ) {
-  return (
-    position.orders.filter(o => o.state === 'FILLED').length *
-    commissionPerOrder
-  );
-}
-
-export function getPositionDirection(position: Position): PositionDirection {
-  if (!position.orders.length) {
-    return 'UNKNOWN';
-  }
-
-  return position.orders[0].action === 'BUY' ? 'LONG' : 'SHORT';
+  return position.orders.filter(isFilledOrder).length * commissionPerOrder;
 }
 
 type ConsecutivePositions = {
@@ -235,7 +224,7 @@ export function calculateMetrics(positions: Array<Position>, options: Options) {
   });
 
   const metrics = positions.reduce((acc, position) => {
-    const direction = getPositionDirection(position);
+    const direction = positionDirection(position);
     const positionPnL = getPositionPL(position);
     const positionPnLWithCommission =
       positionPnL - getPositionCommission(position, options.commissionPerOrder);

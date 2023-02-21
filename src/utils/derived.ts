@@ -11,6 +11,7 @@ import {
   notEmpty,
   OrderAction,
   Order,
+  PositionDirection,
 } from '../core';
 
 type OrderExecutions = Record<
@@ -113,6 +114,10 @@ export function positionAction(position: {
     O.map(o => o.action),
     O.getOrElse(() => 'BUY' as OrderAction),
   );
+}
+
+export function positionDirection(position: Position): PositionDirection {
+  return positionAction(position) === 'BUY' ? 'LONG' : 'SHORT';
 }
 
 export function positionFillPrice(position: Position) {

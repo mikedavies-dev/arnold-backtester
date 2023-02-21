@@ -84,6 +84,7 @@ export async function runBacktest({
   // Create the data provider so we can download tick data
   const dataProvider = createDataProvider({
     log,
+    type: 'backtest',
   });
 
   await dataProvider.init({

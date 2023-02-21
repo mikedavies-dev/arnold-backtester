@@ -308,7 +308,7 @@ export type LivePosition = Position & {
   profileId: string;
 };
 
-export type PositionDirection = 'LONG' | 'SHORT' | 'UNKNOWN';
+export type PositionDirection = 'LONG' | 'SHORT';
 
 export type BrokerState = {
   getMarketTime: () => Date;

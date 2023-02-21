@@ -81,7 +81,7 @@ export async function runBacktestController({
     },
   });
 
-  const dataProvider = createDataProvider();
+  const dataProvider = createDataProvider({type: 'backtest'});
 
   // connect
   await dataProvider.init();
