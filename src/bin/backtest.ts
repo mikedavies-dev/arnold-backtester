@@ -6,7 +6,11 @@ import Logger from '../utils/logger';
 import {runBacktestController} from '../backtest/controller';
 import {calculateMetrics} from '../utils/results-metrics';
 import {formatDateTime} from '../utils/dates';
-import {positionAction} from '../utils/derived';
+import {
+  positionAction,
+  positionCommission,
+  positionRealisedPnL,
+} from '../utils/derived';
 import {isNumeric} from '../utils/strings';
 
 import {
@@ -17,6 +21,7 @@ import {
   getBacktest,
   getLastBacktest,
 } from '../utils/db';
+import {differenceInSeconds} from 'date-fns';
 
 const metricOptions = {
   accountSize: 10000,
@@ -123,6 +128,7 @@ async function logs(backtestId: string | undefined) {
 }
 
 async function stats(backtestId: string | undefined) {
+  const currency = (val: number) => numeral(val).format('$0.00');
   return dbAction(async () => {
     const backtest = await getBacktestFromInput(backtestId);
 
@@ -146,13 +152,30 @@ async function stats(backtestId: string | undefined) {
           align: 'right',
         },
       ],
-      rows: [['pnl', numeral(metrics.netProfitAndLoss).format('0,0.00')]],
+      rows: [
+        ['gross', currency(metrics.grossProfitAndLoss)],
+        ['commission', currency(metrics.commission)],
+        ['net', currency(metrics.netProfitAndLoss)],
+        ['-'],
+        ['max drawdown', currency(metrics.maxDrawdown)],
+        ['profit factor', currency(metrics.profitFactor)],
+      ],
     });
 
     renderTable({
       columns: [
         {
-          label: 'id',
+          label: 'symbol',
+          width: 8,
+          align: 'left',
+        },
+        {
+          label: 'opened',
+          width: 22,
+          align: 'left',
+        },
+        {
+          label: 'closed',
           width: 22,
           align: 'left',
         },
@@ -162,15 +185,46 @@ async function stats(backtestId: string | undefined) {
           align: 'left',
         },
         {
-          label: 'reason',
+          label: 'mins',
+          width: 8,
+          align: 'right',
+        },
+        {
+          label: 'gross',
+          width: 10,
+          align: 'right',
+        },
+        {
+          label: 'fee',
+          width: 8,
+          align: 'right',
+        },
+        {
+          label: 'net',
+          width: 10,
+          align: 'right',
+        },
+        {
+          label: 'close reason',
           width: 50,
           align: 'left',
         },
       ],
       rows: backtest.positions.map(position => {
+        const commission = positionCommission(position);
+        const pnl = positionRealisedPnL(position);
         return [
+          position.symbol,
           formatDateTime(position.openedAt),
+          formatDateTime(position.closedAt as Date),
           positionAction(position),
+          `${numeral(
+            differenceInSeconds(position.closedAt as Date, position.openedAt) /
+              60,
+          ).format('0.0')}`,
+          currency(pnl),
+          currency(commission),
+          currency(pnl - commission),
           position.closeReason || '',
         ];
       }),
