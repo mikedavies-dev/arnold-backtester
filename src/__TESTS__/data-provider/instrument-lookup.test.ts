@@ -16,9 +16,6 @@ test('instrument lookup', async () => {
     subscribeMarketUpdates: () => 0,
     cancelMarketUpdates: () => {},
     select: () => {},
-    features: {
-      QUOTES: true,
-    },
     instrumentLookup: async () => [
       {
         externalId: 'ABCD',

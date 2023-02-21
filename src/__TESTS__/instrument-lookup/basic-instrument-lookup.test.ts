@@ -47,9 +47,6 @@ const dataProvider: DataProvider = {
   subscribeMarketUpdates: () => 0,
   cancelMarketUpdates: () => {},
   select: () => {},
-  features: {
-    QUOTES: true,
-  },
   instrumentLookup: async searchTerm => {
     return instruments.filter(
       i =>

@@ -133,9 +133,6 @@ describe('mongo db tests', () => {
       subscribeMarketUpdates: () => 0,
       cancelMarketUpdates: () => {},
       select: () => {},
-      features: {
-        QUOTES: true,
-      },
     };
     createDataProviderMock.mockReturnValue(mockProvider);
 
@@ -229,9 +226,6 @@ describe('mongo db tests', () => {
       subscribeMarketUpdates: () => 0,
       cancelMarketUpdates: () => {},
       select: () => {},
-      features: {
-        QUOTES: true,
-      },
       downloadTickData: jest.fn(
         async ({write, merge}: DownloadTickDataArgs) => {
           // Load/write bid/ask data from remove service
@@ -347,9 +341,6 @@ describe('mongo db tests', () => {
       subscribeMarketUpdates: () => 0,
       cancelMarketUpdates: () => {},
       select: () => {},
-      features: {
-        QUOTES: true,
-      },
       downloadTickData: jest.fn(async ({write}: DownloadTickDataArgs) => {
         // Load/write bid/ask data from remove service
         await write(TickFileType.BidAsk, bidAskTickData);
@@ -395,9 +386,6 @@ describe('mongo db tests', () => {
         // so that next time we don't try downloading it
         await merge();
       }),
-      features: {
-        QUOTES: true,
-      },
     });
 
     expect(await hasTickForDay(symbol, getTestDate())).toBeFalsy();

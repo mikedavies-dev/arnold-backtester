@@ -216,7 +216,7 @@ export async function runBacktest({
       marketClose,
     });
 
-    if (tick.type === 'TRADE' && !dataProvider.features.QUOTES) {
+    if (tick.type === 'TRADE' && Env.DISABLE_BACKTEST_BIDASK === '1') {
       // calculate the bid/ask spread if we don't ahve data, this method isn't very good
       // because the spread can change from symbol to symbol and from minute to minute
       // ideally we should use quote data form Polygon but that's $200/month!

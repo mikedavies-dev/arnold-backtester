@@ -43,9 +43,6 @@ const dataProvider: DataProvider = {
   subscribeMarketUpdates: () => 0,
   cancelMarketUpdates: () => {},
   select: () => {},
-  features: {
-    QUOTES: true,
-  },
 };
 
 describe('mongo db tests', () => {

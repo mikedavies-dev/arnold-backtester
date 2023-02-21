@@ -233,8 +233,5 @@ export function create({log}: {log?: LoggerCallback} = {}): DataProvider {
     subscribeMarketUpdates,
     cancelMarketUpdates,
     select: () => {},
-    features: {
-      QUOTES: false,
-    },
   };
 }
