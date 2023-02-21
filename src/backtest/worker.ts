@@ -235,7 +235,7 @@ export async function runBacktest({
 
       handleTrackerTick({
         data: tracker,
-        tick: {...tick, type: 'ASK', value: tick.value - spread, size: 0},
+        tick: {...tick, type: 'ASK', value: tick.value + spread, size: 0},
         marketOpen,
         marketClose,
       });
