@@ -1,29 +1,6 @@
 import {positionRealisedPnL} from '../../utils/derived';
-import {totalOrderValue} from '../../utils/results-metrics';
 
 import {createTestPosition} from '../testing/broker';
-
-test('order value for non-filled order', () => {
-  expect(totalOrderValue([])).toBe(0);
-});
-
-test('order value for non-filled order', () => {
-  expect(
-    totalOrderValue([
-      {
-        id: 1,
-        type: 'MKT',
-        action: 'BUY',
-        shares: 100,
-        remaining: 100,
-        openedAt: new Date(),
-        symbol: 'ZZZZ',
-        state: 'PENDING',
-        executions: {},
-      },
-    ]),
-  ).toBe(0);
-});
 
 test('calculate pnl for a winning buy position', () => {
   expect(

@@ -41,12 +41,6 @@ const emptyPeriodData: MetricsByPeriod = {
   netProfitAndLoss: 0,
 };
 
-export const totalOrderValue = (orders: Array<Order>) =>
-  orders.reduce(
-    (acc, order) => acc + (order.avgFillPrice || 0) * order.shares,
-    0,
-  );
-
 type ConsecutivePositions = {
   // Max data
   maxConsecutiveWins: number;
