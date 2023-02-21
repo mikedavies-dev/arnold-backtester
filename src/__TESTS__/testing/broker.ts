@@ -9,6 +9,7 @@ type TestOrderSpec = {
   length: number;
   shares: number;
   profitLossPerShares: number;
+  commissionPerOrder?: number;
   entryPrice: number;
   symbol?: string;
   time: string;
@@ -25,6 +26,7 @@ export function createTestPosition({
   entryPrice,
   time,
   date,
+  commissionPerOrder = 1,
 }: TestOrderSpec): Position {
   const openedAt = createTimeAsDate(time, date);
 
@@ -39,7 +41,13 @@ export function createTestPosition({
     filledAt: openedAt,
     avgFillPrice: entryPrice,
     state: 'FILLED',
-    executions: {},
+    executions: {
+      exec1: {
+        commission: commissionPerOrder,
+        shares,
+        price: entryPrice,
+      },
+    },
   };
 
   const closedAt = addMinutes(openedAt, length);
@@ -67,7 +75,13 @@ export function createTestPosition({
     filledAt: closedAt,
     avgFillPrice: exitPrice,
     state: 'FILLED',
-    executions: {},
+    executions: {
+      exec1: {
+        commission: commissionPerOrder,
+        shares,
+        price: exitPrice,
+      },
+    },
   };
 
   return {

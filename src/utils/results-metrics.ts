@@ -9,6 +9,7 @@ import {
   isFilledOrder,
   isSellOrder,
   positionDirection,
+  positionCommission,
 } from './derived';
 
 type Options = {
@@ -66,13 +67,6 @@ export function getPositionPL(position: Position) {
   );
 
   return totalSellValue - totalBuyValue;
-}
-
-export function getPositionCommission(
-  position: Position,
-  commissionPerOrder: number,
-) {
-  return position.orders.filter(isFilledOrder).length * commissionPerOrder;
 }
 
 type ConsecutivePositions = {
@@ -227,7 +221,7 @@ export function calculateMetrics(positions: Array<Position>, options: Options) {
     const direction = positionDirection(position);
     const positionPnL = getPositionPL(position);
     const positionPnLWithCommission =
-      positionPnL - getPositionCommission(position, options.commissionPerOrder);
+      positionPnL - positionCommission(position);
     const isWinner = positionPnL >= 0;
 
     // consecutive wins/losses

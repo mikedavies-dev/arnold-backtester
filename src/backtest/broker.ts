@@ -16,7 +16,8 @@ import {
   OrderSpecification,
   Position,
 } from '../core';
-import {getPositionPL, getPositionCommission} from '../utils/results-metrics';
+import {positionCommission} from '../utils/derived';
+import {getPositionPL} from '../utils/results-metrics';
 
 /*
 orderExecutionDelayMs?: number;
@@ -197,9 +198,7 @@ export function handleBrokerTick(
         }
 
         // Update account balance
-        state.balance +=
-          getPositionPL(position) -
-          getPositionCommission(position, options.commissionPerOrder);
+        state.balance += getPositionPL(position) - positionCommission(position);
 
         delete openPositions[symbol];
       }
