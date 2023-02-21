@@ -1,4 +1,5 @@
-import {getPositionPL, totalOrderValue} from '../../utils/results-metrics';
+import {positionRealisedPnL} from '../../utils/derived';
+import {totalOrderValue} from '../../utils/results-metrics';
 
 import {createTestPosition} from '../testing/broker';
 
@@ -26,7 +27,7 @@ test('order value for non-filled order', () => {
 
 test('calculate pnl for a winning buy position', () => {
   expect(
-    getPositionPL(
+    positionRealisedPnL(
       createTestPosition({
         time: '09:30',
         length: 5,
@@ -42,7 +43,7 @@ test('calculate pnl for a winning buy position', () => {
 
 test('calculate pnl for a winning sell position', () => {
   expect(
-    getPositionPL(
+    positionRealisedPnL(
       createTestPosition({
         time: '09:30',
         length: 5,
@@ -58,7 +59,7 @@ test('calculate pnl for a winning sell position', () => {
 
 test('calculate pnl for a loosing buy position', () => {
   expect(
-    getPositionPL(
+    positionRealisedPnL(
       createTestPosition({
         time: '09:30',
         length: 5,
@@ -74,7 +75,7 @@ test('calculate pnl for a loosing buy position', () => {
 
 test('calculate pnl for a loosing sell position', () => {
   expect(
-    getPositionPL(
+    positionRealisedPnL(
       createTestPosition({
         time: '09:30',
         length: 5,

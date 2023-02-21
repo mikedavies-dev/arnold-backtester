@@ -80,6 +80,7 @@ export function createTestPosition({
         commission: commissionPerOrder,
         shares,
         price: exitPrice,
+        realizedPnL: profitLossPerShares * shares * (winner ? 1 : -1),
       },
     },
   };

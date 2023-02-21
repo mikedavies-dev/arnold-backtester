@@ -15,9 +15,14 @@ import {
   BrokerState,
   OrderSpecification,
   Position,
+  OrderExecution,
 } from '../core';
-import {positionCommission} from '../utils/derived';
-import {getPositionPL} from '../utils/results-metrics';
+import {
+  positionAction,
+  positionAvgFillPrice,
+  positionCommission,
+  positionRealisedPnL,
+} from '../utils/derived';
 
 /*
 orderExecutionDelayMs?: number;
@@ -171,6 +176,9 @@ export function handleBrokerTick(
       }
     })
     .forEach(order => {
+      // update open positions
+      const position = openPositions[symbol];
+
       // Fill the order
       order.filledAt = state.getMarketTime();
       order.state = 'FILLED';
@@ -179,14 +187,44 @@ export function handleBrokerTick(
       const price = order.action === 'BUY' ? ask : bid;
       order.avgFillPrice = price;
 
-      order.executions.exec1 = {
+      const exec: OrderExecution = {
         price,
         shares: order.shares,
         commission: options.commissionPerOrder,
       };
 
-      // update open positions
-      const position = openPositions[symbol];
+      /*
+      if this is a closing order then caclualte the realized pnl
+      I'm not 100% sure if this calcualtion is correct for more complex
+      order types, for example if someone performs the following actions:
+
+      - Buy 100 @ 1
+      - Buy 100 @ 1.5
+      - Buy 100 @ 2
+
+      Here the average fill price is 1.5, so if we sell 100 shares we can
+      calculate the realized pnl
+
+      - Sell 100 @ 2 
+        Profit = (100 * 2) - (100 * 1.5) = 50
+
+      but what happens if we then buy 100 again at 2, our average fill price
+      has increased but it has not been offset by the sell
+
+      how does that affect the calculation?
+      */
+
+      if (order.action !== positionAction(position)) {
+        const openValue = positionAvgFillPrice(position) * order.shares;
+        const closeValue = order.avgFillPrice * order.shares;
+
+        exec.realizedPnL =
+          order.action === 'BUY'
+            ? closeValue - openValue
+            : openValue - closeValue;
+      }
+
+      order.executions.exec1 = exec;
 
       position.size +=
         order.action === 'BUY' ? order.shares : order.shares * -1;
@@ -198,7 +236,8 @@ export function handleBrokerTick(
         }
 
         // Update account balance
-        state.balance += getPositionPL(position) - positionCommission(position);
+        state.balance +=
+          positionRealisedPnL(position) - positionCommission(position);
 
         delete openPositions[symbol];
       }

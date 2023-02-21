@@ -1,15 +1,11 @@
 import {getHours, getDay} from 'date-fns';
-import {pipe} from 'fp-ts/lib/function';
-import * as A from 'fp-ts/Array';
 import {Position, Order, PositionDirection, MetricsByPeriod} from '../core';
 import {incIf, ratio, initArrayOfSize} from './logic';
 
 import {
-  isBuyOrder,
-  isFilledOrder,
-  isSellOrder,
   positionDirection,
   positionCommission,
+  positionRealisedPnL,
 } from './derived';
 
 type Options = {
@@ -50,24 +46,6 @@ export const totalOrderValue = (orders: Array<Order>) =>
     (acc, order) => acc + (order.avgFillPrice || 0) * order.shares,
     0,
   );
-
-export function getPositionPL(position: Position) {
-  const totalBuyValue = pipe(
-    position.orders,
-    A.filter(isFilledOrder),
-    A.filter(isBuyOrder),
-    totalOrderValue,
-  );
-
-  const totalSellValue = pipe(
-    position.orders,
-    A.filter(isFilledOrder),
-    A.filter(isSellOrder),
-    totalOrderValue,
-  );
-
-  return totalSellValue - totalBuyValue;
-}
 
 type ConsecutivePositions = {
   // Max data
@@ -219,7 +197,7 @@ export function calculateMetrics(positions: Array<Position>, options: Options) {
 
   const metrics = positions.reduce((acc, position) => {
     const direction = positionDirection(position);
-    const positionPnL = getPositionPL(position);
+    const positionPnL = positionRealisedPnL(position);
     const positionPnLWithCommission =
       positionPnL - positionCommission(position);
     const isWinner = positionPnL >= 0;

@@ -64,6 +64,11 @@ export function handleTrackerTick({
       data.volume += size;
       data.last = value;
 
+      // // for some data providers we don't have bid/ask data so we shoudl
+      // // set bid/ask when we get a last value?
+      // data.bid = value;
+      // data.ask = value;
+
       // Pre-market data
       if (isPreMarket) {
         if (!data.preMarketHigh || value > data.preMarketHigh) {
