@@ -1,5 +1,5 @@
 import series from 'promise-series2';
-import {addDays, isBefore, isSameDay, subDays} from 'date-fns';
+import {addDays, isBefore, subDays} from 'date-fns';
 
 import {LoggerCallback, TimeSeriesPeriod, Instrument} from '../core';
 import {lookupSymbol} from './instrument-lookup';
@@ -93,7 +93,7 @@ export async function ensureBarDataIsAvailable({
               // Store that we have requested this date/period combo so we don't request it again
               for (
                 let day = subDays(end, days);
-                isBefore(day, range.to) || isSameDay(day, range.to);
+                isBefore(day, range.to);
                 day = addDays(day, 1)
               ) {
                 await recordDataHasBeenRequested(

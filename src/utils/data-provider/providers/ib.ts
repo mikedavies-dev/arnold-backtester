@@ -237,7 +237,13 @@ export function create({log}: {log?: LoggerCallback} = {}): DataProvider {
       },
       1,
       // IB returns some -1 contracts which we don't want
-      contracts.filter(c => c.contract?.conId && c.contract?.conId !== -1),
+      contracts.filter(
+        c =>
+          c.contract?.conId &&
+          c.contract?.conId !== -1 &&
+          // only usd stocks at the moment
+          c.contract.currency === 'USD',
+      ),
     );
 
     return details.map(contract => ({
