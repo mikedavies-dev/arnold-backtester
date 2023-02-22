@@ -422,15 +422,13 @@ export function create({log}: {log?: LoggerCallback} = {}): DataProvider {
       */
 
       if (type === 'VOLUME') {
-        if (lastVolume === null) {
-          lastVolume = value;
-        } else {
+        if (lastVolume !== null) {
           onUpdate({
             type: 'VOLUME_DELTA',
-            // value: (value - lastVolume) * 100,
-            value: value - lastVolume,
+            value: (value - lastVolume) * 100,
           });
         }
+        lastVolume = value;
         return;
       }
 
