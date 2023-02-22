@@ -1,5 +1,4 @@
 import Commander from 'commander';
-import {isValid} from 'date-fns';
 
 import Logger from '../utils/logger';
 import {parseDate} from '../utils/dates';
@@ -31,7 +30,7 @@ async function run() {
 
     // TODO, validate this inside Commander once we have internet and can
     // check the docs
-    if (!isValid(from) || !isValid(to)) {
+    if (!from || !to) {
       log('Dates do not appear to be valid');
       return;
     }

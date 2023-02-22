@@ -5,7 +5,7 @@ import {render as renderTable} from '../ui/cli/utils/table';
 import Logger from '../utils/logger';
 import {runBacktestController} from '../backtest/controller';
 import {calculateMetrics} from '../utils/results-metrics';
-import {formatDateTime} from '../utils/dates';
+import {formatDateTime, parseDate} from '../utils/dates';
 import {
   positionAction,
   positionCommission,
@@ -233,11 +233,16 @@ async function stats(backtestId: string | undefined) {
   });
 }
 
-async function run(profile: string) {
+async function run(
+  profile: string,
+  {symbol, date}: {symbol: string | null; date: Date | null},
+) {
   return dbAction(async () => {
     const results = await runBacktestController({
       log,
       profile,
+      symbol,
+      date,
     });
 
     const stored = await storeBacktestResults(results);
@@ -268,7 +273,22 @@ const {program} = Commander;
 program
   .command('run [profile]')
   .description('Run a backtest profile')
-  .action((profile: string) => run(profile));
+  .option('-s, --symbol <symbol>', 'the symbol to test', '')
+  .option('-d, --date <date>', 'date to test', '')
+  .action(
+    (
+      profile: string,
+      options: {
+        symbol: string;
+        date: string;
+      },
+    ) => {
+      run(profile, {
+        symbol: options.symbol || null,
+        date: options.date ? parseDate(options.date) : null,
+      });
+    },
+  );
 
 // list existing backtests
 program.command('ls').description('list previously run backtests').action(list);

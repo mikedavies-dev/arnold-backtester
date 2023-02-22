@@ -35,5 +35,15 @@ test('get times in various formats', () => {
 });
 
 test('parsing a date', () => {
-  expect(formatDate(parseDate('2022-01-01'))).toEqual('2022-01-01');
+  const dt = parseDate('2022-01-01');
+  expect(dt).not.toBeNull();
+
+  if (dt) {
+    expect(formatDate(dt)).toEqual('2022-01-01');
+  }
+});
+
+test('fail to parse an invalid date', () => {
+  const dt = parseDate('INVALID');
+  expect(dt).toBeNull();
 });

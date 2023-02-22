@@ -2,9 +2,9 @@ import {format} from 'date-fns';
 import {StaticPool} from 'node-worker-threads-pool';
 import numeral from 'numeral';
 import path from 'path';
+import series from 'promise-series2';
 
 import Env from '../utils/env';
-
 import {LogMessage, LoggerCallback, Position, Profile} from '../core';
 import {profileExists, loadBacktestProfile} from '../utils/profile';
 import {BackTestWorkerErrorCode} from '../backtest/worker';
@@ -15,7 +15,7 @@ import {
 import {createDataProvider} from '../utils/data-provider';
 import {loadStrategy} from '../utils/module';
 import {ensureTickDataIsAvailable} from '../utils/tick-storage';
-import series from 'promise-series2';
+import {dateArray} from '../utils/dates';
 
 const baseFolder = path.parse(__filename).dir;
 const filePath = path.join(baseFolder, '../bin/worker.js');
@@ -49,9 +49,13 @@ export class BacktestControllerError extends Error {
 export async function runBacktestController({
   log,
   profile,
+  symbol,
+  date,
 }: {
   log: LoggerCallback;
   profile: string;
+  symbol: string | null;
+  date: Date | null;
 }): Promise<BacktestResults> {
   log(`Loading profile '${profile}'`);
 
@@ -61,14 +65,17 @@ export async function runBacktestController({
 
   const runProfile = await loadBacktestProfile(profile);
 
+  const symbols = symbol ? [symbol] : runProfile.symbols;
+  const from = date ? date : runProfile.dates.from;
+  const to = date ? date : runProfile.dates.to;
+
+  const dates = dateArray(from, to);
+
   // Run the profile
   log(
-    `Running strategy '${
-      runProfile.strategy.name
-    }' for tickers ${runProfile.symbols.join(', ')} from ${format(
-      runProfile.dates.from,
-      'yyyy-MM-dd',
-    )} to ${format(runProfile.dates.to, 'yyyy-MM-dd')}`,
+    `Running strategy '${runProfile.strategy.name}' for tickers ${symbols.join(
+      ', ',
+    )} from ${format(from, 'yyyy-MM-dd')} to ${format(to, 'yyyy-MM-dd')}`,
   );
 
   log(`Starting ${runProfile.threads} threads`);
@@ -98,7 +105,7 @@ export async function runBacktestController({
   const {extraSymbols} = strategy;
 
   const symbolsThatRequireData = Array.from(
-    new Set([...runProfile.symbols, ...extraSymbols]),
+    new Set([...symbols, ...extraSymbols]),
   );
 
   // Make sure we have
@@ -111,8 +118,8 @@ export async function runBacktestController({
     dataProvider,
     symbols: symbolsThatRequireData,
     log,
-    from: runProfile.dates.from,
-    to: runProfile.dates.to,
+    from,
+    to,
   });
 
   await series(
@@ -125,14 +132,14 @@ export async function runBacktestController({
       });
     },
     5,
-    runProfile.dates.dates,
+    dates,
   );
 
   const start = Date.now();
 
   const dateSymbolCombos = runProfile.dates.dates
     .map(date => {
-      return runProfile.symbols.map(symbol => ({
+      return symbols.map(symbol => ({
         date,
         symbol,
       }));
