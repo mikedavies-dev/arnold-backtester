@@ -22,6 +22,7 @@ import {
   getLastBacktest,
 } from '../utils/db';
 import {differenceInSeconds} from 'date-fns';
+import {positionsCsv, positionsHeaders} from '../utils/csv-export';
 
 const metricOptions = {
   accountSize: 10000,
@@ -247,6 +248,20 @@ async function run(profile: string) {
   });
 }
 
+async function csv(backtestId: string | undefined) {
+  return dbAction(async () => {
+    const backtest = await getBacktestFromInput(backtestId);
+
+    if (!backtest) {
+      log(`No backtest found for ${backtestId}`);
+      return;
+    }
+
+    process.stdout.write(positionsHeaders());
+    process.stdout.write(positionsCsv(backtest.positions));
+  });
+}
+
 const {program} = Commander;
 
 // run a new backtest
@@ -270,5 +285,10 @@ program
   .command('stats [backtestId]')
   .description('list previously run backtests')
   .action(stats);
+
+program
+  .command('csv [backtestId]')
+  .description('export backtest positions as csv')
+  .action(csv);
 
 program.parse();
