@@ -33,7 +33,6 @@ export function positionsHeaders() {
 
 export function positionsCsv(positions: Array<Position | DbLivePosition>) {
   const data = positions
-    .filter(p => p.closedAt)
     .map(position => {
       if (!position.closedAt) {
         return null;
