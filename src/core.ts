@@ -443,6 +443,10 @@ export type LineIndicator = Indicator & {
   values: number[];
 };
 
+export type ValueIndicator = Indicator & {
+  value: number;
+};
+
 export type LineIndicatorAccessor = LineIndicator & {
   last: number;
   values: () => number[];

@@ -42,6 +42,11 @@ export function parseDate(input: string) {
   return isValid(ret) ? ret : null;
 }
 
+export function parseDateTime(input: string) {
+  const ret = parse(input, 'yyyy-MM-dd HH:mm', new Date());
+  return isValid(ret) ? ret : null;
+}
+
 export function dateArray(from: Date, to: Date) {
   const days = differenceInDays(to, from);
   const start = startOfDay(from);

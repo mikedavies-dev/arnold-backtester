@@ -1,50 +1,56 @@
-import {Bar, LineIndicator} from '../core';
-import {barTime} from '../utils/bars';
+import {isSameDay, startOfDay} from 'date-fns';
+import {Bar, ValueIndicator} from '../core';
+import {parseDateTime} from '../utils/dates';
 
-export default function RetraceFromHigh(bars: Bar[]): LineIndicator {
+export default function RetraceFromHigh(bars: Bar[]): ValueIndicator {
   let high = 0;
-  let low = 0;
+  let low = Infinity;
 
-  let values: number[] = [];
+  let value = 0;
 
   return {
     recalculate() {
+      value = 0;
       high = 0;
-      low = 0;
+      low = Infinity;
 
-      values = bars.map(bar => {
-        // market is not open yet or it's a new day so reset
-        if (barTime(bar) < '09:30') {
-          high = 0;
-          low = 0;
-          return 0;
+      if (bars.length) {
+        const latest = bars.at(-1) as Bar;
+        const time = parseDateTime(latest.time);
+
+        if (time) {
+          const barsToday = bars.filter(b => {
+            const barTime = parseDateTime(b.time);
+            return barTime && isSameDay(barTime, time);
+          });
+
+          // find the high
+          let highIndex = 0;
+          for (let ix = 0; ix < barsToday.length; ix += 1) {
+            const bar = barsToday[ix];
+
+            if (bar.high > high) {
+              high = bar.high;
+              highIndex = ix;
+            }
+          }
+
+          // find the low since the high
+          for (let ix = highIndex; ix < barsToday.length; ix += 1) {
+            const bar = barsToday[ix];
+            if (bar.low < low) {
+              low = bar.low;
+            }
+          }
+
+          value = high - low;
         }
-
-        if (bar.high > high) {
-          high = bar.high;
-          low = bar.high;
-        }
-
-        if (bar.close < low) {
-          low = bar.close;
-        }
-
-        return high - low;
-      });
+      }
     },
     updateLatest() {
       const bar = bars.at(-1);
 
       if (bar) {
-        // // market is not open yet or it's a new day so reset
-        // if (barTime(bar) < '09:30') {
-        //   high = 0;
-        //   low = 0;
-        //
-        //   values[values.length - 1] = 0;
-        //   return;
-        // }
-        //
         // see if the last bar high is higher than ours, if so then reset
         if (bar.high > high) {
           high = bar.close;
@@ -56,11 +62,11 @@ export default function RetraceFromHigh(bars: Bar[]): LineIndicator {
         }
 
         // update the current retrace
-        values[values.length - 1] = high - low;
+        value = high - low;
       }
     },
-    get values() {
-      return values;
+    get value() {
+      return value;
     },
     dependencies: [bars],
   };

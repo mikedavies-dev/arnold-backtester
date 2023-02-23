@@ -3,7 +3,12 @@ import contrib from 'blessed-contrib';
 import numeral from 'numeral';
 import colors from 'colors/safe';
 
-import {LineIndicator, TraderStatusUpdate, Tracker} from '../../../core';
+import {
+  LineIndicator,
+  TraderStatusUpdate,
+  Tracker,
+  ValueIndicator,
+} from '../../../core';
 import Layout from '../utils/layout';
 import {formatTime} from '../../../utils/dates';
 import {
@@ -41,6 +46,11 @@ import ATR from '../../../indicators/ATR';
 export function calcAndLatest(indicator: LineIndicator): number {
   indicator.recalculate();
   return latest(indicator);
+}
+
+export function calcAndValue(indicator: ValueIndicator): number {
+  indicator.recalculate();
+  return indicator.value;
 }
 
 const InstrumentColumns: Column[] = [
@@ -380,7 +390,7 @@ export function run({
             decimal(tracker.ask),
             decimal(tracker.ask - tracker.bid),
             decimal(calcAndLatest(ATR(14, tracker.bars.m5))),
-            decimal(calcAndLatest(RetraceFromHigh(tracker.bars.m5))),
+            decimal(calcAndValue(RetraceFromHigh(tracker.bars.m5))),
             decimal(tracker.high - tracker.last),
             profiles
               .filter(p => p.currentlyInSetup)

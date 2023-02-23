@@ -5,6 +5,7 @@ import {
   createTimeAsDate,
   getTimes,
   parseDate,
+  parseDateTime,
 } from '../../utils/dates';
 
 import {getTestDate} from '../testing/tick';
@@ -45,5 +46,19 @@ test('parsing a date', () => {
 
 test('fail to parse an invalid date', () => {
   const dt = parseDate('INVALID');
+  expect(dt).toBeNull();
+});
+
+test('parsing a date/time', () => {
+  const dt = parseDateTime('2022-01-01 10:00');
+  expect(dt).not.toBeNull();
+
+  if (dt) {
+    expect(formatDateTime(dt)).toEqual('2022-01-01 10:00:00');
+  }
+});
+
+test('fail to parse an invalid date/time', () => {
+  const dt = parseDateTime('INVALID');
   expect(dt).toBeNull();
 });
