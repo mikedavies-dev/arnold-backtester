@@ -374,6 +374,10 @@ export function run({
           const pcntChange = percentChange(tracker);
           const color = colorize(pcntChange);
 
+          const atr = calcAndLatest(ATR(14, tracker.bars.m5));
+          const retrace = calcAndValue(RetraceFromHigh(tracker.bars.m1));
+          const distanceFromHigh = tracker.high - tracker.last;
+
           return [
             symbol,
             profiles.some(p => p.currentlyInSetup)
@@ -389,9 +393,11 @@ export function run({
             decimal(tracker.bid),
             decimal(tracker.ask),
             decimal(tracker.ask - tracker.bid),
-            decimal(calcAndLatest(ATR(14, tracker.bars.m5))),
-            decimal(calcAndValue(RetraceFromHigh(tracker.bars.m5))),
-            decimal(tracker.high - tracker.last),
+            decimal(atr),
+            colorize(Math.max(0, retrace - atr))(decimal(retrace)),
+            colorize(Math.max(0, atr - distanceFromHigh))(
+              decimal(distanceFromHigh),
+            ),
             profiles
               .filter(p => p.currentlyInSetup)
               .map(p => `${p.name}`)

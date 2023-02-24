@@ -1,11 +1,11 @@
-import {isSameDay, startOfDay} from 'date-fns';
+import {getUnixTime, isSameDay} from 'date-fns';
 import {Bar, ValueIndicator} from '../core';
 import {parseDateTime} from '../utils/dates';
+import {getMarketOpen} from '../utils/market';
 
 export default function RetraceFromHigh(bars: Bar[]): ValueIndicator {
   let high = 0;
   let low = Infinity;
-
   let value = 0;
 
   return {
@@ -19,24 +19,34 @@ export default function RetraceFromHigh(bars: Bar[]): ValueIndicator {
         const time = parseDateTime(latest.time);
 
         if (time) {
+          const marketOpen = getMarketOpen(time);
           const barsToday = bars.filter(b => {
             const barTime = parseDateTime(b.time);
-            return barTime && isSameDay(barTime, time);
+
+            return (
+              barTime &&
+              // only include bars that are greater or equal than today's open
+              getUnixTime(barTime) >= marketOpen
+            );
           });
 
+          if (barsToday.length === 0) {
+            return 0;
+          }
+
           // find the high
-          let highIndex = 0;
+          let highAt = 0;
           for (let ix = 0; ix < barsToday.length; ix += 1) {
             const bar = barsToday[ix];
 
             if (bar.high > high) {
               high = bar.high;
-              highIndex = ix;
+              highAt = ix;
             }
           }
 
           // find the low since the high
-          for (let ix = highIndex; ix < barsToday.length; ix += 1) {
+          for (let ix = highAt; ix < barsToday.length; ix += 1) {
             const bar = barsToday[ix];
             if (bar.low < low) {
               low = bar.low;
