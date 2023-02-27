@@ -19,7 +19,7 @@ import {
 } from '../core';
 import {
   positionAction,
-  positionAvgFillPrice,
+  positionAvgEntryPrice,
   positionCommission,
   positionRealisedPnL,
 } from '../utils/derived';
@@ -215,11 +215,11 @@ export function handleBrokerTick(
       */
 
       if (order.action !== positionAction(position)) {
-        const openValue = positionAvgFillPrice(position) * order.shares;
+        const openValue = positionAvgEntryPrice(position) * order.shares;
         const closeValue = order.avgFillPrice * order.shares;
 
         exec.realizedPnL =
-          order.action === 'BUY'
+          order.action === 'SELL'
             ? closeValue - openValue
             : openValue - closeValue;
       }

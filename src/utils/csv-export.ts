@@ -5,7 +5,7 @@ import {formatDateTime} from './dates';
 import {
   isFilledOrder,
   positionAction,
-  positionAvgFillPrice,
+  positionAvgEntryPrice,
   positionCommission,
   positionEntryPrice,
   positionRealisedPnL,
@@ -47,7 +47,7 @@ export function positionsCsv(positions: Array<Position | DbLivePosition>) {
         positionCommission(position).toFixed(2),
         positionRealisedPnL(position).toFixed(2),
         positionEntryPrice(position)?.toFixed(2) || null,
-        positionAvgFillPrice(position).toFixed(2),
+        positionAvgEntryPrice(position).toFixed(2),
         position.orders.length,
         position.orders.filter(isFilledOrder).length,
         position.closeReason,

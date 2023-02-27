@@ -11,7 +11,9 @@ import {
   currentPositionSize,
   positionPnL,
   positionEntryPrice,
-  positionAvgFillPrice,
+  positionAvgEntryPrice,
+  positionAvgExitPrice,
+  positionExitAction,
 } from '../../utils/derived';
 
 import {initTracker} from '../../utils/tracker';
@@ -268,6 +270,28 @@ describe('test derived functions', () => {
     ).toBe('SELL');
   });
 
+  test('a positions exit action', () => {
+    expect(positionExitAction({orders: []})).toBe('SELL');
+    expect(
+      positionExitAction({
+        orders: [
+          {
+            action: 'BUY',
+          },
+        ],
+      }),
+    ).toBe('SELL');
+    expect(
+      positionExitAction({
+        orders: [
+          {
+            action: 'SELL',
+          },
+        ],
+      }),
+    ).toBe('BUY');
+  });
+
   test('that a position with no orders should have a fill price of 0', () => {
     const position = createPosition({
       orders: [
@@ -439,7 +463,7 @@ describe('test derived functions', () => {
     expect(positionEntryPrice({orders: []})).toBeNull();
   });
 
-  test('position average fill price', () => {
+  test('position average entry fill price', () => {
     const position = createPosition({
       orders: [
         createOrder({
@@ -462,7 +486,33 @@ describe('test derived functions', () => {
         }),
       ],
     });
-    expect(positionAvgFillPrice(position)).toBe(130);
-    expect(positionAvgFillPrice({orders: []})).toBe(0);
+    expect(positionAvgEntryPrice(position)).toBe(130);
+    expect(positionAvgEntryPrice({orders: []})).toBe(0);
+  });
+
+  test('position average exit fill price', () => {
+    const position = createPosition({
+      orders: [
+        createOrder({
+          shares: 100,
+          action: 'BUY',
+          state: 'FILLED',
+          avgFillPrice: 100,
+        }),
+        createOrder({
+          shares: 150,
+          action: 'BUY',
+          state: 'FILLED',
+          avgFillPrice: 150,
+        }),
+        createOrder({
+          shares: 50,
+          action: 'SELL',
+          state: 'FILLED',
+          avgFillPrice: 100,
+        }),
+      ],
+    });
+    expect(positionAvgExitPrice(position)).toBe(100);
   });
 });

@@ -116,6 +116,13 @@ export function positionAction(position: {
   );
 }
 
+export function positionExitAction(position: {
+  orders: Array<{action: OrderAction}>;
+}): OrderAction {
+  const entryAction = positionAction(position);
+  return entryAction === 'BUY' ? 'SELL' : 'BUY';
+}
+
 export function positionDirection(position: Position): PositionDirection {
   return positionAction(position) === 'BUY' ? 'LONG' : 'SHORT';
 }
@@ -164,9 +171,10 @@ export function positionEntryPrice({
   return orders.find(isFilledOrder)?.avgFillPrice || null;
 }
 
-export function positionAvgFillPrice({orders}: {orders: Array<Order>}) {
-  const action = positionAction({orders});
-
+export function positionAvgPrice(
+  action: OrderAction,
+  {orders}: {orders: Array<Order>},
+) {
   const {shares, value} = orders
     .filter(o => o.action === action && isFilledOrder(o))
     .reduce(
@@ -181,4 +189,12 @@ export function positionAvgFillPrice({orders}: {orders: Array<Order>}) {
     );
 
   return shares > 0 ? value / shares : 0;
+}
+
+export function positionAvgEntryPrice({orders}: {orders: Array<Order>}) {
+  return positionAvgPrice(positionAction({orders}), {orders});
+}
+
+export function positionAvgExitPrice({orders}: {orders: Array<Order>}) {
+  return positionAvgPrice(positionExitAction({orders}), {orders});
 }

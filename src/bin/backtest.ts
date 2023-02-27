@@ -8,7 +8,10 @@ import {calculateMetrics} from '../utils/results-metrics';
 import {formatDateTime, parseDate} from '../utils/dates';
 import {
   positionAction,
+  positionAvgEntryPrice,
+  positionAvgExitPrice,
   positionCommission,
+  positionEntryPrice,
   positionRealisedPnL,
 } from '../utils/derived';
 import {isNumeric} from '../utils/strings';
@@ -23,6 +26,7 @@ import {
 } from '../utils/db';
 import {differenceInSeconds} from 'date-fns';
 import {positionsCsv, positionsHeaders} from '../utils/csv-export';
+import {Position} from '../core';
 
 const metricOptions = {
   accountSize: 10000,
@@ -128,8 +132,115 @@ async function logs(backtestId: string | undefined) {
   });
 }
 
-async function stats(backtestId: string | undefined) {
+function displayResults(positions: Position[]) {
   const currency = (val: number) => numeral(val).format('$0.00');
+  const metrics = calculateMetrics(positions, metricOptions);
+
+  renderTable({
+    columns: [
+      {
+        label: 'stat',
+        width: 20,
+        align: 'left',
+      },
+      {
+        label: 'value',
+        width: 20,
+        align: 'right',
+      },
+    ],
+    rows: [
+      ['gross', currency(metrics.grossProfitAndLoss)],
+      ['commission', currency(metrics.commission)],
+      ['net', currency(metrics.netProfitAndLoss)],
+      ['-'],
+      ['max drawdown', currency(metrics.maxDrawdown)],
+      ['profit factor', numeral(metrics.profitFactor).format('0.00')],
+    ],
+  });
+
+  renderTable({
+    columns: [
+      {
+        label: 'symbol',
+        width: 8,
+        align: 'left',
+      },
+      {
+        label: 'action',
+        width: 8,
+        align: 'left',
+      },
+      {
+        label: 'opened',
+        width: 22,
+        align: 'left',
+      },
+      {
+        label: 'closed',
+        width: 22,
+        align: 'left',
+      },
+      {
+        label: 'mins',
+        width: 6,
+        align: 'right',
+      },
+      {
+        label: 'avg entry',
+        width: 11,
+        align: 'right',
+      },
+      {
+        label: 'avg exit',
+        width: 11,
+        align: 'right',
+      },
+      {
+        label: 'gross',
+        width: 10,
+        align: 'right',
+      },
+      {
+        label: 'fee',
+        width: 8,
+        align: 'right',
+      },
+      {
+        label: 'net',
+        width: 10,
+        align: 'right',
+      },
+      {
+        label: 'close reason',
+        width: 50,
+        align: 'left',
+      },
+    ],
+    rows: positions.map(position => {
+      const commission = positionCommission(position);
+      const pnl = positionRealisedPnL(position);
+      return [
+        position.symbol,
+        positionAction(position),
+        formatDateTime(position.openedAt),
+        formatDateTime(position.closedAt as Date),
+        `${numeral(
+          differenceInSeconds(position.closedAt as Date, position.openedAt) /
+            60,
+        ).format('0.0')}`,
+        currency(positionAvgEntryPrice(position) || 0),
+        currency(positionAvgExitPrice(position) || 0),
+        currency(pnl),
+        currency(commission),
+        currency(pnl - commission),
+        position.closeReason || '',
+      ];
+    }),
+  });
+}
+
+async function stats(backtestId: string | undefined) {
   return dbAction(async () => {
     const backtest = await getBacktestFromInput(backtestId);
 
@@ -138,104 +249,17 @@ async function stats(backtestId: string | undefined) {
       return;
     }
 
-    const metrics = calculateMetrics(backtest.positions, metricOptions);
-
-    renderTable({
-      columns: [
-        {
-          label: 'stat',
-          width: 20,
-          align: 'left',
-        },
-        {
-          label: 'value',
-          width: 20,
-          align: 'right',
-        },
-      ],
-      rows: [
-        ['gross', currency(metrics.grossProfitAndLoss)],
-        ['commission', currency(metrics.commission)],
-        ['net', currency(metrics.netProfitAndLoss)],
-        ['-'],
-        ['max drawdown', currency(metrics.maxDrawdown)],
-        ['profit factor', currency(metrics.profitFactor)],
-      ],
-    });
-
-    renderTable({
-      columns: [
-        {
-          label: 'symbol',
-          width: 8,
-          align: 'left',
-        },
-        {
-          label: 'opened',
-          width: 22,
-          align: 'left',
-        },
-        {
-          label: 'closed',
-          width: 22,
-          align: 'left',
-        },
-        {
-          label: 'action',
-          width: 8,
-          align: 'left',
-        },
-        {
-          label: 'mins',
-          width: 8,
-          align: 'right',
-        },
-        {
-          label: 'gross',
-          width: 10,
-          align: 'right',
-        },
-        {
-          label: 'fee',
-          width: 8,
-          align: 'right',
-        },
-        {
-          label: 'net',
-          width: 10,
-          align: 'right',
-        },
-        {
-          label: 'close reason',
-          width: 50,
-          align: 'left',
-        },
-      ],
-      rows: backtest.positions.map(position => {
-        const commission = positionCommission(position);
-        const pnl = positionRealisedPnL(position);
-        return [
-          position.symbol,
-          formatDateTime(position.openedAt),
-          formatDateTime(position.closedAt as Date),
-          positionAction(position),
-          `${numeral(
-            differenceInSeconds(position.closedAt as Date, position.openedAt) /
-              60,
-          ).format('0.0')}`,
-          currency(pnl),
-          currency(commission),
-          currency(pnl - commission),
-          position.closeReason || '',
-        ];
-      }),
-    });
+    displayResults(backtest.positions);
   });
 }
 
 async function run(
   profile: string,
-  {symbol, date}: {symbol: string | null; date: Date | null},
+  {
+    symbol,
+    date,
+    keep,
+  }: {symbol: string | null; date: Date | null; keep: boolean},
 ) {
   return dbAction(async () => {
     const results = await runBacktestController({
@@ -245,11 +269,11 @@ async function run(
       date,
     });
 
-    const stored = await storeBacktestResults(results);
-
-    if (stored._id) {
-      await stats(stored._id?.toString());
+    if (keep) {
+      await storeBacktestResults(results);
     }
+
+    displayResults(results.positions);
   });
 }
 
@@ -275,17 +299,20 @@ program
   .description('Run a backtest profile')
   .option('-s, --symbol <symbol>', 'the symbol to test', '')
   .option('-d, --date <date>', 'date to test', '')
+  .option('-k, --keep', 'save the results to mongo', '')
   .action(
     (
       profile: string,
       options: {
         symbol: string;
         date: string;
+        keep: boolean;
       },
     ) => {
       run(profile, {
         symbol: options.symbol || null,
         date: options.date ? parseDate(options.date) : null,
+        keep: options.keep,
       });
     },
   );
