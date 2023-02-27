@@ -11,7 +11,6 @@ import {
   positionAvgEntryPrice,
   positionAvgExitPrice,
   positionCommission,
-  positionEntryPrice,
   positionRealisedPnL,
 } from '../utils/derived';
 import {isNumeric} from '../utils/strings';
@@ -27,6 +26,7 @@ import {
 import {differenceInSeconds} from 'date-fns';
 import {positionsCsv, positionsHeaders} from '../utils/csv-export';
 import {Position} from '../core';
+import {colorize, decimal, thousands, percent} from '../ui/cli/utils/format';
 
 const metricOptions = {
   accountSize: 10000,
@@ -231,7 +231,7 @@ function displayResults(positions: Position[]) {
         ).format('0.0')}`,
         currency(positionAvgEntryPrice(position) || 0),
         currency(positionAvgExitPrice(position) || 0),
-        currency(pnl),
+        colorize(pnl)(currency(pnl)),
         currency(commission),
         currency(pnl - commission),
         position.closeReason || '',

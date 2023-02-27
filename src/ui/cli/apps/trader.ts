@@ -24,6 +24,8 @@ import {
   percentChange,
 } from '../../../utils/derived';
 
+import {colorize, decimal, thousands, percent} from '../utils/format';
+
 export type UIArguments = {
   onQuit: () => void;
   onCommand: (command: string, args: string[]) => void;
@@ -189,26 +191,6 @@ const PositionColumns: Column[] = [
     align: 'LEFT',
   },
 ];
-
-function colorize(val: number) {
-  if (val === 0) {
-    return colors.white;
-  }
-
-  return val > 0 ? colors.green : colors.red;
-}
-
-function decimal(val: number) {
-  return numeral(val).format('0.00');
-}
-
-function thousands(val: number) {
-  return numeral(val).format('0.0a');
-}
-
-function percent(val: number) {
-  return numeral(val).format('0.00%');
-}
 
 export function run({
   onQuit,
