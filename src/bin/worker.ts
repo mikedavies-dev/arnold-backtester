@@ -11,55 +11,63 @@ import {format} from 'date-fns';
 const consoleLogger = Logger(`Worker#${threadId}`);
 
 if (parentPort) {
-  parentPort.on('message', async (param: {symbol: string; date: Date}) => {
-    const logs: Array<LogMessage> = [];
+  parentPort.on(
+    'message',
+    async (param: {symbol: string; date: Date; keep: boolean}) => {
+      const logs: Array<LogMessage> = [];
 
-    if (!parentPort) {
-      return;
-    }
+      if (!parentPort) {
+        return;
+      }
 
-    const log = (msg: string) => {
-      const fullMsg = `[${format(param.date, 'yyyyMMdd')}:${threadId}:${
-        param.symbol
-      }] ${msg}`;
-      logs.push({
-        at: Date.now(),
-        msg: fullMsg,
-      });
-    };
+      const log = (msg: string) => {
+        const fullMsg = `[${format(param.date, 'yyyyMMdd')}:${threadId}:${
+          param.symbol
+        }] ${msg}`;
 
-    const {profile}: {profile: Profile} = workerData;
+        if (param.keep) {
+          logs.push({
+            at: Date.now(),
+            msg: fullMsg,
+          });
+        } else {
+          console.log(fullMsg);
+        }
+      };
 
-    try {
-      log('Connecting to database');
-      await connect();
+      const {profile}: {profile: Profile} = workerData;
 
-      const positions = await runBacktest({
-        profile,
-        symbol: param.symbol,
-        date: param.date,
-        log,
-        workerIndex: threadId,
-      });
+      try {
+        log('Connecting to database');
+        await connect();
 
-      consoleLogger(
-        `Finished backtest on ${param.symbol} with ${positions.length} positions and ${logs.length} logs`,
-      );
-
-      // Send the results to the parent
-      parentPort.postMessage({
-        positions,
-        logs,
-      });
-    } catch (err) {
-      consoleLogger('Failed', err);
-      setTimeout(() => {
-        parentPort?.postMessage({
-          error: err instanceof BacktestWorkerError ? err.code : 'unknown',
+        const positions = await runBacktest({
+          profile,
+          symbol: param.symbol,
+          date: param.date,
+          log,
+          workerIndex: threadId,
         });
-      }, 10);
-    } finally {
-      await disconnect();
-    }
-  });
+
+        consoleLogger(
+          `Finished backtest on ${param.symbol} with ${positions.length} positions and ${logs.length} logs`,
+        );
+
+        // Send the results to the parent
+        parentPort.postMessage({
+          positions,
+          logs,
+        });
+      } catch (err) {
+        consoleLogger('Failed', err);
+        setTimeout(() => {
+          parentPort?.postMessage({
+            error: err instanceof BacktestWorkerError ? err.code : 'unknown',
+          });
+        }, 10);
+      } finally {
+        await disconnect();
+      }
+    },
+  );
 }

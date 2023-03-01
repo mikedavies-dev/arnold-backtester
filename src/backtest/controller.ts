@@ -51,11 +51,13 @@ export async function runBacktestController({
   profile,
   symbol,
   date,
+  keep,
 }: {
   log: LoggerCallback;
   profile: string;
   symbol: string | null;
   date: Date | null;
+  keep: boolean;
 }): Promise<BacktestResults> {
   log(`Loading profile '${profile}'`);
 
@@ -137,7 +139,7 @@ export async function runBacktestController({
 
   const start = Date.now();
 
-  const dateSymbolCombos = runProfile.dates.dates
+  const dateSymbolCombos = dates
     .map(date => {
       return symbols.map(symbol => ({
         date,
@@ -154,6 +156,7 @@ export async function runBacktestController({
       const result = (await pool.exec({
         symbol,
         date,
+        keep,
       })) as WorkerResult;
 
       switch (result.error) {

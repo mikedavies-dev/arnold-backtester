@@ -7,6 +7,7 @@ test('running the controller with an invalid profile', async () => {
       log: () => {},
       symbol: null,
       date: null,
+      keep: false,
     }),
   ).rejects.toThrowErrorMatchingInlineSnapshot(`"invalid-profile"`);
 });

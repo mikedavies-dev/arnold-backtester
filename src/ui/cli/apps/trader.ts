@@ -378,7 +378,7 @@ export function run({
             decimal(atr),
             colorize(Math.max(0, retrace - atr))(decimal(retrace)),
             colorize(Math.max(0, atr - distanceFromHigh))(
-              decimal(distanceFromHigh),
+              decimal(Math.max(0, distanceFromHigh)),
             ),
             profiles
               .filter(p => p.currentlyInSetup)

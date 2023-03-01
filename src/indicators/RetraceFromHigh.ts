@@ -1,7 +1,5 @@
-import {getUnixTime, isSameDay} from 'date-fns';
 import {Bar, ValueIndicator} from '../core';
-import {parseDateTime} from '../utils/dates';
-import {getMarketOpen} from '../utils/market';
+import {todaysBars} from '../utils/bars';
 
 export default function RetraceFromHigh(bars: Bar[]): ValueIndicator {
   let high = 0;
@@ -15,46 +13,32 @@ export default function RetraceFromHigh(bars: Bar[]): ValueIndicator {
       low = Infinity;
 
       if (bars.length) {
-        const latest = bars.at(-1) as Bar;
-        const time = parseDateTime(latest.time);
+        const todays = todaysBars(bars);
 
-        if (time) {
-          const marketOpen = getMarketOpen(time);
-          const barsToday = bars.filter(b => {
-            const barTime = parseDateTime(b.time);
-
-            return (
-              barTime &&
-              // only include bars that are greater or equal than today's open
-              getUnixTime(barTime) >= marketOpen
-            );
-          });
-
-          if (barsToday.length === 0) {
-            return 0;
-          }
-
-          // find the high
-          let highAt = 0;
-          for (let ix = 0; ix < barsToday.length; ix += 1) {
-            const bar = barsToday[ix];
-
-            if (bar.high > high) {
-              high = bar.high;
-              highAt = ix;
-            }
-          }
-
-          // find the low since the high
-          for (let ix = highAt; ix < barsToday.length; ix += 1) {
-            const bar = barsToday[ix];
-            if (bar.low < low) {
-              low = bar.low;
-            }
-          }
-
-          value = high - low;
+        if (todays.length === 0) {
+          return 0;
         }
+
+        // find the high
+        let highAt = 0;
+        for (let ix = 0; ix < todays.length; ix += 1) {
+          const bar = todays[ix];
+
+          if (bar.high > high) {
+            high = bar.high;
+            highAt = ix;
+          }
+        }
+
+        // find the low since the high
+        for (let ix = highAt; ix < todays.length; ix += 1) {
+          const bar = todays[ix];
+          if (bar.low < low) {
+            low = bar.low;
+          }
+        }
+
+        value = high - low;
       }
     },
     updateLatest() {

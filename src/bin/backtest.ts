@@ -26,7 +26,7 @@ import {
 import {differenceInSeconds} from 'date-fns';
 import {positionsCsv, positionsHeaders} from '../utils/csv-export';
 import {Position} from '../core';
-import {colorize, decimal, thousands, percent} from '../ui/cli/utils/format';
+import {colorize} from '../ui/cli/utils/format';
 
 const metricOptions = {
   accountSize: 10000,
@@ -267,6 +267,7 @@ async function run(
       profile,
       symbol,
       date,
+      keep,
     });
 
     if (keep) {

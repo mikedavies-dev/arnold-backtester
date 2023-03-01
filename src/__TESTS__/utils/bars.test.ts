@@ -1,5 +1,11 @@
 import {Bar} from '../../core';
-import {getRetraceFromHigh, getHigh, isRed, areRed} from '../../utils/bars';
+import {
+  todaysBars,
+  getRetraceFromHigh,
+  getHigh,
+  isRed,
+  areRed,
+} from '../../utils/bars';
 
 function testBar(value: number) {
   return {
@@ -123,5 +129,24 @@ describe('bar utilities', () => {
         makeBar({open: 10, close: 8}),
       ]),
     ).toEqual(true);
+  });
+
+  test('todays bars with empty bars', () => {
+    expect(todaysBars([])).toStrictEqual([]);
+  });
+
+  test('todays bars with invalid time should be empty', () => {
+    expect(
+      todaysBars([
+        {
+          time: 'INVALID_TIME',
+          open: 0,
+          high: 0,
+          low: 0,
+          close: 0,
+          volume: 0,
+        },
+      ]),
+    ).toStrictEqual([]);
   });
 });

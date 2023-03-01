@@ -1,5 +1,7 @@
-import {format, startOfDay, fromUnixTime} from 'date-fns';
+import {format, startOfDay, fromUnixTime, getUnixTime} from 'date-fns';
 import {Bar, Bars, BarPeriod, MaximumBarCount, Periods} from '../core';
+import {parseDateTime} from './dates';
+import {getMarketOpen} from './market';
 
 export const formatBarTime = (period: number, marketTime: number): string => {
   const duration = period * 60;
@@ -144,4 +146,31 @@ export function isRed(bar: Bar) {
 
 export function areRed(bars: Bar[]) {
   return bars.every(isRed);
+}
+
+export function todaysBars(bars: Bar[]) {
+  const latest = bars.at(-1) as Bar;
+
+  if (!latest) {
+    return [];
+  }
+
+  const time = parseDateTime(latest.time);
+
+  if (!time) {
+    return [];
+  }
+
+  const marketOpen = getMarketOpen(time);
+
+  return bars.filter(b => {
+    const barTime = parseDateTime(b.time);
+
+    return (
+      time &&
+      barTime &&
+      // only include bars that are greater or equal than today's open
+      getUnixTime(barTime) >= marketOpen
+    );
+  });
 }

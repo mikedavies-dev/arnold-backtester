@@ -503,7 +503,7 @@ export function notEmpty<TValue>(
   return value !== null && value !== undefined;
 }
 
-export const MaximumBarCount = 250;
+export const MaximumBarCount = 600;
 
 export const Periods = {
   m1: 1,
