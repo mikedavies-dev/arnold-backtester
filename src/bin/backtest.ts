@@ -213,7 +213,7 @@ function displayResults(positions: Position[]) {
       },
       {
         label: 'close reason',
-        width: 50,
+        width: 25,
         align: 'left',
       },
     ],
@@ -224,11 +224,17 @@ function displayResults(positions: Position[]) {
         position.symbol,
         positionAction(position),
         formatDateTime(position.openedAt),
-        formatDateTime(position.closedAt as Date),
-        `${numeral(
-          differenceInSeconds(position.closedAt as Date, position.openedAt) /
-            60,
-        ).format('0.0')}`,
+        position.closedAt
+          ? formatDateTime(position.closedAt as Date)
+          : 'NOT_CLOSED',
+        position.closedAt
+          ? `${numeral(
+              differenceInSeconds(
+                position.closedAt as Date,
+                position.openedAt,
+              ) / 60,
+            ).format('0.0')}`
+          : 'NOT_CLOSED',
         currency(positionAvgEntryPrice(position) || 0),
         currency(positionAvgExitPrice(position) || 0),
         colorize(pnl)(currency(pnl)),
