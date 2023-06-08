@@ -216,31 +216,6 @@ export async function runBacktest({
       marketClose,
     });
 
-    if (tick.type === 'TRADE' && Env.DISABLE_BACKTEST_BIDASK === '1') {
-      // calculate the bid/ask spread if we don't ahve data, this method isn't very good
-      // because the spread can change from symbol to symbol and from minute to minute
-      // ideally we should use quote data form Polygon but that's $200/month!
-      //
-      // I don't think that the type of testing that I will be doing will be a huge issue
-      // but it's something to keep an eye on
-
-      const spread = 0.02 / 2;
-
-      handleTrackerTick({
-        data: tracker,
-        tick: {...tick, type: 'BID', value: tick.value - spread, size: 0},
-        marketOpen,
-        marketClose,
-      });
-
-      handleTrackerTick({
-        data: tracker,
-        tick: {...tick, type: 'ASK', value: tick.value + spread, size: 0},
-        marketOpen,
-        marketClose,
-      });
-    }
-
     // update the indicators
     indicators.forEach(indicator => indicator.update());
 

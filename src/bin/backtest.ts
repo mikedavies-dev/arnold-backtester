@@ -183,7 +183,7 @@ function displayResults(positions: Position[]) {
       },
       {
         label: 'mins',
-        width: 6,
+        width: 8,
         align: 'right',
       },
       {
