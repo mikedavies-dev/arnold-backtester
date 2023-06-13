@@ -156,6 +156,7 @@ function displayResults(positions: Position[]) {
       ['-'],
       ['max drawdown', currency(metrics.maxDrawdown)],
       ['profit factor', numeral(metrics.profitFactor).format('0.00')],
+      ['win rate', numeral(metrics.winRate).format('0.00%')],
     ],
   });
 

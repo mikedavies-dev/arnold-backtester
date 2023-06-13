@@ -61,3 +61,7 @@ export function dateArray(from: Date, to: Date) {
 
   return dates;
 }
+
+export function barIndexFromTime(dt: Date, barSize: number) {
+  return Math.floor(dt.getTime() / 1000 / (barSize * 60));
+}

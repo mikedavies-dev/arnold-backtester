@@ -1,5 +1,5 @@
 import {getHours, getDay} from 'date-fns';
-import {Position, Order, PositionDirection, MetricsByPeriod} from '../core';
+import {Position, PositionDirection, MetricsByPeriod} from '../core';
 import {incIf, ratio, initArrayOfSize} from './logic';
 
 import {
@@ -33,6 +33,7 @@ const emptyPeriodData: MetricsByPeriod = {
   shortWinners: 0,
   longWinnerPercent: 0,
   shortWinnerPercent: 0,
+  winRate: 0,
   grossProfit: 0,
   grossLoss: 0,
   profitFactor: 0,
@@ -155,6 +156,7 @@ export function updatePeriodMetrics(
     grossLoss,
     longWinnerPercent: ratio(longWinners, longPositions),
     shortWinnerPercent: ratio(shortWinners, shortPositions),
+    winRate: ratio(longWinners + shortWinners, longPositions + shortPositions),
     profitFactor: ratio(grossProfit, grossLoss || 1),
     grossProfitAndLoss: metrics.grossProfitAndLoss + positionPnL,
     netProfitAndLoss: metrics.netProfitAndLoss + (positionPnL - commission),

@@ -478,6 +478,7 @@ export type MetricsByPeriod = {
   shortWinners: number;
   longWinnerPercent: number;
   shortWinnerPercent: number;
+  winRate: number;
   profitFactor: number;
   grossProfitAndLoss: number;
   netProfitAndLoss: number;
