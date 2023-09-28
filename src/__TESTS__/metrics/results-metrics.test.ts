@@ -33,6 +33,7 @@ function createAndUpdatePeriodMetrics(
       shortWinners: 0,
       longWinnerPercent: 0,
       shortWinnerPercent: 0,
+      winRate: 0,
       grossProfit: 0,
       grossLoss: 0,
       profitFactor: 0,

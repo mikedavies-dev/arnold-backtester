@@ -133,7 +133,8 @@ async function logs(backtestId: string | undefined) {
 }
 
 function displayResults(positions: Position[]) {
-  const currency = (val: number) => numeral(val).format('$0.00');
+  const currency = (val: number) => numeral(val).format('0.00');
+  const pips = (val: number) => numeral(val).format('0.00000');
   const metrics = calculateMetrics(positions, metricOptions);
 
   renderTable({
@@ -156,6 +157,7 @@ function displayResults(positions: Position[]) {
       ['-'],
       ['max drawdown', currency(metrics.maxDrawdown)],
       ['profit factor', numeral(metrics.profitFactor).format('0.00')],
+      ['win rate', numeral(metrics.winRate).format('0.00%')],
     ],
   });
 
@@ -183,17 +185,17 @@ function displayResults(positions: Position[]) {
       },
       {
         label: 'mins',
-        width: 6,
+        width: 8,
         align: 'right',
       },
       {
         label: 'avg entry',
-        width: 11,
+        width: 13,
         align: 'right',
       },
       {
         label: 'avg exit',
-        width: 11,
+        width: 13,
         align: 'right',
       },
       {
@@ -235,8 +237,8 @@ function displayResults(positions: Position[]) {
               ) / 60,
             ).format('0.0')}`
           : 'NOT_CLOSED',
-        currency(positionAvgEntryPrice(position) || 0),
-        currency(positionAvgExitPrice(position) || 0),
+        pips(positionAvgEntryPrice(position) || 0),
+        pips(positionAvgExitPrice(position) || 0),
         colorize(pnl)(currency(pnl)),
         currency(commission),
         currency(pnl - commission),

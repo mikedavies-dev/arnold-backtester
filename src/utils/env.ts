@@ -48,8 +48,6 @@ const environment: {
 
   BROKER_PROVIDER: string;
 
-  DISABLE_BACKTEST_BIDASK: string;
-
   // IB
   IB_HOST: string;
   IB_PORT: string;
@@ -62,6 +60,7 @@ const environment: {
   USER_FOLDER: string;
 
   POLYGONIO_KEY: string;
+  RUN_INLINE: string;
 
   // Other..
   getEnv: (name: string, def: string) => string;
@@ -92,9 +91,10 @@ const environment: {
   IB_DISPLAY_GROUP: getEnv('IB_DISPLAY_GROUP', '7'),
 
   POLYGONIO_KEY: getEnv('POLYGONIO_KEY', ''),
-  DISABLE_BACKTEST_BIDASK: getEnv('DISABLE_BACKTEST_BIDASK', ''),
 
   DISABLE_PROVIDER_TESTS: getEnv('DISABLE_PROVIDER_TESTS', ''),
+  RUN_INLINE: getEnv('RUN_INLINE', ''),
+
   USER_FOLDER: getEnv('USER_FOLDER', './user'),
   NODE_ENV: getEnv('NODE_ENV', 'development'),
   getEnv,

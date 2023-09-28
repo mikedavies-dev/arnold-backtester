@@ -72,7 +72,7 @@
     "test": "is-ci-cli test:coverage test:watch --runInBand",
     "test:coverage": "TZ=America/New_York NODE_ENV=test_ci jest --coverage --runInBand",
     "test:watch": "TZ=America/New_York jest --watch --runInBand",
-    "test:ci": "TZ=America/New_York NODE_ENV=test_ci jest --coverage",
+    "test:ci": "TZ=America/New_York NODE_ENV=test_ci jest --runInBand --coverage",
     "check": "tsc --noEmit",
     "check:watch": "tsc --noEmit --watch",
     "prepare": "husky install",

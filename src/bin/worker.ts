@@ -14,8 +14,6 @@ if (parentPort) {
   parentPort.on(
     'message',
     async (param: {symbol: string; date: Date; keep: boolean}) => {
-      const logs: Array<LogMessage> = [];
-
       if (!parentPort) {
         return;
       }
@@ -25,14 +23,7 @@ if (parentPort) {
           param.symbol
         }] ${msg}`;
 
-        if (param.keep) {
-          logs.push({
-            at: Date.now(),
-            msg: fullMsg,
-          });
-        } else {
-          console.log(fullMsg);
-        }
+        console.log(fullMsg);
       };
 
       const {profile}: {profile: Profile} = workerData;
@@ -50,14 +41,11 @@ if (parentPort) {
         });
 
         consoleLogger(
-          `Finished backtest on ${param.symbol} with ${positions.length} positions and ${logs.length} logs`,
+          `Finished backtest on ${param.symbol} with ${positions.length} positions`,
         );
 
         // Send the results to the parent
-        parentPort.postMessage({
-          positions,
-          logs,
-        });
+        parentPort.postMessage(positions);
       } catch (err) {
         consoleLogger('Failed', err);
         setTimeout(() => {

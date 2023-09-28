@@ -16,6 +16,7 @@ import {createDataProvider} from '../utils/data-provider';
 import {loadStrategy} from '../utils/module';
 import {ensureTickDataIsAvailable} from '../utils/tick-storage';
 import {dateArray} from '../utils/dates';
+import {runBacktest, BacktestWorkerError} from '../backtest/worker';
 
 const baseFolder = path.parse(__filename).dir;
 const filePath = path.join(baseFolder, '../bin/worker.js');
@@ -148,33 +149,31 @@ export async function runBacktestController({
     })
     .flat();
 
-  const results = await Promise.all(
-    dateSymbolCombos.map(async ({date, symbol}) => {
+  const runInline = Boolean(Env.RUN_INLINE);
+
+  const results = await series(
+    async ({date, symbol}) => {
       // This will choose one idle worker in the pool
       // to execute your heavy task without blocking
       // the main thread!
-      const result = (await pool.exec({
-        symbol,
-        date,
-        keep,
-      })) as WorkerResult;
+      const positions: Position[] = runInline
+        ? await runBacktest({
+            symbol,
+            profile: runProfile,
+            workerIndex: 1,
+            log,
+            date,
+          })
+        : await pool.exec({
+            symbol,
+            date,
+            keep,
+          });
 
-      switch (result.error) {
-        case 'no-symbol-data':
-          log('Some symbol data is missing, ignoring');
-          break;
-
-        case 'strategy-not-found':
-          log('Strategy not found, ignoring');
-          break;
-
-        case 'unknown':
-          log('An unknown error occurred');
-          break;
-      }
-
-      return result;
-    }),
+      return positions;
+    },
+    runInline ? 1 : 10,
+    dateSymbolCombos,
   );
 
   log(`Finished in ${numeral(Date.now() - start).format(',')}ms`);
@@ -185,18 +184,14 @@ export async function runBacktestController({
   // Disconnect from data provider
   await dataProvider.shutdown();
 
-  const positions = results
-    .filter(val => !val.error)
-    .flatMap(val => val.positions || []);
+  const positions = results.flatMap(val => val || []);
 
-  const logs = results.flatMap(r => r.logs);
-
-  log(`Got ${logs.length} logs for ${results.length} results`);
+  log(`Got ${results.length} results`);
 
   return {
     createdAt: new Date(),
     positions,
     profile: runProfile,
-    logs,
+    logs: [],
   };
 }

@@ -163,7 +163,7 @@ describe('test data availability', () => {
     expect(range).toBe(null);
   });
 
-  test('have requested all days', async () => {
+  test('have requested all days 1', async () => {
     const symbol = 'ENSURE_DATA_TEST_SYMBOL';
     const period = 'm1';
 
@@ -188,7 +188,7 @@ describe('test data availability', () => {
     );
   });
 
-  test('have requested all days', async () => {
+  test('have requested all days 2', async () => {
     const symbol = 'ENSURE_DATA_TEST_SYMBOL';
     const period = 'm1';
 
@@ -236,7 +236,7 @@ describe('test data availability', () => {
     `);
   });
 
-  test('have requested all days', async () => {
+  test('have requested all days 3', async () => {
     const symbol = 'ENSURE_DATA_TEST_SYMBOL';
     const period = 'm1';
 

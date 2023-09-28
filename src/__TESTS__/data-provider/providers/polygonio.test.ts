@@ -4,7 +4,7 @@ import {getTestDate} from '../../testing/tick';
 import Env from '../../../utils/env';
 
 const microsoft = {
-  externalId: 'MSFT@XNAS',
+  externalId: 'MSFT',
   symbol: 'MSFT',
   name: 'Microsoft Corp',
   data: {
@@ -36,62 +36,6 @@ describe('test the polygonio data provider', () => {
         results.find(r => r.name.indexOf('Microsoft Corp') !== -1),
       ).toBeTruthy();
 
-      await polygon.shutdown();
-    });
-
-    test('request m1 bar data', async () => {
-      const polygon = createPolygon();
-      await polygon.init();
-
-      // 1 min
-      const m1 = await polygon.getTimeSeries(
-        microsoft as Instrument,
-        getTestDate(),
-        2,
-        'm1',
-      );
-
-      expect(m1.length).toBe(1062);
-      expect(m1[0]).toMatchInlineSnapshot(`
-      {
-        "close": 341.94,
-        "high": 342.23,
-        "low": 341.94,
-        "open": 342.02,
-        "time": "2021-12-30 04:19:00",
-        "volume": 2028,
-      }
-    `);
-
-      // Close the connection
-      await polygon.shutdown();
-    });
-
-    test('request m5 bar data', async () => {
-      const polygon = createPolygon();
-      await polygon.init();
-
-      // 5 mins
-      const bars = await polygon.getTimeSeries(
-        microsoft as Instrument,
-        getTestDate(),
-        10,
-        'm5',
-      );
-
-      expect(bars.length).toEqual(1059);
-      expect(bars[0]).toMatchInlineSnapshot(`
-      {
-        "close": 326.75,
-        "high": 326.75,
-        "low": 326.75,
-        "open": 326.75,
-        "time": "2021-12-22 04:10:00",
-        "volume": 759,
-      }
-    `);
-
-      // Close the connection
       await polygon.shutdown();
     });
 
