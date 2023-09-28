@@ -60,6 +60,7 @@ const environment: {
   USER_FOLDER: string;
 
   POLYGONIO_KEY: string;
+  RUN_INLINE: string;
 
   // Other..
   getEnv: (name: string, def: string) => string;
@@ -92,6 +93,8 @@ const environment: {
   POLYGONIO_KEY: getEnv('POLYGONIO_KEY', ''),
 
   DISABLE_PROVIDER_TESTS: getEnv('DISABLE_PROVIDER_TESTS', ''),
+  RUN_INLINE: getEnv('RUN_INLINE', ''),
+
   USER_FOLDER: getEnv('USER_FOLDER', './user'),
   NODE_ENV: getEnv('NODE_ENV', 'development'),
   getEnv,
