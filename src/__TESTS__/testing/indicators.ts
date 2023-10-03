@@ -26,3 +26,14 @@ export function updateBar(
 
   indicator.update();
 }
+
+export function makeBars(values: number[]): Bar[] {
+  return values.map((value, index) => ({
+    time: index.toString(),
+    open: value,
+    high: value,
+    low: value,
+    close: value,
+    volume: 0,
+  }));
+}
