@@ -464,6 +464,7 @@ export type Strategy = {
   isSetup: (params: IsSetupParameters) => boolean;
   handleTick: (tick: Tick) => void;
   indicators: Indicator[];
+  nextBar?: (barSize: number, barIndex: number, tick: Tick) => void;
 };
 
 export type MetricsByPeriod = {

@@ -6,6 +6,7 @@ import {
   getTimes,
   parseDate,
   parseDateTime,
+  barIndexFromTime,
 } from '../../utils/dates';
 
 import {getTestDate} from '../testing/tick';
@@ -61,4 +62,14 @@ test('parsing a date/time', () => {
 test('fail to parse an invalid date/time', () => {
   const dt = parseDateTime('INVALID');
   expect(dt).toBeNull();
+});
+
+test('get a bar index from a date', () => {
+  const dt = parseDateTime('2022-01-01 10:00');
+
+  if (dt) {
+    expect(barIndexFromTime(dt, 1)).toEqual(27350820);
+    expect(barIndexFromTime(dt, 5)).toEqual(5470164);
+    expect(barIndexFromTime(dt, 60)).toEqual(455847);
+  }
 });

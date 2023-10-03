@@ -9,6 +9,7 @@ import {mergeSortedArrays} from '../utils/data-structures';
 import {createDataProvider} from '../utils/data-provider';
 import {getTimes} from '../utils/dates';
 import {indicatorUpdateWrapper} from '../utils/indicators';
+import {barIndexFromTime} from '../utils/dates';
 
 import {initTracker, handleTrackerTick} from '../utils/tracker';
 
@@ -29,6 +30,7 @@ import {
   Profile,
   TickFileType,
   MaximumBarCount,
+  Periods,
 } from '../core';
 
 import {
@@ -199,6 +201,12 @@ export async function runBacktest({
     marketSortFn,
   );
 
+  const periods = [Periods.m1, Periods.m5, Periods.m60];
+
+  let currentBarIndexes = periods.map(barLength =>
+    barIndexFromTime(market.current.dt, barLength),
+  );
+
   marketData.forEach(tick => {
     if (!trackers[tick.symbol]) {
       throw new BacktestWorkerError('invalid-symbol-data');
@@ -270,9 +278,21 @@ export async function runBacktest({
       });
 
       // If this is an update for our symbol then call the strategy
+      // see if we have a new bar
+      const newBarIndexes = periods.map(barLength =>
+        barIndexFromTime(market.current.dt, barLength),
+      );
+
       if (tick.symbol === symbol) {
         strategy.handleTick(tick);
+
+        newBarIndexes.forEach((newBarIndex, index) => {
+          if (newBarIndex !== currentBarIndexes[index]) {
+            strategy.nextBar?.(periods[index], newBarIndex, tick);
+          }
+        });
       }
+      currentBarIndexes = newBarIndexes;
     }
   });
 

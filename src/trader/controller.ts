@@ -17,6 +17,7 @@ import {
   DataProvider,
   LiveTradingConfig,
   TraderStatusUpdate,
+  Periods,
 } from '../core';
 
 import {indicatorUpdateWrapper} from '../utils/indicators';
@@ -49,7 +50,7 @@ import {
 } from '../utils/market';
 
 import {loadStrategy} from '../utils/module';
-import {formatDateTime} from '../utils/dates';
+import {barIndexFromTime, formatDateTime} from '../utils/dates';
 
 const sleep = (time: number) =>
   new Promise(resolve => setTimeout(resolve, time));
@@ -270,6 +271,12 @@ export async function runLiveController({
           });
         });
 
+        const periods = [Periods.m1, Periods.m5, Periods.m60];
+
+        let currentBarIndexes = periods.map(barLength =>
+          barIndexFromTime(market.current.dt, barLength),
+        );
+
         dataProvider.subscribeMarketUpdates({
           instrument,
           onUpdate: ({type, value}) => {
@@ -320,9 +327,27 @@ export async function runLiveController({
               any profile for a symbol is in a setup and stopping when not and no open orders
               */
 
+              // If this is an update for our symbol then call the strategy
+              // see if we have a new bar
+              const newBarIndexes = periods.map(barLength =>
+                barIndexFromTime(market.current.dt, barLength),
+              );
+
               if (inSetup) {
                 profile.strategy.handleTick(tick);
+
+                newBarIndexes.forEach((newBarIndex, index) => {
+                  if (newBarIndex !== currentBarIndexes[index]) {
+                    profile.strategy.nextBar?.(
+                      periods[index],
+                      newBarIndex,
+                      tick,
+                    );
+                  }
+                });
               }
+
+              currentBarIndexes = newBarIndexes;
             });
           },
         });
